@@ -4,14 +4,18 @@ import morgan from 'morgan'
 import { env } from './env'
 import { connectMongo } from './lib/db'
 import { createQueue } from './lib/queue'
+import { startIngestWorker } from './services/ingest/ingest.worker'
 import { health } from './routes/health'
 import { z } from 'zod'
+import { spotifyAuth } from './routes/auth/spotify.routes'
 
 async function main() {
   await connectMongo(env.MONGODB_URI)
   const queue = createQueue(env.REDIS_URL)
   // Enqueue a sample job at boot (non-blocking)
   queue.add('boot', { startedAt: Date.now() }).catch(() => {})
+  // Start ingest worker
+  startIngestWorker()
 
   const app = express()
   app.use(cors({ origin: env.CORS_ORIGIN }))
@@ -24,6 +28,7 @@ async function main() {
   })
 
   app.use('/api', health)
+  app.use('/auth', spotifyAuth)
 
   // Example zod-validated echo route
   app.post('/api/echo', (req, res) => {
