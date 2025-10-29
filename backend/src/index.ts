@@ -8,6 +8,7 @@ import { startIngestWorker } from './services/ingest/ingest.worker'
 import { health } from './routes/health'
 import { z } from 'zod'
 import { spotifyAuth } from './routes/auth/spotify.routes'
+import { profiles } from './routes/profiles.routes'
 
 async function main() {
   await connectMongo(env.MONGODB_URI)
@@ -28,6 +29,7 @@ async function main() {
   })
 
   app.use('/api', health)
+  app.use('/api', profiles)
   app.use('/auth', spotifyAuth)
 
   // Example zod-validated echo route
