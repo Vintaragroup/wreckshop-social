@@ -1,0 +1,15 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install deps first for caching
+COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
+RUN npm install --no-audit --no-fund
+
+# Copy source (only what's needed for dev)
+COPY . .
+
+ENV PORT=5176
+EXPOSE 5176
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5176"]

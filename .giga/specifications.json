@@ -1,0 +1,22 @@
+[
+  {
+    "fileName": "main-overview.mdc",
+    "description": "High-level system architecture overview focusing on the core components: campaign management, journey automation, music release management, and audience segmentation systems"
+  },
+  {
+    "fileName": "audience-data-models.mdc",
+    "description": "Detailed documentation of fan profile data structures, segmentation rules, engagement scoring algorithms, and platform-specific metrics used in audience management"
+  },
+  {
+    "fileName": "campaign-journey-flows.mdc",
+    "description": "Comprehensive documentation of campaign orchestration logic, journey automation algorithms, multi-channel sequencing, and performance optimization rules"
+  },
+  {
+    "fileName": "music-content-models.mdc",
+    "description": "Detailed documentation of artist, release, and event data models, including industry-specific metadata (ISRC/UPC), distribution workflows, and platform integrations"
+  },
+  {
+    "fileName": "segment-builder-algorithms.mdc",
+    "description": "Technical documentation of the segment builder implementation, including rule hierarchy, condition mapping, and audience size calculation algorithms"
+  }
+]

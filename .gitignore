@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Builds
+build/
+dist/
+.out/
+.next/
+.vercel/
+.turbo/
+coverage/
+
+# Env files
+.env
+.env.*
+!.env.example
+.env.docker
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / Editor
+.DS_Store
+*.swp
+.vscode/
+.idea/
+
+# Docker
+**/.docker/
+
+# Misc
+*.local
