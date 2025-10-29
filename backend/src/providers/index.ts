@@ -1,28 +1,10 @@
-import { ProviderAdapter, MusicIdentity as MusicIdentitySchema, MusicTaste as MusicTasteSchema } from './types'
+import { ProviderAdapter } from './types'
 import { spotifyProvider } from './spotify.provider'
-
-const amazonAdapter: ProviderAdapter = {
-  async resolveIdentity(input) {
-    if (!input.providerUserId && !input.handle) {
-      throw new Error('amazon: insufficient identity input')
-    }
-    const identity = {
-      provider: 'amazon' as const,
-      providerUserId: input.providerUserId ?? input.handle ?? 'self',
-      profileUrl: input.profileUrl,
-      handle: input.handle,
-    }
-    return MusicIdentitySchema.parse(identity)
-  },
-  async fetchTaste(_identity) {
-    const taste = { topArtists: [], topGenres: [], topTracks: [], playlists: [] }
-    return MusicTasteSchema.parse(taste)
-  },
-}
+import { amazonProvider } from './amazon.provider'
 
 const registry = {
   spotify: spotifyProvider,
-  amazon: amazonAdapter,
+  amazon: amazonProvider,
 } as const
 
 export type ProviderName = keyof typeof registry
@@ -37,4 +19,4 @@ export function getProvider(name: string): ProviderAdapter {
   return adapter
 }
 
-export { spotifyProvider, amazonAdapter }
+export { spotifyProvider, amazonProvider }
