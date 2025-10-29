@@ -112,19 +112,22 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
             <span className={isInSheet ? "" : "ml-3"}>{item.label}</span>
           )}
           {item.children && (!sidebarCollapsed || isInSheet) && (
-            <div
-              className="ml-auto p-1 h-auto rounded hover:bg-muted cursor-pointer"
+            <button
+              type="button"
+              className="ml-auto p-1 h-auto rounded hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               onClick={(e) => {
                 e.stopPropagation();
                 toggleMenuExpansion(item.id);
               }}
+              aria-label={`Toggle ${item.label} menu`}
+              aria-expanded={expandedMenus.includes(item.id)}
             >
               {expandedMenus.includes(item.id) ? (
                 <ChevronDown className="w-4 h-4" />
               ) : (
                 <ChevronRight className="w-4 h-4" />
               )}
-            </div>
+            </button>
           )}
         </Button>
         
@@ -206,7 +209,7 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
               {isMobile ? (
                 <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                   <SheetTrigger asChild>
-                    <Button variant="ghost" size="sm" className="p-2">
+                    <Button aria-label="Open navigation menu" variant="ghost" size="sm" className="p-2">
                       <Menu className="w-5 h-5" />
                     </Button>
                   </SheetTrigger>
@@ -248,6 +251,7 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
                   size="sm"
                   onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                   className="p-2"
+                  aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
                   <Menu className="w-5 h-5" />
                 </Button>
@@ -266,7 +270,7 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
             {/* Header Actions */}
             <div className="flex items-center space-x-2 md:space-x-4">
               {/* Notifications */}
-              <Button variant="ghost" size="sm" className="relative p-2">
+              <Button aria-label="Notifications" variant="ghost" size="sm" className="relative p-2">
                 <Bell className="w-5 h-5" />
                 <Badge className="absolute -top-1 -right-1 w-5 h-5 rounded-full p-0 flex items-center justify-center bg-destructive text-xs">
                   3

@@ -12,6 +12,8 @@ import {
 } from '../../components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { Badge } from '../../components/ui/badge'
+import { ProviderBadge } from '../../components/ProviderBadge'
+import { IngestStatusBadge } from '../../components/IngestStatusBadge'
 
 export default function ProfilesPage() {
   const [q, setQ] = useState('')
@@ -71,6 +73,7 @@ export default function ProfilesPage() {
           >
             {ingest.isPending ? 'Ingesting…' : 'Ingest'}
           </Button>
+          <IngestStatusBadge status={ingest.isPending ? 'pending' : ingest.isSuccess ? 'success' : ingest.isError ? 'error' : 'idle'} />
         </div>
 
         <div className="md:col-span-4 -mt-2">
@@ -107,9 +110,7 @@ export default function ProfilesPage() {
             <CardContent className="space-y-3">
               <div className="flex flex-wrap gap-2">
                 {p.identities.map((id) => (
-                  <Badge key={`${id.provider}:${id.providerUserId}`} variant="secondary">
-                    {id.provider}
-                  </Badge>
+                  <ProviderBadge key={`${id.provider}:${id.providerUserId}`} provider={id.provider as any} />
                 ))}
               </div>
               {p.taste?.topGenres && p.taste.topGenres.length > 0 ? (
