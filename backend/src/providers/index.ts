@@ -1,27 +1,8 @@
-import { ProviderAdapter, MusicIdentity, MusicTaste, MusicIdentity as MusicIdentitySchema, MusicTaste as MusicTasteSchema } from './types'
-
-// Minimal stub adapters. Implementations can be replaced with real API clients later.
-const spotifyAdapter: ProviderAdapter = {
-  async resolveIdentity(input): Promise<MusicIdentity> {
-    if (!input.providerUserId && !input.accessToken && !input.handle && !input.profileUrl) {
-      throw new Error('spotify: insufficient identity input')
-    }
-    const identity = {
-      provider: 'spotify' as const,
-      providerUserId: input.providerUserId ?? 'self',
-      profileUrl: input.profileUrl,
-      handle: input.handle,
-    }
-    return MusicIdentitySchema.parse(identity)
-  },
-  async fetchTaste(_identity): Promise<MusicTaste> {
-    const taste = { topArtists: [], topGenres: [], topTracks: [], playlists: [] }
-    return MusicTasteSchema.parse(taste)
-  },
-}
+import { ProviderAdapter, MusicIdentity as MusicIdentitySchema, MusicTaste as MusicTasteSchema } from './types'
+import { spotifyProvider } from './spotify.provider'
 
 const amazonAdapter: ProviderAdapter = {
-  async resolveIdentity(input): Promise<MusicIdentity> {
+  async resolveIdentity(input) {
     if (!input.providerUserId && !input.handle) {
       throw new Error('amazon: insufficient identity input')
     }
@@ -33,14 +14,14 @@ const amazonAdapter: ProviderAdapter = {
     }
     return MusicIdentitySchema.parse(identity)
   },
-  async fetchTaste(_identity): Promise<MusicTaste> {
+  async fetchTaste(_identity) {
     const taste = { topArtists: [], topGenres: [], topTracks: [], playlists: [] }
     return MusicTasteSchema.parse(taste)
   },
 }
 
 const registry = {
-  spotify: spotifyAdapter,
+  spotify: spotifyProvider,
   amazon: amazonAdapter,
 } as const
 
@@ -56,4 +37,4 @@ export function getProvider(name: string): ProviderAdapter {
   return adapter
 }
 
-export { spotifyAdapter, amazonAdapter }
+export { spotifyProvider, amazonAdapter }
