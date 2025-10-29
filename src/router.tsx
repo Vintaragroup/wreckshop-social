@@ -1,7 +1,7 @@
 import React from 'react'
 import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom'
 import { Dashboard } from './components/dashboard'
-import { AudienceProfiles } from './components/audience-profiles'
+import ProfilesPage from './pages/audience/profiles'
 import { ThemeProvider } from './components/theme-provider'
 import { AppShell } from './components/app-shell'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -47,8 +47,8 @@ export const router = createBrowserRouter([
     path: '/',
     element: <Layout />,
     children: [
-      { index: true, element: <Dashboard /> },
-      { path: 'audience/profiles', element: <AudienceProfiles onPageChange={() => {}} /> },
+  { index: true, element: <Dashboard /> },
+  { path: 'audience/profiles', element: <ProfilesPage /> },
     ],
   },
 ])
