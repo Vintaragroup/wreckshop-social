@@ -57,5 +57,5 @@ export interface ProviderAdapter {
   }): Promise<MusicIdentity>
 
   // Fetch normalized taste for a given identity
-  fetchTaste(identity: MusicIdentity): Promise<MusicTaste>
+  fetchTaste(identity: MusicIdentity, options?: { accessToken?: string }): Promise<MusicTaste>
 }
