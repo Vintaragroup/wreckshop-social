@@ -18,6 +18,11 @@ async function main() {
   app.use(morgan('dev'))
   app.use(express.json())
 
+  // Root-level health route as per acceptance criteria
+  app.get('/health', (_req, res) => {
+    res.json({ ok: true })
+  })
+
   app.use('/api', health)
 
   // Example zod-validated echo route
@@ -28,6 +33,15 @@ async function main() {
       return res.status(400).json({ error: parsed.error.flatten() })
     }
     return res.json({ echo: parsed.data.message })
+  })
+
+  // Centralized error handler
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    const status = typeof err?.status === 'number' ? err.status : 500
+    const message = err?.message || 'Internal Server Error'
+    console.error('[error]', { status, message, stack: err?.stack })
+    res.status(status).json({ error: message })
   })
 
   app.listen(env.PORT, () => {
