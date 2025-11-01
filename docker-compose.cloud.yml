@@ -1,0 +1,18 @@
+name: wreckshop_social_cloud
+
+services:
+  backend:
+    environment:
+      PORT: ${BACKEND_PORT:-4002}
+      # Use Atlas (set ATLAS_MONGODB_URI in .env.docker)
+      MONGODB_URI: ${ATLAS_MONGODB_URI}
+      REDIS_URL: redis://redis:6379
+      SPOTIFY_CLIENT_ID: dev_id
+      SPOTIFY_CLIENT_SECRET: dev_secret
+      SPOTIFY_REDIRECT_URI: http://localhost:${BACKEND_PORT:-4002}/auth/spotify/callback
+      CORS_ORIGIN: http://localhost:${FRONTEND_PORT:-5176}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY}
+      SOUNDCLOUD_CLIENT_ID: ${SOUNDCLOUD_CLIENT_ID}
+      LASTFM_API_KEY: ${LASTFM_API_KEY}
+    depends_on:
+      - redis

@@ -1,0 +1,35 @@
+FROM python:3.11-slim
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# System deps: Chromium + chromedriver for Selenium headless, and fonts/ssl
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        chromium \
+        chromium-driver \
+        ca-certificates \
+        fonts-liberation \
+        libasound2 \
+        libnss3 \
+        libxss1 \
+        libx11-xcb1 \
+        wget \
+        xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV CHROME_BIN=/usr/bin/chromium \
+    CHROMEDRIVER=/usr/bin/chromedriver
+
+WORKDIR /app
+
+# Install Python deps for all scripts (start with the Last.fm scraper requirements)
+COPY scripts/lastfm_scraper/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Copy workspace (mounted again at runtime for live edits)
+COPY . /app
+
+# Default to a long-running shell so `docker compose run` can execute commands
+CMD ["bash", "-lc", "sleep infinity"]

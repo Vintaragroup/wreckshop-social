@@ -1,70 +1,54 @@
 ---
-description: Documents the technical implementation of segment building algorithms for audience targeting and filtering.
+description: Specification for implementing audience segmentation rules and size calculation algorithms in music marketing platform
 ---
 
 
 # segment-builder-algorithms
 
-## Rule Hierarchy Implementation
-The segment builder uses a nested rule structure for defining audience segments:
+The segment builder implements hierarchical rule composition for music audience targeting with the following key components:
 
-- Root Group (AND/OR)
-  - Rule Groups (AND/OR) 
-    - Individual Rules
-      - Field Selection
-      - Operator Selection 
-      - Value Input
-
-Each rule group maintains its own logical operator (AND/OR) that determines how child rules are combined. Groups can be nested up to 3 levels deep.
-
-Importance Score: 85
+## Rule Hierarchy
+- Root groups contain nested rule groups connected by AND/OR operators
+- Individual rules evaluate profile attributes using domain-specific operators
+- Groups can be infinitely nested with alternating logical operators
+- Rule evaluation order follows music industry targeting best practices
 
 ## Condition Mapping
-The segment builder maps user-selected conditions to database queries:
+Key profile attributes for segmentation:
+- Platform presence (Spotify, Apple Music, etc)
+- Artist follows/engagement
+- Genre preferences with weighted scores
+- Event attendance history
+- Purchase behavior (merch, tickets)
+- Geographic location for touring
 
-1. Field Mapping
-- Profile attributes (demographics, preferences)
-- Engagement metrics (opens, clicks, purchases)
-- Custom fields (tags, segments)
+Operator mappings:
+- Numeric: equals, greater/less than, between
+- String: contains, starts with, exact match
+- Array: includes any, includes all, excludes
+- Boolean: is true/false
+- DateTime: before, after, between
 
-2. Operator Mapping 
-- String: contains, starts with, ends with
-- Numeric: equals, greater than, less than
-- Date: before, after, between
-- Boolean: is, is not
-
-3. Value Validation
-- Type checking based on field
-- Range validation for numeric fields
-- Format validation for dates
-- List validation for enums
-
-Importance Score: 90
-
-## Audience Size Calculation
+## Size Calculation
 Real-time audience size estimation using:
+1. Initial segment scan on rule creation
+2. Progressive refinement based on new profile matches
+3. Platform-specific multipliers for reach estimation
+4. Statistical sampling for large audience sets
+5. Cached intermediary results for common rule combinations
 
-1. Rule Group Analysis
-- Parse rule group structure
-- Build optimized query plan
-- Calculate group matches
-
-2. Profile Scanning
-- Scan profile collection
-- Apply rule filters
-- Track matching profiles
-
-3. Size Approximation
-- Sample-based estimation for large segments
-- Exact count for small segments
-- Progressive refinement as rules change
-
-Importance Score: 95
-
-## Relevant Files
+Key files:
 - src/components/segment-builder.tsx
-- src/components/audience-profiles.tsx
-- src/components/campaigns-journeys.tsx
+- src/components/profile-export-modal.tsx
+
+Business Rules:
+1. Genre rules use fuzzy matching with synonyms
+2. Artist rules account for variations in artist names
+3. Platform rules check both active and historical presence
+4. Geographic rules support touring radius calculations
+5. Engagement scores use weighted averages across platforms
+
+Importance Score: 85/100
 
 $END$
 

@@ -18,6 +18,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "./ui/button";
+import { NavLink } from "react-router-dom";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import {
@@ -95,47 +96,75 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
   const renderNavigationItems = (isInSheet = false) => {
     return navigationItems.map((item) => (
       <div key={item.id}>
-        <Button
-          variant={currentPage === item.id || currentPage.startsWith(item.id + "-") ? "default" : "ghost"}
-          className={`w-full justify-start ${
-            isInSheet 
-              ? "h-12 px-4 text-base" 
-              : sidebarCollapsed ? "px-2 h-10" : "px-3 h-10"
-          }`}
-          onClick={() => {
-            onPageChange?.(item.id);
-            if (isInSheet) setMobileMenuOpen(false);
-          }}
-        >
-          <item.icon className={`w-5 h-5 ${isInSheet ? "mr-3" : ""}`} />
-          {(!sidebarCollapsed || isInSheet) && (
-            <span className={isInSheet ? "" : "ml-3"}>{item.label}</span>
-          )}
-          {item.children && (!sidebarCollapsed || isInSheet) && (
-            <button
-              type="button"
-              className="ml-auto p-1 h-auto rounded hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleMenuExpansion(item.id);
-              }}
-              aria-label={`Toggle ${item.label} menu`}
-              aria-expanded={expandedMenus.includes(item.id)}
-            >
-              {expandedMenus.includes(item.id) ? (
-                <ChevronDown className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
+        {item.children ? (
+          <Button
+            variant={
+              currentPage === item.id || currentPage.startsWith(item.id + "-")
+                ? "default"
+                : "ghost"
+            }
+            className={`w-full justify-start ${
+              isInSheet
+                ? "h-12 px-4 text-base"
+                : sidebarCollapsed
+                  ? "px-2 h-10"
+                  : "px-3 h-10"
+            }`}
+            onClick={() => {
+              // Toggle expansion for grouped menus
+              toggleMenuExpansion(item.id);
+            }}
+          >
+            <item.icon className={`w-5 h-5 ${isInSheet ? "mr-3" : ""}`} />
+            {(!sidebarCollapsed || isInSheet) && (
+              <span className={isInSheet ? "" : "ml-3"}>{item.label}</span>
+            )}
+            {(!sidebarCollapsed || isInSheet) && (
+              <button
+                type="button"
+                className="ml-auto p-1 h-auto rounded hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleMenuExpansion(item.id);
+                }}
+                aria-label={`Toggle ${item.label} menu`}
+                aria-expanded={expandedMenus.includes(item.id)}
+              >
+                {expandedMenus.includes(item.id) ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </button>
+            )}
+          </Button>
+        ) : (
+          <Button
+            asChild
+            variant={currentPage === item.id ? "default" : "ghost"}
+            className={`w-full justify-start ${
+              isInSheet
+                ? "h-12 px-4 text-base"
+                : sidebarCollapsed
+                  ? "px-2 h-10"
+                  : "px-3 h-10"
+            }`}
+          >
+            <NavLink to={item.href} onClick={() => isInSheet && setMobileMenuOpen(false)}>
+              <item.icon className={`w-5 h-5 ${isInSheet ? "mr-3" : ""}`} />
+              {(!sidebarCollapsed || isInSheet) && (
+                <span className={isInSheet ? "" : "ml-3"}>{item.label}</span>
               )}
-            </button>
-          )}
-        </Button>
+            </NavLink>
+          </Button>
+        )}
         
         {item.children && (!sidebarCollapsed || isInSheet) && 
          (expandedMenus.includes(item.id) || currentPage === item.id || currentPage.startsWith(item.id + "-")) && (
           <div className={`${isInSheet ? "ml-4" : "ml-6"} mt-2 space-y-1`}>
             {item.children.map((child) => (
               <Button
+                asChild
                 key={child.href}
                 variant="ghost"
                 size="sm"
@@ -144,13 +173,10 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
                     ? "text-foreground bg-muted"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
-                onClick={() => {
-                  const childPageId = `${item.id}-${child.href.split('/').pop()}`;
-                  onPageChange?.(childPageId);
-                  if (isInSheet) setMobileMenuOpen(false);
-                }}
               >
-                {child.label}
+                <NavLink to={child.href} onClick={() => isInSheet && setMobileMenuOpen(false)}>
+                  {child.label}
+                </NavLink>
               </Button>
             ))}
           </div>

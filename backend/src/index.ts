@@ -19,7 +19,10 @@ async function main() {
   startIngestWorker()
 
   const app = express()
-  app.use(cors({ origin: env.CORS_ORIGIN }))
+  // Enable CORS for the frontend, including credentials because the web app uses
+  // fetch with `credentials: 'include'`. Without this, the browser will block
+  // cross-origin responses even if no cookies are used.
+  app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }))
   app.use(morgan('dev'))
   app.use(express.json())
 

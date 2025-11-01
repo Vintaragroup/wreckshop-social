@@ -13,52 +13,61 @@
 - Explain your OBSERVATIONS clearly, then provide REASONING to identify the exact issue. Add console logs when needed to gather more information.
 
 
-The system implements a comprehensive music industry data platform with four core business domains:
+The system implements a music industry platform focused on artist management, audience engagement, and marketing automation.
 
-## Campaign Management
-- Multi-step campaign creation workflow specialized for music industry
-- Templates for album launches, newsletters, and fan engagement
-- Audience segmentation based on music engagement metrics
-- Revenue projections for different campaign types
-- File: src/components/create-campaign-modal.tsx
-Importance Score: 85
+Core Business Domains:
 
-## Artist Events Management
-- Venue-specific event creation and management
-- Revenue projection system for tiered ticket sales
-- Pre-sale code generation and tracking
-- Capacity management for music venues
-- File: src/components/create-event-modal.tsx
-Importance Score: 80
+1. Artist & Release Management (Importance: 90/100)
+- Multi-step artist onboarding with platform verification
+- Release tracking with ISRC/UPC management
+- Music distribution platform integration
+- Revenue calculation and attribution
+- Venue and event management with ticket sales workflow
 
-## Release Management
-- Music distribution workflow across platforms
-- ISRC/UPC code tracking and verification
-- Pre-save campaign orchestration
-- Cross-platform release synchronization
-- File: src/components/create-release-modal.tsx
-Importance Score: 90
+2. Audience Profile System (Importance: 85/100)
+- Cross-platform identity resolution
+- Genre-based user discovery algorithms
+- Platform-specific profile enrichment
+- Music taste analysis and correlation
+- Fan engagement scoring
 
-## Audience Engagement
-- Fan profile management with platform-specific metrics
-- Custom recommendation engine for communication channels
-- Journey-based marketing automation
-- Engagement scoring across streaming platforms
-- File: src/components/audience-profiles.tsx
-Importance Score: 85
+3. Marketing Automation (Importance: 80/100)
+- Artist-specific journey orchestration
+- Multi-channel campaign management
+- Music industry SMS compliance handling
+- Fan segmentation based on music preferences
+- Automated engagement triggers
 
-The platform integrates these domains through:
-- Cross-platform data synchronization
-- Unified engagement metrics
-- Industry compliance tracking
-- Automated platform metrics collection
-- Multi-channel campaign coordination
+Key Integration Points:
+- Streaming platform connectivity (Spotify, Apple Music)
+- Social platform identity federation
+- Music metadata enrichment
+- Platform-specific verification workflows
+- Cross-platform metrics consolidation
 
-Supporting Components:
-- Segment builder for targeted marketing
-- Profile export system for data analysis
-- Platform integration management
-- Campaign performance analytics
+Critical Business Components:
+
+`backend/src/services/discovery/discovery.service.ts`
+- Cross-platform music taste discovery
+- Genre-based artist correlation
+- Weighted user similarity scoring
+
+`backend/src/services/ingest/ingest.service.ts`
+- Unified profile merging
+- Identity reconciliation
+- Progressive metadata enrichment
+
+`src/components/content-releases.tsx`
+- ISRC/UPC tracking
+- Multi-platform release synchronization
+- Streaming performance metrics
+
+Domain-Specific Features:
+- Music industry identifiers handling
+- Artist verification workflows
+- Platform-specific content distribution
+- Fan journey orchestration
+- Concert/event management
 
 $END$
 

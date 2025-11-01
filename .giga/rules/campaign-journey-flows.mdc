@@ -1,67 +1,56 @@
 ---
-description: Documents the campaign journey orchestration and automation logic for marketing flows
+description: Technical specification for campaign orchestration, journey automation, and multi-channel sequencing logic in music marketing platform
 ---
 
 
 # campaign-journey-flows
 
-## Journey Orchestration Engine
+Campaign Journey Flow System
+Importance Score: 85/100
 
-The campaign journey system implements multi-step marketing automation workflows specialized for music industry use cases:
+Core Components:
 
-### Fan Journey Types
-- New Fan Onboarding
-- Album Launch Sequences 
-- Concert Pre/Post Event
-- VIP Status Progression
-- Re-engagement Campaigns
+1. Journey Orchestration Engine (src/components/campaigns-journeys.tsx)
+- Music industry-specific journey templates for album launches, tours, merch drops
+- Fan engagement scoring with platform-specific weighting
+- Conditional branching based on fan segment behavior
+- Multi-channel coordination across email, SMS, social
+- Revenue attribution tracking per journey touchpoint
 
-File: `src/components/campaigns-journeys.tsx`
-Importance Score: 90
+2. Campaign Sequencing Logic (src/components/create-journey-modal.tsx)
+- Dynamic delay calculations based on engagement timing analysis
+- Platform-specific message throttling and quiet hours
+- A/B path optimization using fan preference data
+- Cross-channel frequency capping with platform awareness
+- Journey completion tracking with conversion metrics
 
-### Journey Step Types
-- Email Communications
-- SMS/Text Messages
-- Social Media Actions
-- Streaming Platform Integration
-- Wait/Delay Steps
-- Conditional Branching
+3. Channel-Specific Campaign Rules (src/components/create-sms-campaign-modal.tsx)
+- SMS compliance handling with music industry regulations
+- Quiet hours enforcement by timezone/region
+- Artist-specific templating with dynamic content insertion
+- Automated opt-out processing with compliance logging
 
-File: `src/components/create-journey-modal.tsx`
-Importance Score: 85
+Notable Workflows:
 
-### Audience Targeting
-- Platform-specific engagement scores
-- Music preference analysis
-- Geographic targeting
-- Prior campaign interaction history
-- Custom segment builder integration
+Album Release Journey
+- Pre-save campaign orchestration
+- Release day notification sequencing
+- Post-release engagement tracking
+- Streaming platform conversion monitoring
 
-File: `src/components/segment-builder.tsx` 
-Importance Score: 80
+Tour Promotion Journey  
+- Presale access coordination
+- Geographic targeting rules
+- Ticket sales funnel optimization
+- Post-event engagement flows
 
-### Performance Analytics
-- Step completion rates
-- Channel effectiveness scoring
-- Audience segment performance
-- Revenue attribution
-- A/B test variations
+Merchandise Launch Journey
+- Fan segment prioritization 
+- Stock level-aware messaging
+- Purchase history-based targeting
+- Cross-sell recommendation logic
 
-File: `src/components/analytics.tsx`
-Importance Score: 75
-
-### Journey Templates
-- Pre-built journey templates for common music marketing scenarios:
-  - Album Release
-  - Tour Announcement
-  - Merch Launch
-  - Artist Updates
-  - Fan Club Management
-
-File: `src/components/create-campaign-modal.tsx`
-Importance Score: 70
-
-The system orchestrates complex multi-channel campaign journeys while maintaining compliance with music industry standards and platform-specific requirements. Journey flows can be triggered by events, schedules, or audience behaviors across integrated music platforms.
+The system implements sophisticated journey orchestration specifically designed for music industry marketing needs, with deep integration of artist content, fan behavior patterns, and industry compliance requirements.
 
 $END$
 
