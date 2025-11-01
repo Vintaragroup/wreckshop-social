@@ -8,6 +8,11 @@ services:
     container_name: wreckshop-frontend-dev
     environment:
       - VITE_API_BASE_URL=http://localhost:${BACKEND_PORT:-4002}
+      - VITE_ENABLE_LASTFM=true
+      - VITE_ENABLE_SOUNDCLOUD=true
+      - VITE_ENABLE_DEEZER=true
+      - VITE_ENABLE_YOUTUBE=true
+      - VITE_ENABLE_AUDIUS=true
     ports:
       - "${FRONTEND_PORT:-5176}:5176"
     working_dir: /app
@@ -31,6 +36,9 @@ services:
       - SPOTIFY_CLIENT_SECRET=dev_secret
       - SPOTIFY_REDIRECT_URI=http://localhost:${BACKEND_PORT:-4002}/auth/spotify/callback
       - CORS_ORIGIN=http://localhost:${FRONTEND_PORT:-5176}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
+      - SOUNDCLOUD_CLIENT_ID=${SOUNDCLOUD_CLIENT_ID:-}
+      - LASTFM_API_KEY=${LASTFM_API_KEY:-}
     ports:
       - "${BACKEND_PORT:-4002}:4002"
     working_dir: /app
@@ -52,6 +60,24 @@ services:
     image: redis:7-alpine
     container_name: wreckshop-redis
     command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+
+  scripts:
+    build:
+      context: .
+      dockerfile: Dockerfile.scripts
+    container_name: wreckshop-scripts
+    environment:
+      - LASTFM_API_KEY=${LASTFM_API_KEY:-}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
+      - BACKEND_BASE_URL=http://backend:${BACKEND_PORT:-4002}
+    working_dir: /app
+    volumes:
+      - ./:/app
+    depends_on:
+      - backend
+    # Provide a larger shared memory for Chromium
+    shm_size: "2gb"
+    command: ["bash", "-lc", "sleep infinity"]
 
 volumes:
   frontend_node_modules:

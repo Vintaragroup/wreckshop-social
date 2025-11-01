@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 // Core provider-agnostic identity
 export const MusicIdentity = z.object({
-  provider: z.enum(['spotify', 'amazon', 'lastfm', 'soundcloud']),
+  provider: z.enum(['spotify', 'amazon', 'lastfm', 'soundcloud', 'deezer', 'youtube', 'audius', 'instagram', 'facebook', 'tiktok']),
   providerUserId: z.string(),
   profileUrl: z.string().url().optional(),
   handle: z.string().optional(),
@@ -58,4 +58,17 @@ export interface ProviderAdapter {
 
   // Fetch normalized taste for a given identity
   fetchTaste(identity: MusicIdentity, options?: { accessToken?: string }): Promise<MusicTaste>
+
+  // Optionally fetch richer profile details for display
+  fetchProfileDetails?: (identity: MusicIdentity, options?: { accessToken?: string }) => Promise<{
+    displayName?: string
+    avatarUrl?: string
+    bio?: string
+    profileUrl?: string
+    // Optional social graph counts
+    followersCount?: number
+    followingCount?: number
+    friendsCount?: number
+    neighboursCount?: number
+  }>
 }

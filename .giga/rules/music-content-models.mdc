@@ -1,74 +1,60 @@
 ---
-description: Specifications for music industry data models including artist, release, and event management with industry metadata
+description: Documents the core data models and workflows for managing music content including artists, releases, and events
 ---
 
 
 # music-content-models
 
-Core data models for music industry content management:
+## Core Data Models
 
 ### Artist Model
-`src/components/content-artists.tsx`
-- Industry metadata storage:
-  - Artist ID mapping across platforms (Spotify, Apple Music, etc.)
-  - Genre classification with multiple-genre support
-  - Label affiliation tracking
-  - Artist status states (active, inactive, on-hold)
-Importance Score: 85
+- Professional status verification system with label affiliation tracking
+- Platform-specific artist identifiers (Spotify ID, Apple Music ID, etc.)
+- Genre categorization with weighted relevance scores
+- Distribution channel mapping across streaming platforms
 
-### Release Model
-`src/components/content-releases.tsx`
-- Release workflow states:
-  - Pre-release planning
-  - Distribution preparation
-  - Post-release tracking
-- Industry identifiers:
-  - ISRC code management
-  - UPC/EAN code tracking
-  - Distribution platform IDs
-- Release types:
-  - Singles
-  - EPs
-  - Albums
-  - Remixes
-Importance Score: 90
+### Release Model 
+- ISRC/UPC handling with duplicate detection
+- Multi-platform release state tracking (draft, scheduled, published)
+- Rights management with territory restrictions
+- Revenue attribution across distribution channels
+- Release type classification (album, EP, single)
 
 ### Event Model
-`src/components/content-events.tsx`
-- Event classifications:
-  - Concerts
-  - Album release parties
-  - Meet & greets
-  - Virtual events
-- Venue management:
-  - Capacity tracking
-  - Stage setup requirements
-  - Technical rider support
-- Ticket tiers:
-  - General admission
-  - VIP packages
-  - Meet & greet add-ons
-Importance Score: 80
+- Venue capacity and ticket tier management
+- Age restriction and door time handling
+- Presale code generation and validation
+- Smart link generation for cross-platform ticket sales
 
-### Distribution Integration
-- Platform-specific metadata requirements
-- Release scheduling across platforms
-- Synchronized release timing management
-- Distribution status tracking per platform
-Importance Score: 85
+## Integration Points
 
-### Asset Management
-`src/components/content-assets.tsx`
-- Asset categorization:
-  - Audio masters
-  - Artwork
-  - Press materials
-  - Marketing collateral
-- Format requirements:
-  - Platform-specific image dimensions
-  - Audio quality standards
-  - Video format specifications
-Importance Score: 75
+Distribution workflows connect to:
+- Digital Service Providers (DSPs) for release delivery
+- Ticketing platforms for event management  
+- Social platforms for artist verification
+- Analytics services for performance tracking
+
+## Key Business Rules
+
+1. Release Management
+- Enforces ISRC uniqueness across platforms
+- Validates territory rights before distribution
+- Requires complete metadata before scheduling
+- Handles pre-save to streaming service conversion
+
+2. Artist Verification
+- Multi-step verification process with label confirmation
+- Platform-specific artist page validation
+- Genre classification with machine learning support
+- Cross-platform identity resolution
+
+3. Event Management
+- Capacity-based ticket allocation
+- Age restriction enforcement
+- Presale window timing control
+- Territory-specific pricing rules
+
+Importance Score: 95/100
 
 $END$
 

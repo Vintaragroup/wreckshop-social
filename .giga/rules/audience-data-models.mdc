@@ -1,56 +1,58 @@
 ---
-description: Defines core audience data models, segmentation rules and engagement scoring for music industry fan profiles
+description: Defines fan profile data structures, segmentation rules, engagement scoring models and platform metrics
 ---
 
 
 # audience-data-models
 
-## Core Fan Profile Model
-- Music platform integration identifiers (Spotify, YouTube, Instagram)
-- Engagement scoring across platforms
-- Genre preferences and artist affinities 
-- Communication channel consent flags
-- Platform-specific metrics (streams, likes, shares)
-Importance Score: 95
+## Fan Profile Data Structure
+- Cross-platform identity federation across music services
+- Genre-based taste profiling with weighted preferences
+- Engagement scoring based on platform-specific metrics
+- VIP status determination from composite engagement levels
+
+Key files:
+- `backend/src/models/profile.ts`
+- `src/pages/audience/profile-detail.tsx`
+
+Importance Score: 90/100
 
 ## Segmentation Engine
-Located in `src/components/segment-builder.tsx`:
-- Rule-based segment builder supporting:
-  - Streaming behavior criteria
-  - Purchase history filters
-  - Genre/artist preferences
-  - Engagement level thresholds
-  - Geographic location
-- Dynamic segment size estimation
-- Reusable segment templates
-Importance Score: 90
+- Hierarchical rule groups with music-specific operators
+- Platform-based filtering (Spotify, Apple Music, etc)
+- Artist affinity scoring and genre categorization
+- Custom operators for music engagement metrics
 
-## Engagement Scoring Algorithm
-- Weighted scoring based on:
-  - Stream counts and completion rates
-  - Social media interactions
-  - Purchase behavior
-  - Event attendance
-  - Newsletter engagement
-- Platform-specific metric normalization
-- Rolling 30/90/365 day calculations
-Importance Score: 85
+Key files: 
+- `src/components/segment-builder.tsx`
+- `src/components/audience-profiles.tsx`
 
-## Profile Export System
-Located in `src/components/profile-export-modal.tsx`:
-- Configurable field selection
-- Format options (CSV, Excel, JSON)
-- Platform-specific data filtering
-- GDPR-compliant data handling
-Importance Score: 75
+Importance Score: 85/100
 
-## Platform Integration Metrics
-- Spotify: streams, saves, playlists
-- YouTube: views, subscriptions, comments
-- Instagram: follows, story views, post engagement
-- Email: open rates, click rates, unsubscribes
-- SMS: delivery rates, response rates
-Importance Score: 80
+## Discovery System
+- Genre and artist-based user discovery algorithms
+- Cross-platform identity resolution
+- Progressive taste profile enrichment
+- Weighted similarity scoring based on music preferences
+
+Key files:
+- `backend/src/services/discovery/discovery.service.ts`
+- `src/pages/audience/profiles-discover.tsx`
+
+Importance Score: 80/100
+
+## Platform Integration
+- Platform-specific metrics normalization
+- Unified consent management across channels
+- Engagement score calculation per platform
+- Identity reconciliation across music services
+
+Key files:
+- `backend/src/providers/types.ts`
+- `backend/src/providers/spotify.provider.ts`
+- `backend/src/providers/lastfm.provider.ts`
+
+Importance Score: 75/100
 
 $END$
 
