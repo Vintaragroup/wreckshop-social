@@ -80,6 +80,28 @@ export function SpotifyOAuth({ onTokenReceived, onConnectionChange }: SpotifyOAu
 
       const userData = await userRes.json();
       setConnectedUser(userData.display_name || userData.email || "Connected");
+      
+      // Send token to backend for profile enrichment
+      try {
+        const enrichResponse = await fetch(`${BACKEND_URL}/auth/spotify/connect`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accessToken }),
+        });
+
+        if (enrichResponse.ok) {
+          const enrichData = await enrichResponse.json();
+          console.log("Profile enriched with data:", enrichData.data);
+          // Token will be used to fetch profile, top artists, tracks, etc
+        } else {
+          console.warn("Profile enrichment request failed (non-critical)");
+          // Continue anyway - enrichment is optional
+        }
+      } catch (enrichErr) {
+        console.warn("Profile enrichment error (non-critical):", enrichErr);
+        // Continue anyway - enrichment is optional
+      }
+
       setIsConnected(true);
       setSuccessMessage(`Connected as ${userData.display_name || userData.email}`);
 

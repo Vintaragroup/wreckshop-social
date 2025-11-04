@@ -65,6 +65,25 @@ export default function SpotifyCallbackPage() {
         }
 
         const userData = await userRes.json()
+        
+        // Send token to backend for profile enrichment
+        try {
+          const enrichResponse = await fetch(`${BACKEND_URL}/auth/spotify/connect`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accessToken }),
+          })
+
+          if (enrichResponse.ok) {
+            const enrichData = await enrichResponse.json()
+            console.log('Profile enriched:', enrichData.data)
+          } else {
+            console.warn('Profile enrichment failed (non-critical)')
+          }
+        } catch (enrichErr) {
+          console.warn('Profile enrichment error (non-critical):', enrichErr)
+        }
+
         setStatus('success')
         setMessage(`Connected as ${userData.display_name || userData.email}`)
 

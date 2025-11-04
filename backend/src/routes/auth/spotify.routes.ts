@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { exchangeCodeForToken } from '../../providers/spotify.oauth'
+import { enrichSpotifyProfile } from '../../services/spotify/enrichment.service'
 import { env } from '../../env'
 
 export const spotifyAuth = Router()
@@ -18,3 +19,30 @@ spotifyAuth.get('/spotify/callback', async (req, res) => {
     return res.status(400).json({ ok: false, error: message })
   }
 })
+
+// POST /auth/spotify/connect
+// Body: { accessToken: string }
+// Enriches Spotify profile with user data
+spotifyAuth.post('/spotify/connect', async (req, res) => {
+  const { accessToken } = req.body as { accessToken?: string }
+  if (!accessToken) {
+    return res.status(400).json({ ok: false, error: 'accessToken is required' })
+  }
+
+  try {
+    const enrichedData = await enrichSpotifyProfile(accessToken)
+    
+    // TODO: Store enrichedData in database linked to user/profile
+    // For now, return the enriched data
+    
+    return res.json({
+      ok: true,
+      data: enrichedData,
+      message: 'Spotify profile enriched successfully',
+    })
+  } catch (err: any) {
+    const message = err?.message || 'Profile enrichment failed'
+    return res.status(400).json({ ok: false, error: message })
+  }
+})
+
