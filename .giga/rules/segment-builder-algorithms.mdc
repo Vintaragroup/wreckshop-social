@@ -1,54 +1,57 @@
 ---
-description: Specification for implementing audience segmentation rules and size calculation algorithms in music marketing platform
+description: Technical implementation details for audience segmentation rules, conditions and size estimation algorithms
 ---
 
 
 # segment-builder-algorithms
 
-The segment builder implements hierarchical rule composition for music audience targeting with the following key components:
+Core segmentation engine implemented in `src/components/segment-builder.tsx`:
 
-## Rule Hierarchy
-- Root groups contain nested rule groups connected by AND/OR operators
-- Individual rules evaluate profile attributes using domain-specific operators
-- Groups can be infinitely nested with alternating logical operators
-- Rule evaluation order follows music industry targeting best practices
+Rule Hierarchy:
+- Top level groups (AND/OR)
+- Nested condition groups with unlimited depth
+- Individual rules with operators and values
+- Support for complex nested boolean logic
 
-## Condition Mapping
-Key profile attributes for segmentation:
-- Platform presence (Spotify, Apple Music, etc)
-- Artist follows/engagement
-- Genre preferences with weighted scores
-- Event attendance history
-- Purchase behavior (merch, tickets)
-- Geographic location for touring
+Condition Types:
+- Profile attributes (demographics, preferences)
+- Platform metrics (followers, engagement)
+- Music taste (genres, artists)
+- Behavioral events (streams, saves)
 
-Operator mappings:
-- Numeric: equals, greater/less than, between
-- String: contains, starts with, exact match
-- Array: includes any, includes all, excludes
-- Boolean: is true/false
-- DateTime: before, after, between
+Size Estimation Algorithm:
+1. Traverses rule tree depth-first
+2. Calculates subset sizes for leaf conditions
+3. Aggregates up through AND/OR nodes
+4. Applies platform-specific weighting factors
+5. Returns estimated matching audience size
 
-## Size Calculation
-Real-time audience size estimation using:
-1. Initial segment scan on rule creation
-2. Progressive refinement based on new profile matches
-3. Platform-specific multipliers for reach estimation
-4. Statistical sampling for large audience sets
-5. Cached intermediary results for common rule combinations
+Business-Critical Components:
 
-Key files:
-- src/components/segment-builder.tsx
-- src/components/profile-export-modal.tsx
+1. Rule Builder (`segment-builder.tsx`)
+- Music industry specific field definitions
+- Genre/artist condition handling
+- Cross-platform metric normalization
+- Importance Score: 90/100
 
-Business Rules:
-1. Genre rules use fuzzy matching with synonyms
-2. Artist rules account for variations in artist names
-3. Platform rules check both active and historical presence
-4. Geographic rules support touring radius calculations
-5. Engagement scores use weighted averages across platforms
+2. Audience Calculation (`create-campaign-modal.tsx`)
+- Real-time size estimation
+- Platform reach adjustments
+- Delivery probability scoring
+- Importance Score: 85/100
 
-Importance Score: 85/100
+Key Integration Points:
+- Platform APIs for real-time metrics
+- Profile database for condition evaluation
+- Campaign modules for audience targeting
+- Analytics for conversion tracking
+
+The segmentation system is specialized for music industry use cases with specific handling of:
+- Cross-platform social metrics
+- Artist affinity scoring
+- Genre classification
+- Engagement thresholds
+- Platform-specific delivery rules
 
 $END$
 

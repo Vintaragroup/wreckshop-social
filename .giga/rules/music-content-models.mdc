@@ -1,5 +1,5 @@
 ---
-description: Documents the core data models and workflows for managing music content including artists, releases, and events
+description: Documents data models and workflows for music industry content like artists, releases, and events
 ---
 
 
@@ -8,53 +8,66 @@ description: Documents the core data models and workflows for managing music con
 ## Core Data Models
 
 ### Artist Model
-- Professional status verification system with label affiliation tracking
-- Platform-specific artist identifiers (Spotify ID, Apple Music ID, etc.)
-- Genre categorization with weighted relevance scores
-- Distribution channel mapping across streaming platforms
+Key fields:
+- UUID and platform-specific IDs (Spotify, Apple Music, etc.)
+- Verification status and platform links 
+- Genre classifications and tags
+- Engagement metrics per platform
+- Connected release and event catalogs
+- Rights management status
 
 ### Release Model 
-- ISRC/UPC handling with duplicate detection
-- Multi-platform release state tracking (draft, scheduled, published)
-- Rights management with territory restrictions
-- Revenue attribution across distribution channels
-- Release type classification (album, EP, single)
+Key fields:
+- ISRC/UPC identifiers
+- Distribution platform mappings
+- Rights holders and splits
+- Pre-save campaign configuration
+- Cross-platform smart links
+- Geographic availability rules
 
 ### Event Model
-- Venue capacity and ticket tier management
-- Age restriction and door time handling
-- Presale code generation and validation
-- Smart link generation for cross-platform ticket sales
+Fields:
+- Venue capacity and tier configuration
+- Presale code generation rules
+- Geographic targeting parameters
+- Marketing automation triggers
+- Revenue projections per tier
+- Ticket allocation rules
 
-## Integration Points
+## Distribution Workflows
 
-Distribution workflows connect to:
-- Digital Service Providers (DSPs) for release delivery
-- Ticketing platforms for event management  
-- Social platforms for artist verification
-- Analytics services for performance tracking
+1. Release Distribution Pipeline:
+```
+Content Upload -> Rights Verification -> Platform Distribution -> Smart Link Generation -> Marketing Automation
+```
 
-## Key Business Rules
+2. Artist Verification Flow:
+```
+Profile Creation -> Platform Link Verification -> Rights Documentation -> Manual Review -> Status Update
+```
 
-1. Release Management
-- Enforces ISRC uniqueness across platforms
-- Validates territory rights before distribution
-- Requires complete metadata before scheduling
-- Handles pre-save to streaming service conversion
+3. Event Marketing Flow: 
+```
+Event Creation -> Presale Setup -> Geographic Targeting -> Automation Rules -> Cross-Channel Promotion
+```
 
-2. Artist Verification
-- Multi-step verification process with label confirmation
-- Platform-specific artist page validation
-- Genre classification with machine learning support
-- Cross-platform identity resolution
+## Platform Integrations
 
-3. Event Management
-- Capacity-based ticket allocation
-- Age restriction enforcement
-- Presale window timing control
-- Territory-specific pricing rules
+- Spotify: Artist profile sync, release distribution, metrics aggregation
+- Apple Music: Catalog management, smart links, territory rules
+- Soundcloud: Creator profile sync, release uploads
+- YouTube Music: Content ID matching, artist channel linking
 
-Importance Score: 95/100
+## Implementation Files
+
+Key business logic resides in:
+- src/components/content-artists.tsx
+- src/components/content-releases.tsx  
+- src/components/content-events.tsx
+- src/components/create-release-modal.tsx
+- src/models/artist.ts
+- src/models/release.ts
+- src/models/event.ts
 
 $END$
 

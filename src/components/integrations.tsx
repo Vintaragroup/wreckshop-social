@@ -19,6 +19,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { AddIntegrationModal } from "./add-integration-modal";
+import { SpotifyIntegrationCard } from "./spotify-oauth";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -270,7 +271,13 @@ export function Integrations() {
       <div>
         <h2 className="text-xl font-semibold mb-4">Social Media Platforms</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {integrations.map((integration) => (
+          {integrations.map((integration) => {
+            // Special handling for Spotify - use the OAuth component
+            if (integration.id === "spotify") {
+              return <SpotifyIntegrationCard key={integration.id} />;
+            }
+            
+            return (
             <Card key={integration.id}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -362,7 +369,8 @@ export function Integrations() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+          );
+          })}
         </div>
       </div>
 

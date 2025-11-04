@@ -79,4 +79,49 @@ export const spotifyProvider: ProviderAdapter = {
 
     return results
   },
+
+  async fetchProfileDetails(identity, options?: { accessToken?: string }) {
+    const token = (options as any)?.accessToken
+    if (!token) return {}
+
+    try {
+      // Fetch current user's profile (when using an access token from authenticated session)
+      const userProfile = await spotifyGET<{
+        id: string
+        display_name?: string
+        images?: Array<{ url?: string }> | null
+        external_urls?: { spotify?: string }
+        followers?: { total?: number }
+        following?: { total?: number }
+      }>('/v1/me', token)
+
+      const result: any = {}
+
+      if (userProfile.display_name) {
+        result.displayName = userProfile.display_name
+      }
+
+      if (userProfile.images && Array.isArray(userProfile.images) && userProfile.images.length > 0) {
+        const img = userProfile.images[0]
+        if (img?.url) result.avatarUrl = img.url
+      }
+
+      if (userProfile.followers?.total !== undefined) {
+        result.followersCount = userProfile.followers.total
+      }
+
+      if (userProfile.following?.total !== undefined) {
+        result.followingCount = userProfile.following.total
+      }
+
+      if (userProfile.external_urls?.spotify) {
+        result.profileUrl = userProfile.external_urls.spotify
+      }
+
+      return result
+    } catch (err) {
+      // If no token or insufficient scopes, return empty
+      return {}
+    }
+  },
 }

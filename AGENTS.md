@@ -13,61 +13,47 @@
 - Explain your OBSERVATIONS clearly, then provide REASONING to identify the exact issue. Add console logs when needed to gather more information.
 
 
-The system implements a music industry platform focused on artist management, audience engagement, and marketing automation.
+Music Industry Marketing & Fan Engagement Platform
 
 Core Business Domains:
 
-1. Artist & Release Management (Importance: 90/100)
-- Multi-step artist onboarding with platform verification
-- Release tracking with ISRC/UPC management
-- Music distribution platform integration
-- Revenue calculation and attribution
-- Venue and event management with ticket sales workflow
-
-2. Audience Profile System (Importance: 85/100)
-- Cross-platform identity resolution
-- Genre-based user discovery algorithms
-- Platform-specific profile enrichment
-- Music taste analysis and correlation
-- Fan engagement scoring
-
-3. Marketing Automation (Importance: 80/100)
-- Artist-specific journey orchestration
-- Multi-channel campaign management
-- Music industry SMS compliance handling
-- Fan segmentation based on music preferences
-- Automated engagement triggers
-
-Key Integration Points:
-- Streaming platform connectivity (Spotify, Apple Music)
-- Social platform identity federation
-- Music metadata enrichment
-- Platform-specific verification workflows
-- Cross-platform metrics consolidation
-
-Critical Business Components:
-
-`backend/src/services/discovery/discovery.service.ts`
-- Cross-platform music taste discovery
-- Genre-based artist correlation
-- Weighted user similarity scoring
-
-`backend/src/services/ingest/ingest.service.ts`
-- Unified profile merging
-- Identity reconciliation
-- Progressive metadata enrichment
-
-`src/components/content-releases.tsx`
+1. Artist Management & Content Distribution (90/100)
+- Rights management and licensing workflows
+- Cross-platform release distribution
+- Pre-save campaign orchestration
+- Artist verification systems
 - ISRC/UPC tracking
-- Multi-platform release synchronization
-- Streaming performance metrics
+- Platform-specific profile mapping
 
-Domain-Specific Features:
-- Music industry identifiers handling
-- Artist verification workflows
-- Platform-specific content distribution
-- Fan journey orchestration
-- Concert/event management
+2. Fan Identity & Taste Analysis (85/100)
+- Cross-platform identity resolution
+- Music taste profile generation
+- Genre affinity scoring
+- Platform-specific engagement metrics
+- VIP fan identification
+
+3. Campaign Orchestration (85/100)
+- Multi-channel campaign workflows
+- Journey automation with behavioral triggers
+- Audience segmentation by music preferences
+- Release promotion automation
+- Tour/event announcement systems
+
+4. Platform Integration Layer (80/100)
+- Provider-specific data normalization
+- Social graph relationship analysis
+- Cross-platform metrics aggregation
+- Music platform OAuth handling
+- Rate limiting and compliance
+
+Key Implementation Files:
+- `backend/src/services/discovery/discovery.service.ts`  
+- `backend/src/services/ingest/ingest.service.ts`
+- `src/components/create-release-modal.tsx`
+- `src/components/create-journey-modal.tsx`
+- `backend/src/providers/spotify.provider.ts`
+
+The system implements specialized workflows for music industry marketing automation, focusing on cross-platform artist promotion, fan relationship management, and content distribution. The core business value centers on normalizing fan identities across music platforms while orchestrating sophisticated marketing campaigns based on music preferences and engagement patterns.
 
 $END$
 

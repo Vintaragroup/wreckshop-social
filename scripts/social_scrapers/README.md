@@ -4,6 +4,7 @@ This folder contains keyless, Selenium- and HTTPX-based scrapers to discover aud
 
 Tools included:
 
+- Spotify user discovery (followers, following, artist/playlist search): `spotify_scraper.py`
 - YouTube web scraper (no API): `youtube_web_scraper.py`
 - TikTok user search scraper: `tiktok_scraper.py`
 - Instagram followers/following scraper (cookie-based): `instagram_scraper.py`
@@ -17,6 +18,14 @@ Tools included:
 - For Instagram and Facebook, capture a logged-in session cookie header string from your browser and pass it with `--cookie`.
 
 ## Quick start
+
+Spotify artist listeners:
+
+docker exec wreckshop-scripts python /app/scripts/social_scrapers/spotify_scraper.py --artist "Drake" --max-users 50 --backend http://backend:4002 --ingest
+
+Spotify seed user's followers and following:
+
+docker exec wreckshop-scripts python /app/scripts/social_scrapers/spotify_scraper.py --seed-user "myusername" --followers --following --max-users 100 --backend http://backend:4002 --ingest
 
 YouTube search (no API key):
 

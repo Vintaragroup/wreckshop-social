@@ -29,7 +29,7 @@ profiles.get('/profiles', async (req, res) => {
   const docs = await (Profile as any)
     .find(filter)
     .sort({ updatedAt: -1 })
-    .limit(50)
+    .limit(500)
     .lean()
     .exec()
 

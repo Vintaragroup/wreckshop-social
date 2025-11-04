@@ -92,9 +92,14 @@ export default function ProfileDetailPage() {
             ) : (
               <p className="text-sm text-muted-foreground">No genres</p>
             )}
-              {/* Social counts if available (Last.fm, YouTube, etc.) */}
+              {/* Social counts if available (Spotify, Last.fm, YouTube, etc.) */}
               {(() => {
                 const parts: string[] = []
+                const spotify = p.identities.find((id: any) => id.provider === 'spotify') as any
+                if (spotify) {
+                  if (typeof spotify?.followersCount === 'number') parts.push(`${spotify.followersCount.toLocaleString()} followers`)
+                  if (typeof spotify?.followingCount === 'number') parts.push(`${spotify.followingCount.toLocaleString()} following`)
+                }
                 const lf = p.identities.find((id: any) => id.provider === 'lastfm') as any
                 if (lf) {
                   if (typeof lf?.friendsCount === 'number') parts.push(`${lf.friendsCount.toLocaleString()} friends`)

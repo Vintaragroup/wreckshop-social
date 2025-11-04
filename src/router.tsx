@@ -4,6 +4,7 @@ import { Dashboard } from './components/dashboard'
 import ProfilesPage from './pages/audience/profiles'
 import ProfileDetailPage from './pages/audience/profile-detail'
 import ProfilesDiscoverPage from './pages/audience/profiles-discover'
+import SpotifyCallbackPage from './pages/auth/spotify-callback'
 import { ThemeProvider } from './components/theme-provider'
 import { AppShell } from './components/app-shell'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -138,6 +139,10 @@ export const router = createBrowserRouter([
   { path: 'compliance', element: <Compliance /> },
   { path: 'settings', element: <Settings /> },
     ],
+  },
+  {
+    path: '/auth/spotify/callback',
+    element: <SpotifyCallbackPage />,
   },
 ])
 

@@ -1,56 +1,54 @@
 ---
-description: Technical specification for campaign orchestration, journey automation, and multi-channel sequencing logic in music marketing platform
+description: Defines campaign orchestration, journey automation, and multi-channel sequencing rules for music marketing platform
 ---
 
 
 # campaign-journey-flows
 
-Campaign Journey Flow System
-Importance Score: 85/100
+Core Journey Orchestration Logic:
 
-Core Components:
+1. Multi-Channel Campaign Creation
+File: src/components/create-campaign-modal.tsx
+- Campaign type differentiation (email, SMS, journey)
+- Audience reach estimation based on segment rules
+- Quiet hours compliance checks
+- Cross-channel frequency capping
 
-1. Journey Orchestration Engine (src/components/campaigns-journeys.tsx)
-- Music industry-specific journey templates for album launches, tours, merch drops
-- Fan engagement scoring with platform-specific weighting
-- Conditional branching based on fan segment behavior
-- Multi-channel coordination across email, SMS, social
-- Revenue attribution tracking per journey touchpoint
+2. Journey Automation Engine 
+File: src/components/create-journey-modal.tsx
+- Behavioral trigger definitions for fan engagement
+- Multi-step journey branching logic
+- A/B testing splits with performance optimization
+- Goal tracking with exit conditions
+- Re-engagement rules based on inactivity
 
-2. Campaign Sequencing Logic (src/components/create-journey-modal.tsx)
-- Dynamic delay calculations based on engagement timing analysis
-- Platform-specific message throttling and quiet hours
-- A/B path optimization using fan preference data
-- Cross-channel frequency capping with platform awareness
-- Journey completion tracking with conversion metrics
+3. SMS Campaign Orchestration
+File: src/components/create-sms-campaign-modal.tsx
+- Message segmentation with character limits
+- Cost calculation per segment/recipient
+- 10DLC compliance validation
+- Delivery rate throttling rules
 
-3. Channel-Specific Campaign Rules (src/components/create-sms-campaign-modal.tsx)
-- SMS compliance handling with music industry regulations
-- Quiet hours enforcement by timezone/region
-- Artist-specific templating with dynamic content insertion
-- Automated opt-out processing with compliance logging
+4. Release Campaign Workflows
+File: src/components/create-release-modal.tsx
+- Distribution platform selection logic
+- Rights management validation
+- Pre-save campaign triggers
+- Smart link generation rules
 
-Notable Workflows:
+Key Domain Patterns:
+- Fan engagement scoring based on interaction types
+- Platform-specific quiet period enforcement
+- Genre-based targeting rules
+- Artist-specific campaign templates
+- Release date-driven journey triggers
 
-Album Release Journey
-- Pre-save campaign orchestration
-- Release day notification sequencing
-- Post-release engagement tracking
-- Streaming platform conversion monitoring
-
-Tour Promotion Journey  
-- Presale access coordination
-- Geographic targeting rules
-- Ticket sales funnel optimization
-- Post-event engagement flows
-
-Merchandise Launch Journey
-- Fan segment prioritization 
-- Stock level-aware messaging
-- Purchase history-based targeting
-- Cross-sell recommendation logic
-
-The system implements sophisticated journey orchestration specifically designed for music industry marketing needs, with deep integration of artist content, fan behavior patterns, and industry compliance requirements.
+Campaign Performance Optimization:
+- Send time optimization based on timezone/activity
+- Dynamic content selection from asset library
+- Engagement-based journey path selection
+- Cross-channel coordination rules
+- Frequency capping across channels
 
 $END$
 
