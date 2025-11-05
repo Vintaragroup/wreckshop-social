@@ -1,10 +1,15 @@
 import { Router, Request, Response } from 'express'
 import { discoverUsersByMusicAndArtist, DiscoveryFilters } from '../../services/spotify/discovery.service'
+import {
+  saveDiscoveredUsers,
+  queryDiscoveredUsers,
+  getDiscoveredUsersByGenre,
+  getDiscoveredUsersByArtistType,
+  getDiscoveryStats,
+} from '../../services/spotify/discovered-user.service'
 import { env } from '../../env'
 
 export const spotifyDiscoveryRouter = Router()
-
-const router = Router()
 
 /**
  * GET /api/spotify/discover/users
@@ -51,6 +56,15 @@ spotifyDiscoveryRouter.get('/spotify/discover/users', async (req: Request, res: 
     console.log(`[Discovery] Searching for users: genre=${genre}, artistType=${artistType}`)
 
     const result = await discoverUsersByMusicAndArtist(filters, accessToken)
+
+    // Persist discovered users to database
+    try {
+      const savedUsers = await saveDiscoveredUsers(result)
+      console.log(`[Discovery] Persisted ${savedUsers.length} users to database`)
+    } catch (dbErr: any) {
+      console.error('[Discovery] Failed to persist users:', dbErr?.message)
+      // Don't fail the request if database persistence fails
+    }
 
     return res.json({
       ok: true,
@@ -123,3 +137,99 @@ spotifyDiscoveryRouter.get('/spotify/discover/artist-types', (req: Request, res:
     data: artistTypes,
   })
 })
+
+/**
+ * GET /api/spotify/discover/saved
+ * Returns: Saved discovered users from database
+ * Query params:
+ *   - genre: filter by music genre (optional)
+ *   - artistType: filter by artist type (optional)
+ *   - limit: max results (1-200, default 50)
+ *   - offset: pagination offset (default 0)
+ *   - minScore: minimum match score (0-100, optional)
+ */
+spotifyDiscoveryRouter.get('/spotify/discover/saved', async (req: Request, res: Response) => {
+  const { genre, artistType, limit, offset, minScore } = req.query as {
+    genre?: string
+    artistType?: string
+    limit?: string
+    offset?: string
+    minScore?: string
+  }
+
+  try {
+    const result = await queryDiscoveredUsers({
+      genre,
+      artistType,
+      limit: limit ? parseInt(limit) : 50,
+      offset: offset ? parseInt(offset) : 0,
+      minMatchScore: minScore ? parseInt(minScore) : undefined,
+    })
+
+    return res.json({
+      ok: true,
+      data: result,
+    })
+  } catch (err: any) {
+    console.error('[Discovery] Error querying saved users:', err)
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || 'Failed to query saved users',
+    })
+  }
+})
+
+/**
+ * GET /api/spotify/discover/stats
+ * Returns: Statistics about discovered users
+ */
+spotifyDiscoveryRouter.get('/spotify/discover/stats', async (req: Request, res: Response) => {
+  try {
+    const stats = await getDiscoveryStats()
+    return res.json({
+      ok: true,
+      data: stats,
+    })
+  } catch (err: any) {
+    console.error('[Discovery] Error getting stats:', err)
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || 'Failed to get discovery stats',
+    })
+  }
+})
+
+/**
+ * POST /api/spotify/discover/save-results
+ * Manually save discovery results to database
+ * Body: { discoveryResult: DiscoveryResult }
+ */
+spotifyDiscoveryRouter.post('/spotify/discover/save-results', async (req: Request, res: Response) => {
+  const { discoveryResult } = req.body
+
+  if (!discoveryResult) {
+    return res.status(400).json({
+      ok: false,
+      error: 'discoveryResult is required in request body',
+    })
+  }
+
+  try {
+    const savedUsers = await saveDiscoveredUsers(discoveryResult)
+    return res.json({
+      ok: true,
+      data: {
+        saved: savedUsers.length,
+        users: savedUsers,
+      },
+      message: `Saved ${savedUsers.length} discovered users to database`,
+    })
+  } catch (err: any) {
+    console.error('[Discovery] Error saving results:', err)
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || 'Failed to save discovery results',
+    })
+  }
+})
+
