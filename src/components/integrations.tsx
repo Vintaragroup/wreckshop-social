@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { AddIntegrationModal } from "./add-integration-modal";
 import { SpotifyIntegrationCard } from "./spotify-oauth";
+import { SpotifyDiscoveryCard } from "./spotify-discovery";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -484,6 +485,12 @@ export function Integrations() {
             </Card>
           ))}
         </div>
+      </div>
+
+      {/* User Discovery */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Audience Discovery</h2>
+        <SpotifyDiscoveryCard />
       </div>
 
       {/* OAuth Connection Dialog */}

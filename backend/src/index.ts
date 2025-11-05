@@ -8,15 +8,22 @@ import { startIngestWorker } from './services/ingest/ingest.worker'
 import { health } from './routes/health'
 import { z } from 'zod'
 import { spotifyAuth } from './routes/auth/spotify.routes'
+import { spotifyDiscoveryRouter } from './routes/spotify/discovery.routes'
 import { profiles } from './routes/profiles.routes'
 
 async function main() {
   await connectMongo(env.MONGODB_URI)
-  const queue = createQueue(env.REDIS_URL)
-  // Enqueue a sample job at boot (non-blocking)
-  queue.add('boot', { startedAt: Date.now() }).catch(() => {})
-  // Start ingest worker
-  startIngestWorker()
+  
+  // Try to initialize queue, but don't block startup if Redis is unavailable
+  try {
+    const queue = createQueue(env.REDIS_URL)
+    // Enqueue a sample job at boot (non-blocking)
+    queue.add('boot', { startedAt: Date.now() }).catch(() => {})
+    // Start ingest worker
+    startIngestWorker()
+  } catch (err) {
+    console.warn('[warning] Redis connection failed, queue features disabled:', err)
+  }
 
   const app = express()
   // Enable CORS for the frontend, including credentials because the web app uses
@@ -34,6 +41,7 @@ async function main() {
   app.use('/api', health)
   app.use('/api', profiles)
   app.use('/auth', spotifyAuth)
+  app.use('/api', spotifyDiscoveryRouter)
 
   // Example zod-validated echo route
   app.post('/api/echo', (req, res) => {
