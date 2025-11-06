@@ -40,11 +40,29 @@ import {
 } from "lucide-react";
 import { cn } from "./ui/utils";
 import { format } from "date-fns";
+import { apiUrl } from "../lib/api";
+import { EmailTemplateModal } from "./email-templates";
+import { toast } from "sonner";
 
 interface CreateEmailCampaignModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: (campaign: any) => void;
+}
+
+interface EmailTemplate {
+  _id: string
+  name: string
+  subject: string
+  fromName: string
+  fromEmail: string
+  bodyHtml: string
+}
+
+interface Segment {
+  _id: string
+  name: string
+  estimatedCount: number
 }
 
 const emailTemplates = [
@@ -103,18 +121,52 @@ const STEPS = [
 
 export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: CreateEmailCampaignModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [campaignName, setCampaignName] = useState("");
   const [subject, setSubject] = useState("");
   const [preheader, setPreheader] = useState("");
   const [emailBody, setEmailBody] = useState("");
-  const [selectedAudiences, setSelectedAudiences] = useState<string[]>([]);
+  const [selectedSegment, setSelectedSegment] = useState<Segment | null>(null);
+  const [segments, setSegments] = useState<Segment[]>([]);
+  const [showSegmentDropdown, setShowSegmentDropdown] = useState(false);
+  const [loadingSegments, setLoadingSegments] = useState(false);
   const [senderName, setSenderName] = useState("Wreckshop Records");
   const [senderEmail, setSenderEmail] = useState("info@wreckshoprecords.com");
   const [scheduleDate, setScheduleDate] = useState<Date | undefined>(undefined);
   const [scheduleTime, setScheduleTime] = useState("09:00");
   const [sendNow, setSendNow] = useState(true);
   const [abTest, setAbTest] = useState(false);
+
+  const loadSegments = async () => {
+    try {
+      setLoadingSegments(true)
+      const res = await fetch(apiUrl('/segments'))
+      if (!res.ok) throw new Error('Failed to load segments')
+      const json = await res.json()
+      setSegments(json.data || [])
+    } catch (err: any) {
+      toast.error('Failed to load segments')
+    } finally {
+      setLoadingSegments(false)
+    }
+  }
+
+  const handleSelectTemplate = (template: EmailTemplate) => {
+    setSelectedTemplate(template)
+    setSubject(template.subject)
+    setSenderName(template.fromName)
+    setSenderEmail(template.fromEmail)
+    setEmailBody(template.bodyHtml)
+    setShowTemplateModal(false)
+  }
+
+  const handleOpenSegmentsDropdown = () => {
+    setShowSegmentDropdown(true)
+    if (segments.length === 0) {
+      loadSegments()
+    }
+  }
 
   const handleNext = () => {
     if (currentStep < STEPS.length) {
@@ -148,7 +200,7 @@ export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: Crea
           },
         },
         schedule: scheduleIso ? { startAt: scheduleIso } : undefined,
-        // segments to be wired later; selectedAudiences are UI-only for now
+        segments: selectedSegment ? [selectedSegment._id] : [],
       }
       const res = await fetch('/api/campaigns', {
         method: 'POST',
@@ -167,37 +219,24 @@ export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: Crea
 
   const handleClose = () => {
     setCurrentStep(1);
-    setSelectedTemplate("");
+    setSelectedTemplate(null);
     setCampaignName("");
     setSubject("");
     setPreheader("");
     setEmailBody("");
-    setSelectedAudiences([]);
+    setSelectedSegment(null);
     setSendNow(true);
     setScheduleDate(undefined);
     setAbTest(false);
     onOpenChange(false);
   };
 
-  const canProceedFromStep1 = selectedTemplate !== "";
+  const canProceedFromStep1 = selectedTemplate !== null;
   const canProceedFromStep2 = campaignName.trim() !== "" && subject.trim() !== "" && emailBody.trim() !== "";
-  const canProceedFromStep3 = selectedAudiences.length > 0;
+  const canProceedFromStep3 = selectedSegment !== null;
   const canCreate = canProceedFromStep1 && canProceedFromStep2 && canProceedFromStep3;
 
-  const toggleAudience = (audienceId: string) => {
-    setSelectedAudiences(prev => 
-      prev.includes(audienceId) 
-        ? prev.filter(id => id !== audienceId)
-        : [...prev, audienceId]
-    );
-  };
-
   const progressPercentage = (currentStep / STEPS.length) * 100;
-  
-  const totalRecipients = selectedAudiences.reduce((sum, id) => {
-    const audience = audiences.find(a => a.id === id);
-    return sum + (audience ? parseInt(audience.count.replace(/,/g, '')) : 0);
-  }, 0);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -259,49 +298,55 @@ export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: Crea
               <div>
                 <h3 className="mb-1">Choose a Template</h3>
                 <p className="text-sm text-muted-foreground">
-                  Select a pre-designed template optimized for music industry campaigns
+                  Select a template from your library or from pre-designed options
                 </p>
               </div>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4">
-                {emailTemplates.map((template) => {
-                  const Icon = template.icon;
-                  const isSelected = selectedTemplate === template.id;
-                  
-                  return (
-                    <Card 
-                      key={template.id}
-                      className={cn(
-                        "cursor-pointer transition-all hover:shadow-md",
-                        isSelected && "ring-2 ring-primary"
-                      )}
-                      onClick={() => setSelectedTemplate(template.id)}
-                    >
-                      <CardHeader className="pb-2 md:pb-3">
-                        <div className="flex items-start gap-2 md:gap-3">
-                          <div className={cn(
-                            "w-9 h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0",
-                            isSelected ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
-                          )}>
-                            <Icon className="w-4 h-4 md:w-5 md:h-5" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <CardTitle className="text-sm md:text-base leading-tight mb-1">{template.name}</CardTitle>
-                            <Badge variant="outline" className="text-xs px-1 md:px-1.5 py-0">
-                              {template.category}
-                            </Badge>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <p className="text-xs md:text-sm text-muted-foreground leading-snug">
-                          {template.description}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+
+              {selectedTemplate ? (
+                <Card className="ring-2 ring-primary">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>{selectedTemplate.name}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowTemplateModal(true)}
+                      >
+                        Change Template
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div>
+                      <span className="text-xs text-muted-foreground">Subject: </span>
+                      <span className="text-sm">{selectedTemplate.subject}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground">From: </span>
+                      <span className="text-sm">{selectedTemplate.fromName} &lt;{selectedTemplate.fromEmail}&gt;</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-center text-muted-foreground py-8">
+                    No template selected
+                  </p>
+                  <Button
+                    onClick={() => setShowTemplateModal(true)}
+                    className="w-full"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Select from Template Library
+                  </Button>
+                </div>
+              )}
+
+              <EmailTemplateModal
+                open={showTemplateModal}
+                onOpenChange={setShowTemplateModal}
+                onSelectTemplate={handleSelectTemplate}
+              />
             </div>
           )}
 
@@ -461,88 +506,87 @@ export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: Crea
             </div>
           )}
 
-          {/* Step 3: Audience */}
+          {/* Step 3: Audience/Segment Selection */}
           {currentStep === 3 && (
             <div className="space-y-4 md:space-y-6">
               <div>
-                <h3 className="mb-1">Select Audience</h3>
+                <h3 className="mb-1">Select Audience Segment</h3>
                 <p className="text-sm text-muted-foreground">
-                  Choose who will receive this email campaign
+                  Choose which audience segment to send this campaign to
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                {audiences.map((audience) => {
-                  const isSelected = selectedAudiences.includes(audience.id);
-                  
-                  return (
-                    <Card
-                      key={audience.id}
-                      className={cn(
-                        "cursor-pointer transition-all hover:shadow-md",
-                        isSelected && "ring-2 ring-primary"
-                      )}
-                      onClick={() => toggleAudience(audience.id)}
-                    >
-                      <CardContent className="p-3 md:p-4">
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleAudience(audience.id)}
-                            className="mt-1"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2 mb-1">
-                              <h4 className="text-sm font-medium">{audience.name}</h4>
-                              <Badge variant="outline" className="text-xs">
-                                {audience.count}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground leading-snug">
-                              {audience.description}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-
-              {selectedAudiences.length > 0 && (
-                <Card className="bg-primary/5 border-primary/20">
-                  <CardContent className="p-4">
+              {selectedSegment ? (
+                <Card className="ring-2 ring-primary">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>{selectedSegment.name}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleOpenSegmentsDropdown}
+                      >
+                        Change Segment
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shrink-0">
-                        <Target className="w-5 h-5 text-primary-foreground" />
-                      </div>
+                      <Target className="w-5 h-5 text-primary" />
                       <div>
                         <div className="font-medium">
-                          {selectedAudiences.length} segment{selectedAudiences.length !== 1 ? 's' : ''} selected
+                          {selectedSegment.estimatedCount.toLocaleString()} subscribers
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          Total reach: ~{totalRecipients.toLocaleString()} subscribers
-                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Estimated reach for this campaign
+                        </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-center text-muted-foreground py-8">
+                    {loadingSegments ? 'Loading segments...' : 'No segment selected'}
+                  </p>
+                  <Button
+                    onClick={handleOpenSegmentsDropdown}
+                    className="w-full"
+                    disabled={loadingSegments}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    {loadingSegments ? 'Loading...' : 'Select Segment'}
+                  </Button>
+                </div>
               )}
 
-              <Card className="bg-muted/50">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Zap className="w-4 h-4 text-warning" />
-                    <span className="text-sm font-medium">Smart Segmentation</span>
-                  </div>
-                  <p className="text-xs md:text-sm text-muted-foreground">
-                    Create custom segments based on listening behavior, location, engagement history, and more.
-                  </p>
-                  <Button variant="outline" size="sm" className="mt-3">
-                    Create Custom Segment
-                  </Button>
-                </CardContent>
-              </Card>
+              {showSegmentDropdown && !selectedSegment && (
+                <Card className="border">
+                  <CardHeader>
+                    <CardTitle className="text-base">Available Segments</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 max-h-64 overflow-y-auto">
+                    {segments.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No segments available</p>
+                    ) : (
+                      segments.map(seg => (
+                        <Button
+                          key={seg._id}
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedSegment(seg)
+                            setShowSegmentDropdown(false)
+                          }}
+                          className="w-full justify-between"
+                        >
+                          <span>{seg.name}</span>
+                          <Badge variant="secondary">{seg.estimatedCount.toLocaleString()}</Badge>
+                        </Button>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
 
@@ -652,7 +696,7 @@ export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: Crea
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Template:</span>
                         <Badge variant="outline">
-                          {emailTemplates.find(t => t.id === selectedTemplate)?.name || 'None'}
+                          {selectedTemplate?.name || 'None'}
                         </Badge>
                       </div>
                       <div className="flex justify-between text-sm">
@@ -664,12 +708,12 @@ export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: Crea
                         <span className="font-medium truncate ml-2 max-w-[200px]">{subject || 'No subject'}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Segments:</span>
-                        <span className="font-medium">{selectedAudiences.length}</span>
+                        <span className="text-muted-foreground">Segment:</span>
+                        <span className="font-medium">{selectedSegment?.name || 'None'}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Est. Reach:</span>
-                        <span className="font-medium">~{totalRecipients.toLocaleString()}</span>
+                        <span className="font-medium">~{selectedSegment?.estimatedCount.toLocaleString() || '0'}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Send:</span>
