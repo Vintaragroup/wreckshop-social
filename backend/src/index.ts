@@ -19,6 +19,7 @@ import { capture } from './routes/capture.routes'
 import { artists } from './routes/artists.routes'
 import { journeys } from './routes/journeys.routes'
 import { segments } from './routes/segments.routes'
+import { templates } from './routes/email-templates.routes'
 
 async function main() {
   await connectMongo(env.MONGODB_URI)
@@ -71,6 +72,7 @@ async function main() {
   app.use('/api', artists)
   app.use('/api', journeys)
   app.use('/api', segments)
+  app.use('/api', templates)
   app.use('/auth', spotifyAuth)
   app.use('/api', spotifyDiscoveryRouter)
   app.use('/api', adminDiscoveryRouter)

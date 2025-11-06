@@ -60,6 +60,7 @@ const navigationItems = [
       { label: "Email", href: "/campaigns/email" },
       { label: "SMS", href: "/campaigns/sms" },
       { label: "Journeys", href: "/campaigns/journeys" },
+      { label: "Templates", href: "/campaigns/templates" },
     ],
   },
   {

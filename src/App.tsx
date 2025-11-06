@@ -10,6 +10,7 @@ import { Campaigns } from "./components/campaigns";
 import { CampaignsEmail } from "./components/campaigns-email";
 import { CampaignsSMS } from "./components/campaigns-sms";
 import { CampaignsJourneys } from "./components/campaigns-journeys";
+import { EmailTemplates } from "./components/email-templates";
 import { ContentArtists } from "./components/content-artists";
 import { ContentReleases } from "./components/content-releases";
 import { ContentEvents } from "./components/content-events";
@@ -44,6 +45,9 @@ export default function App() {
       case "campaigns-journeys":
       case "journeys":
         return <CampaignsJourneys onPageChange={setCurrentPage} />;
+      case "email-templates":
+      case "templates":
+        return <EmailTemplates />;
       case "content":
       case "content-artists":
         return <ContentArtists onPageChange={setCurrentPage} />;
