@@ -1,4 +1,13 @@
-const BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || ''
+// Prefer relative /api so Vite dev server can proxy, unless an explicit public URL is provided
+const RAW_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || ''
+// If someone accidentally sets the Docker-internal hostname (backend) into the browser env,
+// fall back to relative so requests don't fail in the browser context.
+const SHOULD_FORCE_RELATIVE = typeof window !== 'undefined' && /\bbackend(?::|$)/.test(RAW_BASE_URL)
+const BASE_URL = SHOULD_FORCE_RELATIVE ? '' : RAW_BASE_URL
+
+// Export base helpers so components using plain fetch can share the same logic
+export const API_BASE_URL = BASE_URL
+export const apiUrl = (path: string) => `${API_BASE_URL}/api${path}`
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: unknown } | any
 

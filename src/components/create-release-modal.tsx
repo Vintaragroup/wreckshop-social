@@ -46,6 +46,7 @@ import { format } from "date-fns";
 interface CreateReleaseModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated?: (release: any) => void;
 }
 
 const releaseTypes = [
@@ -96,7 +97,7 @@ const STEPS = [
   { id: 4, name: 'Settings', icon: Settings },
 ];
 
-export function CreateReleaseModal({ open, onOpenChange }: CreateReleaseModalProps) {
+export function CreateReleaseModal({ open, onOpenChange, onCreated }: CreateReleaseModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [releaseTitle, setReleaseTitle] = useState("");
   const [releaseType, setReleaseType] = useState("");
@@ -131,34 +132,33 @@ export function CreateReleaseModal({ open, onOpenChange }: CreateReleaseModalPro
     }
   };
 
-  const handleCreateRelease = () => {
-    // Handle release creation logic here
-    console.log({
+  const handleCreateRelease = async () => {
+    const body: any = {
       title: releaseTitle,
-      type: releaseType,
-      artist: selectedArtist,
-      featuredArtists,
-      releaseDate,
-      label,
-      upc,
-      isrc,
-      copyright: {
-        holder: copyrightHolder,
-        year: copyrightYear,
-      },
-      genres: {
-        primary: primaryGenre,
-        secondary: secondaryGenre,
-      },
-      lyrics,
-      explicitContent,
-      platforms: platforms.filter(p => p.checked).map(p => p.name),
-      preSave: enablePreSave ? { date: preReleaseDate } : null,
-      createSmartLink,
-      autoMarketing,
-      status,
-    });
-    onOpenChange(false);
+      isrc: isrc || undefined,
+      upc: upc || undefined,
+      releaseDate: releaseDate ? new Date(releaseDate).toISOString() : undefined,
+      coverUrl: undefined,
+      links: {},
+      tags: [releaseType].filter(Boolean),
+    }
+    try {
+      const res = await fetch('/api/releases', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) {
+        const t = await res.text().catch(() => '')
+        throw new Error(t || `Failed to create release (${res.status})`)
+      }
+      const json = await res.json()
+      onCreated && onCreated(json.data)
+      onOpenChange(false)
+    } catch (e) {
+      console.error('Create release failed', e)
+      alert(`Failed to create release: ${(e as any)?.message || e}`)
+    }
   };
 
   const handleClose = () => {
@@ -676,8 +676,8 @@ export function CreateReleaseModal({ open, onOpenChange }: CreateReleaseModalPro
                               mode="single"
                               selected={preReleaseDate}
                               onSelect={setPreReleaseDate}
-                              disabled={(date) => 
-                                date < new Date() || (releaseDate && date >= releaseDate)
+                              disabled={(date) =>
+                                date < new Date() || (releaseDate ? date >= releaseDate : false)
                               }
                               initialFocus
                             />

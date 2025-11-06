@@ -21,6 +21,9 @@ import { Analytics } from './components/analytics'
 import { Compliance } from './components/compliance'
 import { Settings } from './components/settings'
 import { SegmentBuilder } from './components/segment-builder'
+import AdminDiscoveryPage from './pages/admin/discovery'
+const AudienceContactsPage = React.lazy(() => import('./pages/audience/contacts'))
+const CapturePage = React.lazy(() => import('./pages/capture'))
 
 function usePageMapping() {
   const location = useLocation()
@@ -30,6 +33,7 @@ function usePageMapping() {
   let currentPage = 'dashboard'
   if (path === '/') currentPage = 'dashboard'
   else if (path.startsWith('/audience/segments')) currentPage = 'audience-segments'
+  else if (path.startsWith('/audience/contacts')) currentPage = 'audience-contacts'
   else if (path.startsWith('/audience/profiles')) currentPage = 'audience-profiles'
   else if (path === '/audience') currentPage = 'audience'
   else if (path.startsWith('/campaigns/email')) currentPage = 'campaigns-email'
@@ -44,6 +48,7 @@ function usePageMapping() {
   else if (path.startsWith('/analytics')) currentPage = 'analytics'
   else if (path.startsWith('/compliance')) currentPage = 'compliance'
   else if (path.startsWith('/settings')) currentPage = 'settings'
+  else if (path.startsWith('/admin/discovery')) currentPage = 'admin-discovery'
 
   const onPageChange = (page: string) => {
     switch (page) {
@@ -58,6 +63,9 @@ function usePageMapping() {
         break
       case 'audience-segments':
         navigate('/audience/segments')
+        break
+      case 'audience-contacts':
+        navigate('/audience/contacts')
         break
       case 'campaigns':
         navigate('/campaigns')
@@ -95,6 +103,9 @@ function usePageMapping() {
       case 'settings':
         navigate('/settings')
         break
+      case 'admin-discovery':
+        navigate('/admin/discovery')
+        break
       default:
         navigate('/')
         break
@@ -117,11 +128,16 @@ function Layout() {
 
 export const router = createBrowserRouter([
   {
+    path: '/c/:slug',
+    element: <React.Suspense fallback={<div style={{padding:16}}>Loading…</div>}><CapturePage /></React.Suspense>,
+  },
+  {
     path: '/',
     element: <Layout />,
     children: [
   { index: true, element: <Dashboard /> },
   { path: 'audience', element: <AudienceDashboard /> },
+  { path: 'audience/contacts', element: <React.Suspense fallback={<div style={{padding:16}}>Loading…</div>}><AudienceContactsPage /></React.Suspense> },
   { path: 'audience/segments', element: <SegmentBuilder /> },
   { path: 'audience/profiles', element: <ProfilesPage /> },
   { path: 'audience/profiles/discover', element: <ProfilesDiscoverPage /> },
@@ -138,6 +154,7 @@ export const router = createBrowserRouter([
   { path: 'analytics', element: <Analytics /> },
   { path: 'compliance', element: <Compliance /> },
   { path: 'settings', element: <Settings /> },
+  { path: 'admin/discovery', element: <AdminDiscoveryPage /> },
     ],
   },
   {
@@ -147,5 +164,12 @@ export const router = createBrowserRouter([
 ])
 
 export function AppRouter() {
-  return <RouterProvider router={router} />
+  return (
+    <RouterProvider
+      router={router}
+      future={{
+        v7_startTransition: true,
+      }}
+    />
+  )
 }

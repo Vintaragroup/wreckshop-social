@@ -1,74 +1,82 @@
 ---
-description: Defines audience data models, profile structures, segmentation rules and engagement metrics for music industry fan management
+description: Defines fan profile data structures, segmentation rules, and platform-specific scoring models for music audience management
 ---
 
 
 # audience-data-models
 
-Core Data Models and Algorithms:
+## Core Data Models
 
-1. Fan Profile Structure
-- Cross-platform identity resolution across music services
-- Normalized engagement scoring (0-100)
-- Genre affinity calculation based on listening history
-- Platform-specific metrics aggregation
-- VIP status determination rules
+### Fan Profile Structure
+- Unified music identity system linking profiles across platforms
+- Genre affinity scoring (0-100) based on listening patterns
+- Artist type categorization with weighted relationships
+- Platform-specific engagement metrics aggregation
+- Behavioral trait mapping from music consumption patterns
 
-2. Segmentation Engine (src/components/segment-builder.tsx)
-- Complex nested AND/OR rule builder for music fan targeting
-- Genre-based audience filtering
-- Platform-specific engagement thresholds
-- Artist affinity scoring (0-100%)
-- Estimated reach calculations
+### Segmentation Rules
+- Multi-criteria segmentation engine supporting:
+  - Genre preferences (primary/secondary)
+  - Artist affinity scores
+  - Platform engagement levels
+  - Content interaction patterns
+- Dynamic segment size estimation
+- Real-time audience qualification rules
 
-3. Profile Discovery System (src/pages/audience/profiles-discover.tsx)
-- Cross-platform music fan discovery
-- Genre-based candidate matching
-- Social graph relationship analysis
-- Platform-specific handle parsing
-- Bulk ingestion workflow
+### Engagement Scoring
+- Platform-specific scoring algorithms:
+  - Spotify: Playlist creation/curation weight
+  - YouTube: Artist channel engagement metrics
+  - Instagram: Music-related content interaction
+- Cross-platform activity correlation
+- Temporal engagement patterns
+- Genre-based engagement multipliers
 
-4. Taste Analysis Pipeline (backend/src/services/ingest/ingest.service.ts)
-- Multi-platform profile aggregation
-- Interest tag derivation from listening history
+### Discovery Models
+Located in: `backend/src/services/discovery/discovery.service.ts`
+- Music taste matching algorithm (0-100 score)
+- Genre correlation mapping
+- Artist relationship graphs
+- Playlist contribution analysis
+- Fan similarity clustering
+
+### Profile Enrichment
+Located in: `backend/src/services/spotify/enrichment.service.ts`
+- Automated taste profile generation
+- Cross-platform identity resolution
+- Genre normalization rules
 - Artist affinity calculations
-- Social graph metrics normalization
-- Identity merging/deduplication
+- Platform-specific metadata aggregation
 
-5. Platform Integration Models (backend/src/providers/*.provider.ts)
-- Provider-specific identity resolution
-- Platform-specific taste extraction
-- Normalized music taste modeling
-- Social relationship mapping
-- Rate limiting handling
+## Key Integration Points
 
-Key Metrics:
-- Artist Affinity Score (0-100)
-- Platform Engagement Level
-- Genre Match Percentage
-- Social Graph Depth
-- VIP Status Threshold
+### Platform Data Models
+- Spotify: User preferences, playlist behavior
+- YouTube: Music video engagement
+- Instagram: Artist content interaction
+- LastFM: Historical listening patterns
+- TikTok: Music-related content creation
 
-File Paths:
-```
-src/
-  components/
-    segment-builder.tsx
-    audience-profiles.tsx
-    audience-dashboard.tsx
-  pages/audience/
-    profiles.tsx
-    profile-detail.tsx
-    profiles-discover.tsx
-backend/
-  src/
-    models/profile.ts
-    services/ingest/
-      ingest.service.ts
-    providers/
-      spotify.provider.ts
-      lastfm.provider.ts
-```
+### Audience Capture
+Located in: `backend/src/models/audience-contact.ts`
+- Multi-channel consent tracking
+- Platform-specific permissions
+- Communication preference management
+- Source attribution modeling
+
+## Scoring Algorithms
+
+### Match Score Calculation
+- Genre weight: 40%
+- Artist overlap: 35%
+- Platform engagement: 15%
+- Content interaction: 10%
+
+### Segment Quality Scoring
+- Engagement depth
+- Cross-platform presence
+- Genre consistency
+- Artist affinity strength
 
 $END$
 

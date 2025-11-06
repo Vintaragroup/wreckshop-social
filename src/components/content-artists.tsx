@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   Search,
@@ -35,100 +35,23 @@ import {
 } from "./ui/select";
 import { CreateArtistModal } from "./create-artist-modal";
 
-const artists = [
-  {
-    id: 1,
-    name: "Travis Scott",
-    bio: "Multi-platinum rapper, singer, and producer from Houston, Texas",
-    avatar: "/api/placeholder/80/80",
-    handles: {
-      instagram: "@travisscott",
-      youtube: "TravisScottXX",
-      tiktok: "@travisscott",
-      twitter: "@trvisXX",
-    },
-    platforms: ["instagram", "youtube", "tiktok", "spotify", "apple"],
-    followers: {
-      total: 58300000,
-      instagram: 45200000,
-      youtube: 13100000,
-    },
-    genres: ["Hip Hop", "Trap", "Psychedelic Rap"],
-    status: "active",
-    lastRelease: "UTOPIA",
-    nextEvent: "Astroworld Festival",
-    upcomingDate: "Dec 15, 2024",
-  },
-  {
-    id: 2,
-    name: "Don Toliver",
-    bio: "Houston-based rapper and singer signed to Cactus Jack Records",
-    avatar: "/api/placeholder/80/80",
-    handles: {
-      instagram: "@dontoliver",
-      youtube: "DonToliverOfficial",
-      tiktok: "@dontoliver",
-      twitter: "@dontoliver",
-    },
-    platforms: ["instagram", "youtube", "tiktok", "spotify"],
-    followers: {
-      total: 12400000,
-      instagram: 8200000,
-      youtube: 4200000,
-    },
-    genres: ["Hip Hop", "R&B", "Melodic Rap"],
-    status: "active",
-    lastRelease: "Love Sick",
-    nextEvent: "Houston Show",
-    upcomingDate: "Jan 8, 2025",
-  },
-  {
-    id: 3,
-    name: "Maxo Kream",
-    bio: "Houston rapper known for his storytelling and street narratives",
-    avatar: "/api/placeholder/80/80",
-    handles: {
-      instagram: "@maxokream",
-      youtube: "MaxoKreamOfficial",
-      tiktok: "@maxokream",
-      twitter: "@MaxoKream",
-    },
-    platforms: ["instagram", "youtube", "spotify"],
-    followers: {
-      total: 890000,
-      instagram: 650000,
-      youtube: 240000,
-    },
-    genres: ["Hip Hop", "Gangsta Rap"],
-    status: "active",
-    lastRelease: "Weight of the World",
-    nextEvent: null,
-    upcomingDate: null,
-  },
-  {
-    id: 4,
-    name: "Sheck Wes",
-    bio: "Rapper and basketball player, known for 'Mo Bamba'",
-    avatar: "/api/placeholder/80/80",
-    handles: {
-      instagram: "@sheckwes",
-      youtube: "SheckWesOfficial",
-      tiktok: "@sheckwes",
-      twitter: "@sheckwes",
-    },
-    platforms: ["instagram", "youtube", "tiktok"],
-    followers: {
-      total: 3200000,
-      instagram: 2800000,
-      youtube: 400000,
-    },
-    genres: ["Hip Hop", "Trap"],
-    status: "inactive",
-    lastRelease: "Mo Bamba",
-    nextEvent: null,
-    upcomingDate: null,
-  },
-];
+type Artist = {
+  _id: string;
+  name: string;
+  stageName?: string;
+  bio?: string;
+  avatarUrl?: string;
+  genres: string[];
+  status: 'active' | 'inactive';
+  handles?: Record<string, string | undefined>;
+  followers?: { total?: number } & Record<string, number | undefined>;
+  lastRelease?: string;
+  nextEvent?: string;
+  upcomingDate?: string;
+};
+
+// Live artists list is fetched from the API
+const artists: Artist[] = []
 
 const platformIcons = {
   instagram: Instagram,
@@ -148,24 +71,58 @@ export function ContentArtists({ onPageChange }: ContentArtistsProps = {}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [showAddArtistModal, setShowAddArtistModal] = useState(false);
+  const [artistRows, setArtistRows] = useState<Artist[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isError, setIsError] = useState<string | null>(null)
 
-  const filteredArtists = artists.filter(artist => {
-    const matchesSearch = artist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         artist.bio.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === "all" || artist.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  const fetchArtists = async (q?: string, status?: string) => {
+    setIsLoading(true)
+    setIsError(null)
+    try {
+      const params = new URLSearchParams()
+      if (q && q.trim()) params.set('q', q.trim())
+      if (status && status !== 'all') params.set('status', status)
+      const qs = params.toString() ? `?${params.toString()}` : ''
+      const res = await fetch(`/api/artists${qs}`, { credentials: 'include' })
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+      const json = await res.json()
+      setArtistRows(json?.data ?? [])
+    } catch (e: any) {
+      console.error('Failed to load artists', e)
+      setIsError(e?.message || 'Failed to load')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchArtists()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const filteredArtists = useMemo(() => {
+    const q = searchQuery.toLowerCase()
+    return artistRows.filter((artist) => {
+      const matchesSearch =
+        artist.name.toLowerCase().includes(q) ||
+        (artist.stageName?.toLowerCase().includes(q) ?? false) ||
+        (artist.bio?.toLowerCase().includes(q) ?? false) ||
+        (artist.genres || []).some((g) => g.toLowerCase().includes(q))
+      const matchesStatus = filterStatus === 'all' || artist.status === (filterStatus as any)
+      return matchesSearch && matchesStatus
+    })
+  }, [artistRows, searchQuery, filterStatus])
 
   const handleCreateSmartLink = (artistId: number, type: "event" | "release") => {
     console.log(`Creating smart link for artist ${artistId}, type: ${type}`);
   };
 
-  const ArtistCard = ({ artist }: { artist: typeof artists[0] }) => (
+  const ArtistCard = ({ artist }: { artist: Artist }) => (
     <Card className="hover:shadow-lg transition-shadow">
       <CardContent className="p-6">
         <div className="flex items-start space-x-4">
           <Avatar className="w-16 h-16">
-            <AvatarImage src={artist.avatar} alt={artist.name} />
+            <AvatarImage src={artist.avatarUrl} alt={artist.name} />
             <AvatarFallback>{artist.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
           </Avatar>
           
@@ -173,9 +130,11 @@ export function ContentArtists({ onPageChange }: ContentArtistsProps = {}) {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-semibold text-lg">{artist.name}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {artist.bio}
-                </p>
+                {artist.bio && (
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {artist.bio}
+                  </p>
+                )}
               </div>
               <Badge variant={artist.status === "active" ? "default" : "secondary"}>
                 {artist.status}
@@ -191,7 +150,7 @@ export function ContentArtists({ onPageChange }: ContentArtistsProps = {}) {
             </div>
 
             <div className="flex items-center space-x-2">
-              {Object.entries(artist.handles).slice(0, 4).map(([platform, handle]) => {
+              {Object.entries(artist.handles || {}).slice(0, 4).map(([platform, handle]) => {
                 const Icon = platformIcons[platform as keyof typeof platformIcons];
                 return (
                   <div
@@ -199,7 +158,7 @@ export function ContentArtists({ onPageChange }: ContentArtistsProps = {}) {
                     className="flex items-center space-x-1 text-xs text-muted-foreground"
                   >
                     <Icon className="w-3 h-3" />
-                    <span>{handle}</span>
+                    <span>{handle as string}</span>
                   </div>
                 );
               })}
@@ -208,13 +167,11 @@ export function ContentArtists({ onPageChange }: ContentArtistsProps = {}) {
             <div className="flex items-center justify-between text-sm">
               <div>
                 <span className="text-muted-foreground">Followers: </span>
-                <span className="font-medium">
-                  {(artist.followers.total / 1000000).toFixed(1)}M
-                </span>
+                <span className="font-medium">{artist.followers?.total ? artist.followers.total.toLocaleString() : '—'}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Last Release: </span>
-                <span className="font-medium">{artist.lastRelease}</span>
+                <span className="font-medium">{artist.lastRelease || '—'}</span>
               </div>
             </div>
 
@@ -223,16 +180,18 @@ export function ContentArtists({ onPageChange }: ContentArtistsProps = {}) {
                 <Calendar className="w-4 h-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Next Event: </span>
                 <span className="font-medium">{artist.nextEvent}</span>
-                <span className="text-muted-foreground">({artist.upcomingDate})</span>
+                {artist.upcomingDate && (
+                  <span className="text-muted-foreground">({artist.upcomingDate})</span>
+                )}
               </div>
             )}
 
             <div className="flex items-center space-x-2 pt-2">
-              <Button size="sm" onClick={() => handleCreateSmartLink(artist.id, "event")}>
+              <Button size="sm" onClick={() => handleCreateSmartLink((artist as any)._id, "event")}>
                 <Calendar className="w-4 h-4 mr-1" />
                 Announce Event
               </Button>
-              <Button size="sm" variant="outline" onClick={() => handleCreateSmartLink(artist.id, "release")}>
+              <Button size="sm" variant="outline" onClick={() => handleCreateSmartLink((artist as any)._id, "release")}>
                 <Music className="w-4 h-4 mr-1" />
                 Promote Release
               </Button>
@@ -278,6 +237,7 @@ export function ContentArtists({ onPageChange }: ContentArtistsProps = {}) {
       <CreateArtistModal 
         open={showAddArtistModal} 
         onOpenChange={setShowAddArtistModal}
+        onCreated={() => fetchArtists(searchQuery, filterStatus)}
       />
       
       <div className="space-y-6">
@@ -310,25 +270,25 @@ export function ContentArtists({ onPageChange }: ContentArtistsProps = {}) {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-primary">4</div>
+            <div className="text-2xl font-bold text-primary">{artistRows.length}</div>
             <div className="text-sm text-muted-foreground">Total Artists</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-accent">74.9M</div>
+            <div className="text-2xl font-bold text-accent">{artistRows.reduce((sum, a) => sum + (a.followers?.total || 0), 0).toLocaleString()}</div>
             <div className="text-sm text-muted-foreground">Total Followers</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-warning">3</div>
+            <div className="text-2xl font-bold text-warning">{artistRows.filter(a => a.status === 'active').length}</div>
             <div className="text-sm text-muted-foreground">Active Artists</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold">2</div>
+            <div className="text-2xl font-bold">{artistRows.filter(a => !!a.nextEvent).length}</div>
             <div className="text-sm text-muted-foreground">Upcoming Events</div>
           </CardContent>
         </Card>
@@ -350,7 +310,7 @@ export function ContentArtists({ onPageChange }: ContentArtistsProps = {}) {
               </div>
             </div>
             <div className="flex gap-2">
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <Select value={filterStatus} onValueChange={(v) => { setFilterStatus(v); fetchArtists(searchQuery, v); }}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -360,9 +320,9 @@ export function ContentArtists({ onPageChange }: ContentArtistsProps = {}) {
                   <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => fetchArtists(searchQuery, filterStatus)}>
                 <Filter className="w-4 h-4 mr-2" />
-                More Filters
+                Apply Filters
               </Button>
             </div>
           </div>
@@ -371,18 +331,21 @@ export function ContentArtists({ onPageChange }: ContentArtistsProps = {}) {
 
       {/* Artists Grid */}
       <div className="space-y-4">
-        {filteredArtists.map((artist) => (
-          <ArtistCard key={artist.id} artist={artist} />
+        {isLoading && (
+          <Card><CardContent className="p-6 text-sm text-muted-foreground">Loading artists…</CardContent></Card>
+        )}
+        {isError && (
+          <Card><CardContent className="p-6 text-sm text-destructive">Failed to load artists: {isError}</CardContent></Card>
+        )}
+        {!isLoading && !isError && filteredArtists.map((artist) => (
+          <ArtistCard key={(artist as any)._id} artist={artist} />
         ))}
-        
-        {filteredArtists.length === 0 && (
+        {!isLoading && !isError && filteredArtists.length === 0 && (
           <Card>
             <CardContent className="p-12 text-center">
               <Music className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">No artists found</h3>
-              <p className="text-muted-foreground mb-4">
-                Try adjusting your search criteria or add a new artist
-              </p>
+              <h3 className="text-lg font-medium mb-2">Add your first artist</h3>
+              <p className="text-muted-foreground mb-4">Create an artist profile to build your roster and start promoting releases and events.</p>
               <Button onClick={() => setShowAddArtistModal(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add First Artist

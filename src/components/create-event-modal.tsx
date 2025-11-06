@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,7 @@ import { format } from "date-fns";
 interface CreateEventModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated?: (event: any) => void;
 }
 
 const eventTypes = [
@@ -58,12 +59,7 @@ const eventTypes = [
   { id: "virtual", name: "Virtual Event", description: "Online streaming event" },
 ];
 
-const artistOptions = [
-  "Travis Scott",
-  "Don Toliver",
-  "Maxo Kream",
-  "Sheck Wes",
-];
+// Load artist options dynamically from API when modal is opened
 
 const venueOptions = [
   { name: "NRG Stadium", city: "Houston, TX", capacity: 50000 },
@@ -81,7 +77,7 @@ const STEPS = [
   { id: 4, name: 'Settings', icon: Settings },
 ];
 
-export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) {
+export function CreateEventModal({ open, onOpenChange, onCreated }: CreateEventModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [eventTitle, setEventTitle] = useState("");
   const [eventType, setEventType] = useState("");
@@ -105,6 +101,22 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
   const [status, setStatus] = useState<"announced" | "on_sale" | "live">("announced");
   const [createSmartLink, setCreateSmartLink] = useState(true);
   const [enableMarketing, setEnableMarketing] = useState(true);
+  const [artistOptions, setArtistOptions] = useState<string[]>([])
+
+  useEffect(() => {
+    async function loadArtists() {
+      try {
+        const res = await fetch('/api/artists?status=active', { credentials: 'include' })
+        if (!res.ok) return
+        const json = await res.json()
+        const names: string[] = (json?.data || []).map((a: any) => a.name).filter(Boolean)
+        setArtistOptions(names)
+      } catch (_) {
+        // ignore; keep empty options
+      }
+    }
+    if (open) loadArtists()
+  }, [open])
 
   const handleNext = () => {
     if (currentStep < STEPS.length) {
@@ -118,38 +130,60 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     }
   };
 
-  const handleCreateEvent = () => {
-    // Handle event creation logic here
-    const venue = venueOptions.find(v => v.name === selectedVenue);
-    console.log({
+  const handleCreateEvent = async () => {
+    const venuePreset = venueOptions.find(v => v.name === selectedVenue);
+    const venue = selectedVenue === "Custom Venue" ? {
+      name: customVenueName || undefined,
+      city: customVenueCity || undefined,
+      address: venueAddress || undefined,
+    } : (venuePreset ? {
+      name: venuePreset.name,
+      city: venuePreset.city,
+      address: venueAddress || undefined,
+    } : undefined)
+
+    const payload: any = {
       title: eventTitle,
-      type: eventType,
-      artist: selectedArtist,
-      description,
-      date: eventDate,
-      time: eventTime,
-      doorsOpen,
-      venue: selectedVenue === "Custom Venue" ? {
-        name: customVenueName,
-        city: customVenueCity,
-        address: venueAddress,
-      } : venue,
-      capacity: capacity || venue?.capacity,
+      type: eventType || undefined,
+      artistName: selectedArtist || undefined,
+      description: description || undefined,
+      date: eventDate ? new Date(eventDate).toISOString() : undefined,
+      time: eventTime || undefined,
+      doorsOpen: doorsOpen || undefined,
+      venue,
+      capacity: capacity ? parseInt(capacity) : (venuePreset?.capacity || undefined),
       tickets: {
-        price: ticketPrice,
-        vipPrice,
-        url: ticketUrl,
+        price: ticketPrice ? parseFloat(ticketPrice) : undefined,
+        vipPrice: vipPrice ? parseFloat(vipPrice) : undefined,
+        url: ticketUrl || undefined,
       },
       presale: enablePresale ? {
-        date: presaleDate,
-        code: presaleCode,
-      } : null,
+        date: presaleDate ? new Date(presaleDate).toISOString() : undefined,
+        code: presaleCode || undefined,
+        enabled: true,
+      } : undefined,
       ageRestriction,
       status,
-      createSmartLink,
-      enableMarketing,
-    });
-    onOpenChange(false);
+    }
+
+    try {
+      const res = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({} as any))
+        throw new Error(err?.error ? JSON.stringify(err.error) : `${res.status} ${res.statusText}`)
+      }
+      const json = await res.json()
+      onCreated?.(json?.data)
+      onOpenChange(false)
+    } catch (e) {
+      console.error('Failed to create event', e)
+      onOpenChange(false)
+    }
   };
 
   const handleClose = () => {
@@ -298,9 +332,9 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                         <SelectValue placeholder="Select artist..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {artistOptions.map((artist) => (
-                          <SelectItem key={artist} value={artist}>
-                            {artist}
+                        {artistOptions.map((artistName: string) => (
+                          <SelectItem key={artistName} value={artistName}>
+                            {artistName}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -676,7 +710,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                                 mode="single"
                                 selected={presaleDate}
                                 onSelect={setPresaleDate}
-                                disabled={(date) => date < new Date() || (eventDate && date > eventDate)}
+                                disabled={(date) => date < new Date() || (!!eventDate && date > eventDate)}
                                 initialFocus
                               />
                             </PopoverContent>

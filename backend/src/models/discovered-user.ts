@@ -19,6 +19,7 @@ const DiscoveredUserSchema = new Schema(
     // Social graph
     followersCount: { type: Number, default: 0 },
     followingCount: { type: Number, default: 0 },
+  publicPlaylistsCount: { type: Number, default: 0 },
 
     // Discovery metadata
     discoveryMethod: {
@@ -68,6 +69,22 @@ const DiscoveredUserSchema = new Schema(
       engagementRate: Number,
       lastUpdated: Date,
     },
+
+    // Provenance/sources for how we discovered this user
+    sources: [
+      new Schema(
+        {
+          type: { type: String, enum: ['playlist'], default: 'playlist' },
+          playlistId: String,
+          playlistName: String,
+          ownerId: String,
+          trackId: String,
+          addedById: String,
+          discoveredAt: { type: Date, default: Date.now },
+        },
+        { _id: false }
+      ),
+    ],
 
     // Status and sync
     isSynced: { type: Boolean, default: false },

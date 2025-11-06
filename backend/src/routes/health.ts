@@ -11,3 +11,4 @@ health.get('/health', (_req, res) => {
 health.get('/ping', (_req, res) => {
   res.json({ ok: true })
 })
+ 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Toaster } from "sonner";
 import { ThemeProvider } from "./components/theme-provider";
 import { AppShell } from "./components/app-shell";
 import { Dashboard } from "./components/dashboard";
@@ -47,11 +48,11 @@ export default function App() {
       case "content-artists":
         return <ContentArtists onPageChange={setCurrentPage} />;
       case "content-releases":
-        return <ContentReleases onPageChange={setCurrentPage} />;
+        return <ContentReleases />;
       case "content-events":
-        return <ContentEvents onPageChange={setCurrentPage} />;
+        return <ContentEvents />;
       case "content-assets":
-        return <ContentAssets onPageChange={setCurrentPage} />;
+        return <ContentAssets />;
       case "integrations":
         return <Integrations />;
       case "analytics":
@@ -72,6 +73,7 @@ export default function App() {
       <AppShell currentPage={currentPage} onPageChange={setCurrentPage}>
         {renderCurrentPage()}
       </AppShell>
+      <Toaster position="top-center" richColors closeButton />
     </ThemeProvider>
   );
 }

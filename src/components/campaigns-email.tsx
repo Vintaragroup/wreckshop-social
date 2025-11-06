@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   Search,
@@ -44,72 +44,14 @@ import {
 } from "./ui/select";
 import { Progress } from "./ui/progress";
 
-const emailCampaigns = [
-  {
-    id: 1,
-    name: "UTOPIA Album Launch",
-    status: "active",
-    audience: "Travis Scott Fans",
-    subject: "🔥 UTOPIA is HERE! Stream Now",
-    sent: 45230,
-    delivered: 44891,
-    opened: 18356,
-    clicked: 3671,
-    revenue: "$12,450",
-    scheduledFor: "Dec 10, 2024 9:00 AM",
-    createdAt: "Dec 8, 2024",
-    template: "Album Launch",
-    sender: "Wreckshop Records",
-  },
-  {
-    id: 2,
-    name: "Houston Concert Presale",
-    status: "scheduled",
-    audience: "Houston Locals",
-    subject: "🎫 Exclusive Presale: Travis Scott Houston",
-    sent: 0,
-    delivered: 0,
-    opened: 0,
-    clicked: 0,
-    revenue: "$0",
-    scheduledFor: "Dec 12, 2024 10:00 AM",
-    createdAt: "Dec 9, 2024",
-    template: "Event Presale",
-    sender: "Wreckshop Records",
-  },
-  {
-    id: 3,
-    name: "Merch Drop Announcement",
-    status: "completed",
-    audience: "High Engagement",
-    subject: "✨ New Merch Drop - Limited Edition",
-    sent: 23450,
-    delivered: 23234,
-    opened: 12456,
-    clicked: 2891,
-    revenue: "$8,920",
-    scheduledFor: "Dec 5, 2024 2:00 PM",
-    createdAt: "Dec 4, 2024",
-    template: "Merchandise",
-    sender: "Wreckshop Records",
-  },
-  {
-    id: 4,
-    name: "Weekly Newsletter #47",
-    status: "draft",
-    audience: "All Subscribers",
-    subject: "This Week in Hip Hop",
-    sent: 0,
-    delivered: 0,
-    opened: 0,
-    clicked: 0,
-    revenue: "$0",
-    scheduledFor: null,
-    createdAt: "Dec 10, 2024",
-    template: "Newsletter",
-    sender: "Wreckshop Records",
-  },
-];
+type CampaignDoc = {
+  _id: string
+  name: string
+  status?: 'draft'|'scheduled'|'running'|'paused'|'completed'|'failed'
+  channels?: { email?: { subject?: string, bodyHtml?: string, fromName?: string, fromEmail?: string } }
+  schedule?: { startAt?: string | Date, endAt?: string | Date, timezone?: string }
+  createdAt?: string
+}
 
 interface CampaignsEmailProps {
   onPageChange?: (page: string) => void;
@@ -120,12 +62,34 @@ export function CampaignsEmail({ onPageChange }: CampaignsEmailProps = {}) {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterTemplate, setFilterTemplate] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [items, setItems] = useState<CampaignDoc[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
+  async function loadCampaigns() {
+    setLoading(true); setError(null)
+    try {
+      const res = await fetch('/api/campaigns')
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.error || `Failed to load campaigns (${res.status})`)
+      setItems(json.data || [])
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { loadCampaigns() }, [])
+
+  const emailCampaigns = useMemo(() => items.filter(c => c.channels?.email), [items])
   const filteredCampaigns = emailCampaigns.filter(campaign => {
+    const subject = campaign.channels?.email?.subject || ''
     const matchesSearch = campaign.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         campaign.subject.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === "all" || campaign.status === filterStatus;
-    const matchesTemplate = filterTemplate === "all" || campaign.template.toLowerCase() === filterTemplate;
+                         subject.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || (campaign.status || 'draft') === filterStatus;
+    // Template filtering not available yet; pass-through
+    const matchesTemplate = filterTemplate === "all";
     return matchesSearch && matchesStatus && matchesTemplate;
   });
 
@@ -288,9 +252,9 @@ export function CampaignsEmail({ onPageChange }: CampaignsEmailProps = {}) {
       {/* Campaigns Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
+            <CardTitle className="flex items-center">
             <Mail className="w-5 h-5 mr-2" />
-            Email Campaigns ({filteredCampaigns.length})
+            Email Campaigns {loading ? '(loading...)' : `(${filteredCampaigns.length})`} {error ? <span className="text-destructive text-xs ml-2">{error}</span> : null}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -310,81 +274,29 @@ export function CampaignsEmail({ onPageChange }: CampaignsEmailProps = {}) {
             </TableHeader>
             <TableBody>
               {filteredCampaigns.map((campaign) => (
-                <TableRow key={campaign.id}>
+                <TableRow key={campaign._id}>
                   <TableCell>
                     <div>
                       <div className="font-medium">{campaign.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {campaign.subject}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        Template: {campaign.template}
-                      </div>
+                      {campaign.channels?.email?.subject && (
+                        <div className="text-sm text-muted-foreground">
+                          {campaign.channels.email.subject}
+                        </div>
+                      )}
                     </div>
                   </TableCell>
-                  <TableCell>{getStatusBadge(campaign.status)}</TableCell>
+                  <TableCell>{getStatusBadge(campaign.status || 'draft')}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       <Users className="w-4 h-4 text-muted-foreground" />
-                      <Badge variant="outline">{campaign.audience}</Badge>
+                      <Badge variant="outline">Segments TBD</Badge>
                     </div>
                   </TableCell>
+                  <TableCell><span className="text-muted-foreground">-</span></TableCell>
+                  <TableCell><span className="text-muted-foreground">-</span></TableCell>
+                  <TableCell className="font-medium"><span className="text-muted-foreground">-</span></TableCell>
                   <TableCell>
-                    {campaign.sent > 0 ? (
-                      <div>
-                        <div className="font-medium">
-                          {campaign.sent.toLocaleString()}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {campaign.delivered.toLocaleString()} delivered
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {campaign.delivered > 0 ? (
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium">
-                          {calculateOpenRate(campaign.opened, campaign.delivered)}%
-                        </span>
-                        <Progress 
-                          value={parseFloat(calculateOpenRate(campaign.opened, campaign.delivered))} 
-                          className="w-16 h-1"
-                        />
-                      </div>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {campaign.delivered > 0 ? (
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium">
-                          {calculateClickRate(campaign.clicked, campaign.delivered)}%
-                        </span>
-                        <Progress 
-                          value={parseFloat(calculateClickRate(campaign.clicked, campaign.delivered))} 
-                          className="w-16 h-1"
-                        />
-                      </div>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {campaign.revenue}
-                  </TableCell>
-                  <TableCell>
-                    {campaign.scheduledFor ? (
-                      <div className="text-sm">
-                        <div>{campaign.scheduledFor.split(' ')[0]}</div>
-                        <div className="text-muted-foreground">
-                          {campaign.scheduledFor.split(' ').slice(1).join(' ')}
-                        </div>
-                      </div>
-                    ) : (
+                    {campaign.schedule?.startAt ? new Date(campaign.schedule.startAt).toLocaleString() : (
                       <span className="text-muted-foreground">Not scheduled</span>
                     )}
                   </TableCell>
@@ -408,18 +320,18 @@ export function CampaignsEmail({ onPageChange }: CampaignsEmailProps = {}) {
                           <Copy className="w-4 h-4 mr-2" />
                           Duplicate
                         </DropdownMenuItem>
-                        {campaign.status === "active" ? (
+                        {(campaign.status || 'draft') === "running" ? (
                           <DropdownMenuItem>
                             <Pause className="w-4 h-4 mr-2" />
                             Pause
                           </DropdownMenuItem>
-                        ) : campaign.status === "paused" ? (
+                        ) : (campaign.status || 'draft') === "paused" ? (
                           <DropdownMenuItem>
                             <Play className="w-4 h-4 mr-2" />
                             Resume
                           </DropdownMenuItem>
                         ) : null}
-                        {campaign.status === "draft" && (
+                        {(campaign.status || 'draft') === "draft" && (
                           <DropdownMenuItem>
                             <Send className="w-4 h-4 mr-2" />
                             Send Now
@@ -439,6 +351,7 @@ export function CampaignsEmail({ onPageChange }: CampaignsEmailProps = {}) {
       <CreateEmailCampaignModal
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
+        onCreated={() => { setShowCreateModal(false); loadCampaigns() }}
       />
     </div>
   );

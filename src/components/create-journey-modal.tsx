@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +50,7 @@ import { cn } from "./ui/utils";
 interface CreateJourneyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated?: (journey: any) => void;
 }
 
 const journeyTemplates = [
@@ -134,12 +135,14 @@ const STEPS = [
   { id: 4, name: 'Settings', icon: Settings },
 ];
 
-export function CreateJourneyModal({ open, onOpenChange }: CreateJourneyModalProps) {
+export function CreateJourneyModal({ open, onOpenChange, onCreated }: CreateJourneyModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [journeyName, setJourneyName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedTrigger, setSelectedTrigger] = useState("");
+  const [segments, setSegments] = useState<Array<{ _id: string; name: string; estimatedCount?: number }>>([]);
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string>("");
   const [isActive, setIsActive] = useState(true);
   const [exitOnGoal, setExitOnGoal] = useState(true);
   const [goalMetric, setGoalMetric] = useState("conversion");
@@ -163,6 +166,23 @@ export function CreateJourneyModal({ open, onOpenChange }: CreateJourneyModalPro
     }
   };
 
+  // Load segments when modal opens
+  useEffect(() => {
+    let aborted = false;
+    async function load() {
+      try {
+        const res = await fetch('/api/segments', { credentials: 'include' });
+        if (!res.ok) throw new Error(`Failed to load segments (${res.status})`);
+        const json = await res.json();
+        if (!aborted) setSegments(json.data || []);
+      } catch (err) {
+        // non-blocking; leave empty on error
+      }
+    }
+    if (open) load();
+    return () => { aborted = true };
+  }, [open]);
+
   const handleNext = () => {
     if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
@@ -175,26 +195,31 @@ export function CreateJourneyModal({ open, onOpenChange }: CreateJourneyModalPro
     }
   };
 
-  const handleCreateJourney = () => {
-    // Handle journey creation logic here
-    console.log({
-      template: selectedTemplate,
+  const handleCreateJourney = async () => {
+    const payload = {
       name: journeyName,
       description,
-      trigger: selectedTrigger,
-      settings: {
-        isActive,
-        exitOnGoal,
-        goalMetric,
-        timeZone,
-        sendTimeOpt,
-        quietHours,
-        priority,
-        maxContactsPerHour,
-        advancedAnalytics,
-      },
-    });
-    onOpenChange(false);
+      status: isActive ? 'active' : 'draft',
+      triggerKey: selectedTrigger,
+      segmentId: selectedSegmentId || undefined,
+      steps: [],
+      tags: [],
+    };
+    try {
+      const res = await fetch('/api/journeys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(`Failed to create journey (${res.status})`);
+      const json = await res.json();
+      onCreated?.(json.data);
+      onOpenChange(false);
+    } catch (err) {
+      console.error('Create journey failed', err);
+      // Optional: surface error UI later
+    }
   };
 
   const handleClose = () => {
@@ -385,6 +410,25 @@ export function CreateJourneyModal({ open, onOpenChange }: CreateJourneyModalPro
                         <SelectItem value="revenue">Revenue</SelectItem>
                         <SelectItem value="retention">Retention</SelectItem>
                         <SelectItem value="custom">Custom Goal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Target Segment</Label>
+                    <Select value={selectedSegmentId} onValueChange={setSelectedSegmentId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a segment (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {segments.map((s) => (
+                          <SelectItem key={s._id} value={s._id}>
+                            {s.name}{s.estimatedCount !== undefined ? ` (${s.estimatedCount.toLocaleString()})` : ''}
+                          </SelectItem>
+                        ))}
+                        {segments.length === 0 && (
+                          <div className="px-2 py-1 text-xs text-muted-foreground">No segments yet</div>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>

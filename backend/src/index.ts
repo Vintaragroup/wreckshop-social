@@ -10,6 +10,15 @@ import { z } from 'zod'
 import { spotifyAuth } from './routes/auth/spotify.routes'
 import { spotifyDiscoveryRouter } from './routes/spotify/discovery.routes'
 import { profiles } from './routes/profiles.routes'
+import { adminDiscoveryRouter } from './routes/admin/discovery.routes'
+import { releases } from './routes/releases.routes'
+import { events } from './routes/events.routes'
+import { campaigns } from './routes/campaigns.routes'
+import { audience } from './routes/audience.routes'
+import { capture } from './routes/capture.routes'
+import { artists } from './routes/artists.routes'
+import { journeys } from './routes/journeys.routes'
+import { segments } from './routes/segments.routes'
 
 async function main() {
   await connectMongo(env.MONGODB_URI)
@@ -29,7 +38,21 @@ async function main() {
   // Enable CORS for the frontend, including credentials because the web app uses
   // fetch with `credentials: 'include'`. Without this, the browser will block
   // cross-origin responses even if no cookies are used.
-  app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }))
+  app.use(
+    cors({
+      origin: env.CORS_ORIGIN,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'x-admin-key'],
+    })
+  )
+  // Handle preflight quickly
+  app.options('*', cors({
+    origin: env.CORS_ORIGIN,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'x-admin-key'],
+  }))
   app.use(morgan('dev'))
   app.use(express.json())
 
@@ -40,8 +63,17 @@ async function main() {
 
   app.use('/api', health)
   app.use('/api', profiles)
+  app.use('/api', releases)
+  app.use('/api', events)
+  app.use('/api', campaigns)
+  app.use('/api', audience)
+  app.use('/api', capture)
+  app.use('/api', artists)
+  app.use('/api', journeys)
+  app.use('/api', segments)
   app.use('/auth', spotifyAuth)
   app.use('/api', spotifyDiscoveryRouter)
+  app.use('/api', adminDiscoveryRouter)
 
   // Example zod-validated echo route
   app.post('/api/echo', (req, res) => {
@@ -71,3 +103,5 @@ main().catch((err) => {
   console.error('[fatal]', err)
   process.exit(1)
 })
+
+// touch 1762396737

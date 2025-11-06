@@ -1,18 +1,25 @@
 name: wreckshop_social_cloud
 
 services:
+  frontend:
+    environment:
+      # Ensure the browser calls the backend directly, avoiding Vite proxy flakiness
+      VITE_API_BASE_URL: http://localhost:${BACKEND_PORT:-4002}
   backend:
     environment:
       PORT: ${BACKEND_PORT:-4002}
       # Use Atlas (set ATLAS_MONGODB_URI in .env.docker)
       MONGODB_URI: ${ATLAS_MONGODB_URI}
       REDIS_URL: redis://redis:6379
-      SPOTIFY_CLIENT_ID: dev_id
-      SPOTIFY_CLIENT_SECRET: dev_secret
+      # Inherit Spotify credentials from environment or .env.docker; fallback to base compose defaults if unset
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
       SPOTIFY_REDIRECT_URI: http://localhost:${BACKEND_PORT:-4002}/auth/spotify/callback
       CORS_ORIGIN: http://localhost:${FRONTEND_PORT:-5176}
       YOUTUBE_API_KEY: ${YOUTUBE_API_KEY}
       SOUNDCLOUD_CLIENT_ID: ${SOUNDCLOUD_CLIENT_ID}
       LASTFM_API_KEY: ${LASTFM_API_KEY}
+      # Required for /api/admin/* endpoints
+      ADMIN_API_KEY: ${ADMIN_API_KEY}
     depends_on:
       - redis

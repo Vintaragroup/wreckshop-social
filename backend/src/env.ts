@@ -9,6 +9,7 @@ const EnvSchema = z.object({
   SPOTIFY_CLIENT_SECRET: z.string().min(1),
   SPOTIFY_REDIRECT_URI: z.string().url(),
   CORS_ORIGIN: z.string().url(),
+  ADMIN_API_KEY: z.string().default(''),
 })
 
 export const env = EnvSchema.parse({
@@ -19,4 +20,5 @@ export const env = EnvSchema.parse({
   SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
   SPOTIFY_REDIRECT_URI: process.env.SPOTIFY_REDIRECT_URI,
   CORS_ORIGIN: process.env.CORS_ORIGIN,
+  ADMIN_API_KEY: process.env.ADMIN_API_KEY,
 })

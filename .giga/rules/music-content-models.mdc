@@ -1,73 +1,65 @@
 ---
-description: Documents data models and workflows for music industry content like artists, releases, and events
+description: Defines data models and workflows for music industry content like artists, releases, and events
 ---
 
 
 # music-content-models
 
-## Core Data Models
+Core Model Implementation Score: 90/100
 
-### Artist Model
-Key fields:
-- UUID and platform-specific IDs (Spotify, Apple Music, etc.)
-- Verification status and platform links 
-- Genre classifications and tags
-- Engagement metrics per platform
-- Connected release and event catalogs
-- Rights management status
+## Artist Model
+Path: `backend/src/models/profile.ts`
+- Industry-standard artist profile schema with platform integration metadata
+- Multi-platform identity mapping (Spotify, Apple Music, YouTube, etc.)
+- Genre taxonomy with hierarchical categorization
+- Automated profile enrichment pipeline with data validation
+- Platform-specific URL and identifier validation
+- Automated marketing workflow triggers
 
-### Release Model 
-Key fields:
-- ISRC/UPC identifiers
-- Distribution platform mappings
-- Rights holders and splits
-- Pre-save campaign configuration
-- Cross-platform smart links
-- Geographic availability rules
+## Release Model
+Path: `backend/src/models/release.ts`
+- Complete music release workflow with distribution scheduling
+- ISRC/UPC code generation and validation
+- Smart link generation for cross-platform promotion
+- Pre-save campaign automation
+- Release type classification system
+- Platform-specific metadata requirements
+- Automated marketing campaign generation
 
-### Event Model
-Fields:
-- Venue capacity and tier configuration
-- Presale code generation rules
-- Geographic targeting parameters
-- Marketing automation triggers
-- Revenue projections per tier
-- Ticket allocation rules
+## Event Model
+Path: `src/components/create-event-modal.tsx`
+- Venue capacity and ticket allocation management
+- Revenue projection system
+- Presale access control logic
+- Cross-platform ticket sales integration
+- Automated promotional campaign creation
+- Event type classification system
 
-## Distribution Workflows
+## Distribution Workflow
+Path: `backend/src/services/ingest/ingest.service.ts`
+- Multi-platform release distribution pipeline
+- Content validation against platform requirements
+- Automated metadata synchronization
+- Release schedule optimization
+- Platform-specific asset preparation
+- Distribution status tracking
 
-1. Release Distribution Pipeline:
-```
-Content Upload -> Rights Verification -> Platform Distribution -> Smart Link Generation -> Marketing Automation
-```
+## Platform Integration
+Path: `backend/src/providers/*`
+- Platform-specific content validation rules
+- Metadata mapping between platforms
+- Asset format conversion pipeline
+- Release timing coordination
+- Analytics aggregation
+- Performance tracking
 
-2. Artist Verification Flow:
-```
-Profile Creation -> Platform Link Verification -> Rights Documentation -> Manual Review -> Status Update
-```
-
-3. Event Marketing Flow: 
-```
-Event Creation -> Presale Setup -> Geographic Targeting -> Automation Rules -> Cross-Channel Promotion
-```
-
-## Platform Integrations
-
-- Spotify: Artist profile sync, release distribution, metrics aggregation
-- Apple Music: Catalog management, smart links, territory rules
-- Soundcloud: Creator profile sync, release uploads
-- YouTube Music: Content ID matching, artist channel linking
-
-## Implementation Files
-
-Key business logic resides in:
-- src/components/content-artists.tsx
-- src/components/content-releases.tsx  
-- src/components/content-events.tsx
-- src/components/create-release-modal.tsx
-- src/models/artist.ts
-- src/models/release.ts
-- src/models/event.ts
+## Marketing Automation
+Path: `backend/src/services/marketing/*`
+- Release-triggered campaign generation
+- Cross-platform promotion scheduling
+- Smart link analytics tracking
+- Audience segmentation by release engagement
+- Pre-save to streaming conversion tracking
 
 $END$
 

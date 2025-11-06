@@ -1,57 +1,53 @@
 ---
-description: Technical implementation details for audience segmentation rules, conditions and size estimation algorithms
+description: Handles the core business logic for audience segmentation and targeting in music marketing platform
 ---
 
 
 # segment-builder-algorithms
 
-Core segmentation engine implemented in `src/components/segment-builder.tsx`:
+## Core Segmentation Engine
+- Hierarchical rule system for music audience targeting
+- Real-time audience size calculation based on rule combinations
+- Genre-affinity scoring (0-100) for artist/fan matching
+- Multi-criteria filtering with AND/OR logic for audience selection
+- Dynamic operator selection based on music-specific fields:
+  - follows_artist
+  - genre_affinity
+  - platform_engagement
+  - playlist_contribution
 
-Rule Hierarchy:
-- Top level groups (AND/OR)
-- Nested condition groups with unlimited depth
-- Individual rules with operators and values
-- Support for complex nested boolean logic
+File: `src/components/segment-builder.tsx`
 
-Condition Types:
-- Profile attributes (demographics, preferences)
-- Platform metrics (followers, engagement)
-- Music taste (genres, artists)
-- Behavioral events (streams, saves)
+## Discovery Pipeline
+- Cross-platform artist/fan matching algorithms
+- Genre-based correlation scoring
+- Playlist contribution analysis
+- Automated taste profile generation
+- Fan engagement level categorization
 
-Size Estimation Algorithm:
-1. Traverses rule tree depth-first
-2. Calculates subset sizes for leaf conditions
-3. Aggregates up through AND/OR nodes
-4. Applies platform-specific weighting factors
-5. Returns estimated matching audience size
+File: `backend/src/services/spotify/discovery.service.ts`
 
-Business-Critical Components:
+## Profile Enrichment 
+- Multi-platform identity federation
+- Music taste profile aggregation
+- Artist affinity calculations
+- Genre categorization system
+- Platform-specific engagement scoring
 
-1. Rule Builder (`segment-builder.tsx`)
-- Music industry specific field definitions
-- Genre/artist condition handling
-- Cross-platform metric normalization
-- Importance Score: 90/100
+Files:
+- `backend/src/services/spotify/enrichment.service.ts`
+- `backend/src/services/spotify/discovered-user.service.ts`
 
-2. Audience Calculation (`create-campaign-modal.tsx`)
-- Real-time size estimation
-- Platform reach adjustments
-- Delivery probability scoring
-- Importance Score: 85/100
+## Segment Size Estimation
+- Real-time audience calculations
+- Cross-platform reach estimates
+- Genre-weighted scoring
+- Engagement level thresholds
+- Platform-specific multipliers
 
-Key Integration Points:
-- Platform APIs for real-time metrics
-- Profile database for condition evaluation
-- Campaign modules for audience targeting
-- Analytics for conversion tracking
+File: `src/components/discovered-user-segment-builder.tsx`
 
-The segmentation system is specialized for music industry use cases with specific handling of:
-- Cross-platform social metrics
-- Artist affinity scoring
-- Genre classification
-- Engagement thresholds
-- Platform-specific delivery rules
+Importance Score: 90
 
 $END$
 

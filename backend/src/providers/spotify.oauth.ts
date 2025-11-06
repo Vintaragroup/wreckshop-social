@@ -35,3 +35,28 @@ export async function exchangeCodeForToken(code: string, redirectUri?: string): 
   const json = (await res.json()) as SpotifyTokenResponse
   return json
 }
+
+/**
+ * Obtain an application access token using the Client Credentials flow.
+ * Suitable for non-user endpoints (search, playlists, artists, etc.).
+ */
+export async function getClientCredentialsToken(): Promise<SpotifyTokenResponse> {
+  const body = new URLSearchParams()
+  body.set('grant_type', 'client_credentials')
+
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: basicAuthHeader(env.SPOTIFY_CLIENT_ID, env.SPOTIFY_CLIENT_SECRET),
+    },
+    body,
+  })
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`spotify client credentials failed: ${res.status} ${res.statusText} ${text}`)
+  }
+
+  return (await res.json()) as SpotifyTokenResponse
+}

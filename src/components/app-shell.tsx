@@ -46,6 +46,7 @@ const navigationItems = [
     id: "audience",
     href: "/audience",
     children: [
+      { label: "Contacts", href: "/audience/contacts" },
       { label: "Profiles", href: "/audience/profiles" },
       { label: "Segments", href: "/audience/segments" },
     ],
@@ -77,6 +78,15 @@ const navigationItems = [
   { icon: BarChart3, label: "Analytics", id: "analytics", href: "/analytics" },
   { icon: Shield, label: "Compliance", id: "compliance", href: "/compliance" },
   { icon: Settings, label: "Settings", id: "settings", href: "/settings" },
+  {
+    icon: Shield,
+    label: "Admin",
+    id: "admin",
+    href: "/admin",
+    children: [
+      { label: "Discovery", href: "/admin/discovery" },
+    ],
+  },
 ];
 
 export function AppShell({ children, currentPage = "dashboard", onPageChange }: AppShellProps) {
@@ -97,28 +107,32 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
     return navigationItems.map((item) => (
       <div key={item.id}>
         {item.children ? (
-          <Button
-            variant={
-              currentPage === item.id || currentPage.startsWith(item.id + "-")
-                ? "default"
-                : "ghost"
-            }
-            className={`w-full justify-start ${
+          <div
+            className={`w-full flex items-center ${
               isInSheet
                 ? "h-12 px-4 text-base"
                 : sidebarCollapsed
                   ? "px-2 h-10"
                   : "px-3 h-10"
             }`}
-            onClick={() => {
-              // Toggle expansion for grouped menus
-              toggleMenuExpansion(item.id);
-            }}
           >
-            <item.icon className={`w-5 h-5 ${isInSheet ? "mr-3" : ""}`} />
-            {(!sidebarCollapsed || isInSheet) && (
-              <span className={isInSheet ? "" : "ml-3"}>{item.label}</span>
-            )}
+            <Button
+              variant={
+                currentPage === item.id || currentPage.startsWith(item.id + "-")
+                  ? "default"
+                  : "ghost"
+              }
+              className="w-full justify-start h-full"
+              onClick={() => {
+                // Toggle expansion for grouped menus
+                toggleMenuExpansion(item.id);
+              }}
+            >
+              <item.icon className={`w-5 h-5 ${isInSheet ? "mr-3" : ""}`} />
+              {(!sidebarCollapsed || isInSheet) && (
+                <span className={isInSheet ? "" : "ml-3"}>{item.label}</span>
+              )}
+            </Button>
             {(!sidebarCollapsed || isInSheet) && (
               <button
                 type="button"
@@ -137,7 +151,7 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
                 )}
               </button>
             )}
-          </Button>
+          </div>
         ) : (
           <Button
             asChild

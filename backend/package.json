@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "TSX_CLEAR_SCREEN=false nodemon",
+    "dev:discovery": "tsx src/services/spotify/discovery.runner.ts",
     "start": "node dist/index.js",
+    "start:discovery": "node dist/services/spotify/discovery.runner.js",
     "build": "tsc -p tsconfig.json",
     "lint": "eslint src --ext .ts"
   },
@@ -17,17 +19,20 @@
     "ioredis": "^5.4.1",
     "mongoose": "^8.7.0",
     "morgan": "^1.10.0",
+    "qrcode": "^1.5.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/morgan": "^1.9.9",
+    "@types/qrcode": "^1.5.6",
     "@typescript-eslint/eslint-plugin": "^8.10.0",
     "@typescript-eslint/parser": "^8.10.0",
     "eslint": "^9.13.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.3.3",
+    "nodemon": "^3.1.7",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3"
   }

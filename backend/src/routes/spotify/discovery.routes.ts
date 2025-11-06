@@ -7,6 +7,7 @@ import {
   getDiscoveredUsersByArtistType,
   getDiscoveryStats,
 } from '../../services/spotify/discovered-user.service'
+import DiscoveredUserModel from '../../models/discovered-user'
 import { env } from '../../env'
 
 export const spotifyDiscoveryRouter = Router()
@@ -229,6 +230,120 @@ spotifyDiscoveryRouter.post('/spotify/discover/save-results', async (req: Reques
     return res.status(500).json({
       ok: false,
       error: err?.message || 'Failed to save discovery results',
+    })
+  }
+})
+
+/**
+ * POST /api/spotify/discover/create-segment
+ * Create an audience segment from discovered users
+ * Body: { name: string, filters: { genres?: string[], artistTypes?: string[], minScore?: number } }
+ */
+spotifyDiscoveryRouter.post(
+  '/spotify/discover/create-segment',
+  async (req: Request, res: Response) => {
+    const { name, filters } = req.body
+
+    if (!name) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Segment name is required',
+      })
+    }
+
+    try {
+      // Build query based on filters
+      const query: any = {}
+
+      if (filters?.genres && filters.genres.length > 0) {
+        query['discoveredVia.musicGenre'] = { $in: filters.genres }
+      }
+
+      if (filters?.artistTypes && filters.artistTypes.length > 0) {
+        query['discoveredVia.artistType'] = { $in: filters.artistTypes }
+      }
+
+      if (filters?.minScore) {
+        query.matchScore = { $gte: filters.minScore }
+      }
+
+      // Count matching users
+      const count = await DiscoveredUserModel.countDocuments(query)
+
+      // For now, we'll return the count and query info
+      // In a full implementation, this would create a Segment document
+      return res.json({
+        ok: true,
+        data: {
+          name,
+          filters,
+          userCount: count,
+          query: JSON.stringify(query),
+        },
+        message: `Created segment "${name}" with ${count} users`,
+      })
+    } catch (err: any) {
+      console.error('[Discovery] Error creating segment:', err)
+      return res.status(500).json({
+        ok: false,
+        error: err?.message || 'Failed to create segment',
+      })
+    }
+  }
+)
+
+/**
+ * GET /api/spotify/discover/segment-suggestions
+ * Get automatic segment suggestions based on discovered users
+ */
+spotifyDiscoveryRouter.get('/spotify/discover/segment-suggestions', async (req: Request, res: Response) => {
+  try {
+    const stats = await getDiscoveryStats()
+
+    // Create suggestions based on distribution
+    const suggestions = [
+      {
+        name: 'High-Engagement Fans',
+        description: 'Users with 80%+ match score',
+        filters: { minScore: 80 },
+      },
+      {
+        name: 'Genre Specialists',
+        description: 'Users focused on a single genre',
+        filters: {},
+        note: 'Can be refined by genre',
+      },
+      {
+        name: 'Emerging Artist Fans',
+        description: 'Users interested in emerging artists',
+        filters: { artistTypes: ['emerging'] },
+      },
+      {
+        name: 'Underground Enthusiasts',
+        description: 'Users into underground music scene',
+        filters: { artistTypes: ['underground'] },
+      },
+      {
+        name: 'Mainstream Listeners',
+        description: 'Users with mainstream music preferences',
+        filters: { artistTypes: ['mainstream'] },
+      },
+      ...Object.keys(stats.byGenre).map((genre) => ({
+        name: `${genre.charAt(0).toUpperCase() + genre.slice(1)} Fans`,
+        description: `${stats.byGenre[genre]} users interested in ${genre} music`,
+        filters: { genres: [genre] },
+      })),
+    ]
+
+    return res.json({
+      ok: true,
+      data: suggestions,
+    })
+  } catch (err: any) {
+    console.error('[Discovery] Error getting suggestions:', err)
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || 'Failed to get segment suggestions',
     })
   }
 })

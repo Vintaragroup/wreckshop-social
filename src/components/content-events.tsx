@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   Search,
@@ -11,6 +11,7 @@ import {
   Trash2,
   Eye,
   Link,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -31,58 +32,60 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { CreateEventModal } from "./create-event-modal";
-
-const events = [
-  {
-    id: 1,
-    title: "Astroworld Festival 2024",
-    artist: "Travis Scott",
-    date: "2024-12-15",
-    time: "20:00",
-    venue: "NRG Stadium",
-    city: "Houston, TX",
-    capacity: 50000,
-    ticketsSold: 48500,
-    ticketUrl: "https://tickets.astroworldfest.com",
-    status: "live",
-    smartLinks: 2,
-    revenue: "$2.4M",
-  },
-  {
-    id: 2,
-    title: "Love Sick Tour - Houston",
-    artist: "Don Toliver",
-    date: "2025-01-08",
-    time: "21:00",
-    venue: "Toyota Center",
-    city: "Houston, TX",
-    capacity: 18000,
-    ticketsSold: 15200,
-    ticketUrl: "https://tickets.toyotacenter.com",
-    status: "on_sale",
-    smartLinks: 1,
-    revenue: "$890K",
-  },
-  {
-    id: 3,
-    title: "Houston Underground Showcase",
-    artist: "Maxo Kream",
-    date: "2025-02-14",
-    time: "19:30",
-    venue: "House of Blues",
-    city: "Houston, TX",
-    capacity: 1200,
-    ticketsSold: 0,
-    ticketUrl: null,
-    status: "announced",
-    smartLinks: 0,
-    revenue: "$0",
-  },
-];
+// Events will be wired to a live API in a follow-up; start with empty state
+type EventRow = {
+  id: string | number
+  title: string
+  artist?: string
+  date?: string
+  time?: string
+  venue?: string
+  city?: string
+  capacity?: number
+  ticketsSold?: number
+  ticketUrl?: string | null
+  status?: string
+  revenue?: string
+}
 
 export function ContentEvents() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
+  const [events, setEvents] = useState<EventRow[]>([]);
+  const [isLoading, setIsLoading] = useState(false)
+  const [isError, setIsError] = useState<string | null>(null)
+
+  const fetchEvents = async (q?: string) => {
+    setIsLoading(true)
+    setIsError(null)
+    try {
+      const params = new URLSearchParams()
+      if (q && q.trim()) params.set('q', q.trim())
+      const qs = params.toString() ? `?${params.toString()}` : ''
+      const res = await fetch(`/api/events${qs}`, { credentials: 'include' })
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+      const json = await res.json()
+      setEvents(json?.data ?? [])
+    } catch (e: any) {
+      console.error('Failed to load events', e)
+      setIsError(e?.message || 'Failed to load')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchEvents()
+  }, [])
+
+  const visibleEvents = useMemo(() => {
+    const q = searchQuery.toLowerCase()
+    return events.filter(ev =>
+      (ev.title?.toLowerCase().includes(q) ?? false) ||
+      (ev.artist?.toLowerCase().includes(q) ?? false) ||
+      (ev.venue?.toLowerCase?.() ? (ev.venue as any).toLowerCase() : false)
+    )
+  }, [events, searchQuery])
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -106,6 +109,7 @@ export function ContentEvents() {
       <CreateEventModal 
         open={showCreateEventModal} 
         onOpenChange={setShowCreateEventModal}
+        onCreated={() => fetchEvents(searchQuery)}
       />
       
       <div className="space-y-6">
@@ -117,10 +121,16 @@ export function ContentEvents() {
             Manage concerts, festivals, and promotional events
           </p>
         </div>
-        <Button onClick={() => setShowCreateEventModal(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Event
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => fetchEvents(searchQuery)}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+          <Button onClick={() => setShowCreateEventModal(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Create Event
+          </Button>
+        </div>
       </div>
 
       {/* Stats Overview */}
@@ -169,7 +179,7 @@ export function ContentEvents() {
       {/* Events Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Events ({events.length})</CardTitle>
+          <CardTitle>Events ({visibleEvents.length}{isLoading ? ' • loading…' : ''}) {isError && (<span className="text-xs text-destructive ml-2">{isError}</span>)}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -185,7 +195,7 @@ export function ContentEvents() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {events.map((event) => (
+              {visibleEvents.map((event) => (
                 <TableRow key={event.id}>
                   <TableCell>
                     <div>
@@ -200,10 +210,10 @@ export function ContentEvents() {
                       <Calendar className="w-4 h-4 text-muted-foreground" />
                       <div>
                         <div className="font-medium">
-                          {new Date(event.date).toLocaleDateString()}
+                          {event.date ? new Date(event.date).toLocaleDateString() : '-'}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {event.time}
+                          {event.time || '-'}
                         </div>
                       </div>
                     </div>
@@ -212,9 +222,9 @@ export function ContentEvents() {
                     <div className="flex items-center space-x-2">
                       <MapPin className="w-4 h-4 text-muted-foreground" />
                       <div>
-                        <div className="font-medium">{event.venue}</div>
+                        <div className="font-medium">{event.venue || '-'}</div>
                         <div className="text-sm text-muted-foreground">
-                          {event.city}
+                          {event.city || '-'}
                         </div>
                       </div>
                     </div>
@@ -224,16 +234,16 @@ export function ContentEvents() {
                       <Users className="w-4 h-4 text-muted-foreground" />
                       <div>
                         <div className="font-medium">
-                          {event.ticketsSold.toLocaleString()} / {event.capacity.toLocaleString()}
+                          {(event.ticketsSold ?? 0).toLocaleString()} / {(event.capacity ?? 0).toLocaleString()}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {Math.round((event.ticketsSold / event.capacity) * 100)}% sold
+                          {event.capacity ? Math.round(((event.ticketsSold ?? 0) / event.capacity) * 100) : 0}% sold
                         </div>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{getStatusBadge(event.status)}</TableCell>
-                  <TableCell className="font-medium">{event.revenue}</TableCell>
+                  <TableCell>{getStatusBadge(event.status || 'announced')}</TableCell>
+                  <TableCell className="font-medium">{event.revenue || '—'}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -260,15 +270,41 @@ export function ContentEvents() {
                             View Tickets
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={async () => {
+                            if (!confirm('Delete this event?')) return
+                            try {
+                              const res = await fetch(`/api/events/${event.id}` , { method: 'DELETE', credentials: 'include' })
+                              if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+                              fetchEvents(searchQuery)
+                            } catch (e) {
+                              console.error('Failed to delete event', e)
+                            }
+                          }}
+                        >
                           <Trash2 className="w-4 h-4 mr-2" />
-                          Cancel Event
+                          Delete Event
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
+              {!isLoading && !isError && visibleEvents.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7}>
+                    <div className="p-8 text-center">
+                      <h3 className="text-lg font-medium mb-2">Create your first event</h3>
+                      <p className="text-muted-foreground mb-4">Schedule concerts, festivals, and promotional events. Track capacity and ticket sales.</p>
+                      <Button onClick={() => setShowCreateEventModal(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Event
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

@@ -23,6 +23,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Alert, AlertDescription } from "./ui/alert"
 import { Skeleton } from "./ui/skeleton"
+import { apiUrl } from "../lib/api"
 
 interface DiscoveredUserProfile {
   spotifyId: string
@@ -82,48 +83,74 @@ export function DiscoveredUsersSection() {
   const [stats, setStats] = useState<DiscoveredUsersStats | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
   const [selectedGenre, setSelectedGenre] = useState<string | undefined>()
   const [selectedArtistType, setSelectedArtistType] = useState<string | undefined>()
   const [searchTerm, setSearchTerm] = useState("")
   const [limit, setLimit] = useState(50)
 
-  // Load stats on mount
+  // Load stats and users on mount
   useEffect(() => {
+    console.log("[DiscoveredUsers] Component mounted, loading stats and users")
     fetchStats()
+    fetchUsers()
   }, [])
 
-  // Fetch stats
+  // Refetch users when filters change
+  useEffect(() => {
+    if (stats) {
+      const timer = setTimeout(() => {
+        fetchUsers()
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [selectedGenre, selectedArtistType, limit])
+
   const fetchStats = async () => {
     try {
-      const response = await fetch("/api/spotify/discover/stats")
-      const json = (await response.json()) as { ok: boolean; data?: DiscoveredUsersStats }
+      const res = await fetch(apiUrl("/spotify/discover/stats"))
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(`HTTP ${res.status}: ${text || 'Failed to fetch stats'}`)
+      }
+      const json = (await res.json()) as { ok: boolean; data?: DiscoveredUsersStats; error?: string }
       if (json.ok && json.data) {
         setStats(json.data)
+      } else {
+        console.error("[DiscoveredUsers] Stats error:", json.error || "Unknown error")
       }
     } catch (err) {
       console.error("Failed to fetch stats:", err)
     }
   }
 
-  // Fetch discovered users
   const fetchUsers = async () => {
     setLoading(true)
     setError(null)
 
     try {
       const params = new URLSearchParams()
-      if (selectedGenre) params.append("genre", selectedGenre)
-      if (selectedArtistType) params.append("artistType", selectedArtistType)
+      // Only include filters when they are set to a concrete value (not placeholder "all")
+      if (selectedGenre && selectedGenre !== "all") params.append("genre", selectedGenre)
+      if (selectedArtistType && selectedArtistType !== "all")
+        params.append("artistType", selectedArtistType)
       params.append("limit", limit.toString())
 
-      const response = await fetch(`/api/spotify/discover/saved?${params.toString()}`)
+  const url = apiUrl(`/spotify/discover/saved?${params.toString()}`)
+      console.log("[DiscoveredUsers] Fetching from:", url)
+      
+      const response = await fetch(url)
+      if (!response.ok) {
+        const text = await response.text()
+        throw new Error(`HTTP ${response.status}: ${text || 'Failed to fetch users'}`)
+      }
       const json = (await response.json()) as QueryResult
+
+      console.log("[DiscoveredUsers] Response:", json)
 
       if (json.ok && json.data) {
         let filtered = json.data.users
+        console.log("[DiscoveredUsers] Found", filtered.length, "users from API")
 
-        // Client-side filtering by search term
         if (searchTerm) {
           const term = searchTerm.toLowerCase()
           filtered = filtered.filter(
@@ -132,14 +159,20 @@ export function DiscoveredUsersSection() {
               u.matchDetails.artistMatches.some((a) => a.toLowerCase().includes(term)) ||
               u.matchDetails.genreMatch.some((g) => g.toLowerCase().includes(term))
           )
+          console.log("[DiscoveredUsers] After search filter:", filtered.length, "users")
         }
 
+        console.log("[DiscoveredUsers] Setting users state to", filtered.length, "users")
         setUsers(filtered)
       } else {
-        setError(json.error || "Failed to fetch users")
+        const errorMsg = json.error || "Failed to fetch users"
+        console.error("[DiscoveredUsers] Error:", errorMsg)
+        setError(errorMsg)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch users")
+      const errorMsg = err instanceof Error ? err.message : "Failed to fetch users"
+      console.error("[DiscoveredUsers] Fetch error:", errorMsg)
+      setError(errorMsg)
     } finally {
       setLoading(false)
     }
@@ -241,7 +274,7 @@ export function DiscoveredUsersSection() {
                   <SelectValue placeholder="All genres" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All genres</SelectItem>
+                  <SelectItem value="all">All genres</SelectItem>
                   {GENRES.map((g) => (
                     <SelectItem key={g} value={g}>
                       {g.charAt(0).toUpperCase() + g.slice(1)}
@@ -259,7 +292,7 @@ export function DiscoveredUsersSection() {
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All types</SelectItem>
+                  <SelectItem value="all">All types</SelectItem>
                   {ARTIST_TYPES.map((t) => (
                     <SelectItem key={t} value={t}>
                       {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -331,9 +364,44 @@ export function DiscoveredUsersSection() {
         ) : users.length === 0 ? (
           <div className="col-span-full">
             <Card>
-              <CardContent className="p-8 text-center">
-                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-                <p className="text-muted-foreground">No users found. Try adjusting your filters.</p>
+              <CardContent className="p-8 text-center space-y-4">
+                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-2 opacity-50" />
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">
+                    {(selectedGenre && selectedGenre !== 'all') || (selectedArtistType && selectedArtistType !== 'all') ? (
+                      <>
+                        No users found for
+                        {selectedGenre && selectedGenre !== 'all' && (
+                          <> genre <span className="font-medium capitalize">{selectedGenre}</span></>
+                        )}
+                        {selectedArtistType && selectedArtistType !== 'all' && (
+                          <>
+                            {selectedGenre && selectedGenre !== 'all' ? ' and' : ''} artist type{' '}
+                            <span className="font-medium capitalize">{selectedArtistType}</span>
+                          </>
+                        )}.
+                      </>
+                    ) : (
+                      <>No users found. Try adjusting your filters.</>
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground">You can also run a new Spotify discovery to add more users.</p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedGenre(undefined)
+                      setSelectedArtistType(undefined)
+                      fetchUsers()
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                  <Button asChild>
+                    <a href="/integrations">Discover with Spotify</a>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>

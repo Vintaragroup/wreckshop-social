@@ -125,6 +125,12 @@ export async function discoverUsersByMusicAndArtist(
       .sort((a, b) => b.matchScore - a.matchScore)
       .slice(0, maxResults)
 
+    // Step 4: Enrich basic user profiles with follower counts & images where possible
+    // Note: Spotify API exposes followers for arbitrary users via GET /v1/users/{id}
+    // but not following counts (following is only available for the current user context).
+    // We'll populate followersCount and avatarUrl when available.
+    await enrichUsersWithProfile(discoveredUsers, accessToken)
+
     const duration = Date.now() - startTime
 
     logger.info(
@@ -361,4 +367,37 @@ function extractArtistsFromTracks(tracks: any[]): string[] {
   }
 
   return Array.from(artists).slice(0, 5)
+}
+
+/**
+ * Fetch Spotify user profile details for arbitrary user IDs.
+ * Populates followersCount and avatarUrl when available.
+ */
+async function enrichUsersWithProfile(users: DiscoveredUser[], accessToken: string) {
+  const targets = users.filter((u) => !u.spotifyId.startsWith('artist_'))
+  for (const u of targets) {
+    try {
+      const res = await fetch(`https://api.spotify.com/v1/users/${encodeURIComponent(u.spotifyId)}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } })
+      if (!res.ok) continue
+      const info = (await res.json()) as any
+      if (typeof info?.followers?.total === 'number') {
+        u.followersCount = info.followers.total
+      }
+      const imageUrl = Array.isArray(info?.images) && info.images.length > 0 ? info.images[0]?.url : undefined
+      if (imageUrl && !u.avatarUrl) {
+        u.avatarUrl = imageUrl
+      }
+      const displayName = info?.display_name
+      if (displayName && !u.displayName) {
+        u.displayName = displayName
+      }
+      const profileUrl = info?.external_urls?.spotify
+      if (profileUrl && !u.profileUrl) {
+        u.profileUrl = profileUrl
+      }
+    } catch {
+      // Ignore individual enrichment failures
+    }
+  }
 }

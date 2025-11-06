@@ -16,6 +16,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import { Badge } from '../../components/ui/badge'
 import { ProviderBadge } from '../../components/ProviderBadge'
 import { IngestStatusBadge } from '../../components/IngestStatusBadge'
+// Discovery & segmentation
+import { DiscoveredUsersSection } from '../../components/discovered-users'
+import { DiscoveredUserSegmentBuilder } from '../../components/discovered-user-segment-builder'
 
 type ProviderType = 'spotify' | 'amazon' | 'lastfm' | 'soundcloud' | 'deezer' | 'youtube' | 'audius'
 
@@ -294,6 +297,21 @@ export default function ProfilesPage() {
             </Card>
           )
         })}
+      </div>
+
+      {/* Discovered Users (from database) */}
+      <div className="mt-10 pt-8 border-t">
+        <h2 className="text-2xl font-bold mb-4">Discovered users</h2>
+        <DiscoveredUsersSection />
+      </div>
+
+      {/* Segment Builder */}
+      <div className="mt-10 pt-8 border-t">
+        <h2 className="text-2xl font-bold mb-4">Create audience segments</h2>
+        <p className="text-sm text-muted-foreground mb-6">
+          Build targeted audience segments from discovered users based on music taste, artist type, and engagement level.
+        </p>
+        <DiscoveredUserSegmentBuilder />
       </div>
     </div>
   )

@@ -13,47 +13,50 @@
 - Explain your OBSERVATIONS clearly, then provide REASONING to identify the exact issue. Add console logs when needed to gather more information.
 
 
-Music Industry Marketing & Fan Engagement Platform
+Core Business Logic Architecture (Importance: 90/100)
 
-Core Business Domains:
+1. Artist & Release Management Hub
+- Multi-step artist onboarding with platform validation
+- Release distribution workflow with UPC/ISRC handling
+- Smart link generation system for cross-platform promotion
+- Genre categorization and management
+- Automated marketing campaign triggers
 
-1. Artist Management & Content Distribution (90/100)
-- Rights management and licensing workflows
-- Cross-platform release distribution
-- Pre-save campaign orchestration
-- Artist verification systems
-- ISRC/UPC tracking
-- Platform-specific profile mapping
-
-2. Fan Identity & Taste Analysis (85/100)
+2. Audience Discovery Engine (backend/src/services/spotify/discovery.service.ts)
+- Specialized music user discovery algorithm
+- Genre/artist matching with 0-100 scoring system
+- Playlist contributor analysis
+- Fan taste profile aggregation
 - Cross-platform identity resolution
-- Music taste profile generation
+
+3. Marketing Orchestration System
+- Multi-channel journey orchestration
+- Behavioral trigger mapping
+- SMS compliance enforcement
+- Intelligent timing optimization
+- Revenue projection calculations
+
+4. Platform Integration Framework (backend/src/providers/)
+- Unified music identity system
+- Cross-platform profile enrichment
+- Genre normalization engine
+- Artist popularity weighting
+- Platform-specific metadata validation
+
+5. Profile Enhancement Pipeline (backend/src/services/spotify/enrichment.service.ts)
+- Automated profile enrichment from connected platforms
+- Music taste analysis algorithms
 - Genre affinity scoring
-- Platform-specific engagement metrics
-- VIP fan identification
+- Artist relationship mapping
+- Engagement metrics calculation
 
-3. Campaign Orchestration (85/100)
-- Multi-channel campaign workflows
-- Journey automation with behavioral triggers
-- Audience segmentation by music preferences
-- Release promotion automation
-- Tour/event announcement systems
+Key Integration Points:
+- Artist/Release Management → Marketing Orchestration
+- Audience Discovery → Profile Enhancement
+- Platform Integration → Cross-platform Identity Resolution
+- Profile Enhancement → Audience Segmentation
 
-4. Platform Integration Layer (80/100)
-- Provider-specific data normalization
-- Social graph relationship analysis
-- Cross-platform metrics aggregation
-- Music platform OAuth handling
-- Rate limiting and compliance
-
-Key Implementation Files:
-- `backend/src/services/discovery/discovery.service.ts`  
-- `backend/src/services/ingest/ingest.service.ts`
-- `src/components/create-release-modal.tsx`
-- `src/components/create-journey-modal.tsx`
-- `backend/src/providers/spotify.provider.ts`
-
-The system implements specialized workflows for music industry marketing automation, focusing on cross-platform artist promotion, fan relationship management, and content distribution. The core business value centers on normalizing fan identities across music platforms while orchestrating sophisticated marketing campaigns based on music preferences and engagement patterns.
+The system architecture prioritizes music industry-specific workflows, focusing on artist management, audience discovery, and cross-platform integration. Core business value stems from sophisticated matching algorithms and industry-standard compliance handling.
 
 $END$
 

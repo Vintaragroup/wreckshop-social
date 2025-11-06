@@ -47,6 +47,7 @@ import { format } from "date-fns";
 interface CreateSMSCampaignModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated?: (campaign: any) => void;
 }
 
 const smsTemplates = [
@@ -108,7 +109,7 @@ const STEPS = [
   { id: 4, name: 'Schedule', icon: Clock },
 ];
 
-export function CreateSMSCampaignModal({ open, onOpenChange }: CreateSMSCampaignModalProps) {
+export function CreateSMSCampaignModal({ open, onOpenChange, onCreated }: CreateSMSCampaignModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [campaignName, setCampaignName] = useState("");
@@ -141,21 +142,33 @@ export function CreateSMSCampaignModal({ open, onOpenChange }: CreateSMSCampaign
     }
   };
 
-  const handleCreateCampaign = () => {
-    // Handle campaign creation logic here
-    console.log({
-      template: selectedTemplate,
-      name: campaignName,
-      message,
-      shortLink,
-      audiences: selectedAudiences,
-      schedule: sendNow ? null : { date: scheduleDate, time: scheduleTime },
-      options: {
-        respectQuietHours,
-        enableTracking,
-      },
-    });
-    onOpenChange(false);
+  const handleCreateCampaign = async () => {
+    try {
+      const scheduleIso = !sendNow && scheduleDate
+        ? new Date(`${scheduleDate.toDateString()} ${scheduleTime}`).toISOString()
+        : undefined
+      const payload: any = {
+        name: campaignName,
+        channels: {
+          sms: {
+            bodyText: message,
+          },
+        },
+        schedule: scheduleIso ? { startAt: scheduleIso } : undefined,
+        // additional options and segments to be wired later
+      }
+      const res = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.error || 'Failed to create SMS campaign')
+      onCreated?.(json.data)
+      handleClose()
+    } catch (e) {
+      console.error('Create SMS campaign failed', e)
+    }
   };
 
   const handleClose = () => {

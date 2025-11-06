@@ -1,0 +1,12 @@
+{
+  "watch": ["src"],
+  "ext": "ts,json",
+  "ignore": ["dist/*", "node_modules/*"],
+  "exec": "tsx src/index.ts",
+  "legacyWatch": true,
+  "watchOptions": {
+    "usePolling": true,
+    "interval": 300,
+    "ignoreInitial": true
+  }
+}

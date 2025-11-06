@@ -30,6 +30,7 @@ import { useIsMobile } from "./ui/use-mobile";
 import { MobileTable } from "./mobile-table";
 import { AddProfileModal } from "./add-profile-modal";
 import { DiscoveredUsersSection } from "./discovered-users";
+import { DiscoveredUserSegmentBuilder } from "./discovered-user-segment-builder";
 import { ProfileExportModal } from "./profile-export-modal";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -563,7 +564,23 @@ export function AudienceProfiles({ onPageChange }: AudienceProfilesProps = {}) {
 
       {/* Discovered Users Section */}
       <div className="mt-8 pt-8 border-t">
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+          <Headphones className="w-6 h-6" />
+          Discovered Users
+        </h2>
         <DiscoveredUsersSection />
+      </div>
+
+      {/* Segment Builder Section */}
+      <div className="mt-8 pt-8 border-t">
+        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+          <Target className="w-6 h-6" />
+          Create Audience Segments
+        </h2>
+        <p className="text-muted-foreground mb-6">
+          Build targeted audience segments from discovered users based on music taste, artist type, and engagement level.
+        </p>
+        <DiscoveredUserSegmentBuilder />
       </div>
 
       {/* Profile Detail Modal */}

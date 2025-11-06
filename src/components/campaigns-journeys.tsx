@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useEffect } from "react";
 import {
   Plus,
   Search,
@@ -19,8 +20,13 @@ import {
   Timer,
   Zap,
   ArrowLeft,
+  RefreshCw,
 } from "lucide-react";
 import { CreateJourneyModal } from "./create-journey-modal";
+import { EditJourneyModal } from "./edit-journey-modal";
+import { ViewJourneyCanvas } from "./view-journey-canvas";
+import { JourneyAnalyticsModal } from "./journey-analytics-modal";
+import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
@@ -48,117 +54,26 @@ import {
 } from "./ui/select";
 import { Progress } from "./ui/progress";
 
-const journeys = [
-  {
-    id: 1,
-    name: "New Fan Onboarding",
-    status: "active",
-    trigger: "New Subscriber",
-    contacts: 2340,
-    completed: 1876,
-    active: 312,
-    stopped: 152,
-    revenue: "$3,450",
-    createdAt: "Nov 28, 2024",
-    lastModified: "Dec 8, 2024",
-    steps: [
-      { type: "trigger", name: "New Subscriber", icon: Users },
-      { type: "delay", name: "Wait 1 hour", icon: Timer },
-      { type: "email", name: "Welcome Email", icon: Mail },
-      { type: "delay", name: "Wait 3 days", icon: Timer },
-      { type: "condition", name: "Opened Email?", icon: GitBranch },
-      { type: "email", name: "Artist Introduction", icon: Mail },
-      { type: "sms", name: "Exclusive Content", icon: MessageSquare },
-    ],
-    performance: {
-      step1: 100,
-      step2: 95,
-      step3: 82,
-      step4: 76,
-      step5: 68,
-      step6: 61,
-      step7: 48,
-    }
-  },
-  {
-    id: 2,
-    name: "Re-engagement Campaign",
-    status: "active",
-    trigger: "Inactive 30 Days",
-    contacts: 890,
-    completed: 234,
-    active: 156,
-    stopped: 500,
-    revenue: "$1,890",
-    createdAt: "Dec 1, 2024",
-    lastModified: "Dec 10, 2024",
-    steps: [
-      { type: "trigger", name: "Inactive 30 Days", icon: Clock },
-      { type: "email", name: "We Miss You", icon: Mail },
-      { type: "delay", name: "Wait 7 days", icon: Timer },
-      { type: "condition", name: "Opened Email?", icon: GitBranch },
-      { type: "sms", name: "Special Offer", icon: MessageSquare },
-      { type: "exit", name: "Remove from List", icon: Zap },
-    ],
-    performance: {
-      step1: 100,
-      step2: 89,
-      step3: 67,
-      step4: 45,
-      step5: 32,
-      step6: 26,
-    }
-  },
-  {
-    id: 3,
-    name: "Album Launch Sequence",
-    status: "scheduled",
-    trigger: "Album Release Date",
-    contacts: 0,
-    completed: 0,
-    active: 0,
-    stopped: 0,
-    revenue: "$0",
-    createdAt: "Dec 5, 2024",
-    lastModified: "Dec 11, 2024",
-    steps: [
-      { type: "trigger", name: "Album Release", icon: Users },
-      { type: "email", name: "Album Announcement", icon: Mail },
-      { type: "delay", name: "Wait 1 day", icon: Timer },
-      { type: "sms", name: "Stream Reminder", icon: MessageSquare },
-      { type: "delay", name: "Wait 7 days", icon: Timer },
-      { type: "email", name: "Behind the Scenes", icon: Mail },
-    ],
-    performance: {}
-  },
-  {
-    id: 4,
-    name: "VIP Customer Journey",
-    status: "paused",
-    trigger: "High Spending",
-    contacts: 156,
-    completed: 89,
-    active: 23,
-    stopped: 44,
-    revenue: "$5,670",
-    createdAt: "Oct 15, 2024",
-    lastModified: "Dec 2, 2024",
-    steps: [
-      { type: "trigger", name: "High Spending", icon: Users },
-      { type: "email", name: "VIP Welcome", icon: Mail },
-      { type: "sms", name: "Exclusive Access", icon: MessageSquare },
-      { type: "delay", name: "Wait 14 days", icon: Timer },
-      { type: "email", name: "VIP Rewards", icon: Mail },
-    ],
-    performance: {
-      step1: 100,
-      step2: 94,
-      step3: 87,
-      step4: 78,
-      step5: 65,
-    }
-  },
-];
+// Types aligned with backend Journey model
+type JourneyStep = {
+  id: string;
+  type: 'trigger' | 'delay' | 'condition' | 'email' | 'sms' | 'branch' | 'exit' | 'webhook';
+  name?: string;
+  config?: any;
+};
+
+type JourneyDoc = {
+  _id: string;
+  name: string;
+  description?: string;
+  status: 'draft' | 'active' | 'paused';
+  segmentId?: string;
+  triggerKey?: string;
+  steps: JourneyStep[];
+  createdAt?: string;
+  updatedAt?: string;
+  metrics?: Array<{ stepId: string; entered: number; completed: number; dropped: number }>;
+};
 
 interface CampaignsJourneysProps {
   onPageChange?: (page: string) => void;
@@ -169,14 +84,83 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterTrigger, setFilterTrigger] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [refreshSeq, setRefreshSeq] = useState(0);
+  const [editOpen, setEditOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [selectedJourney, setSelectedJourney] = useState<JourneyDoc | null>(null);
 
-  const filteredJourneys = journeys.filter(journey => {
-    const matchesSearch = journey.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         journey.trigger.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === "all" || journey.status === filterStatus;
-    const matchesTrigger = filterTrigger === "all" || journey.trigger.toLowerCase().includes(filterTrigger.toLowerCase());
-    return matchesSearch && matchesStatus && matchesTrigger;
-  });
+  // Journeys from backend
+  const [journeys, setJourneys] = useState<JourneyDoc[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let aborted = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const url = new URL('/api/journeys', window.location.origin);
+        if (filterStatus !== 'all') url.searchParams.set('status', filterStatus);
+        const res = await fetch(url.toString(), { credentials: 'include' });
+        if (!res.ok) throw new Error(`Failed to load journeys (${res.status})`);
+        const json = await res.json();
+        if (!aborted) setJourneys(json.data || []);
+      } catch (e: any) {
+        if (!aborted) setError(e?.message || 'Failed to load journeys');
+      } finally {
+        if (!aborted) setLoading(false);
+      }
+    }
+    load();
+    return () => { aborted = true };
+  }, [filterStatus, refreshSeq]);
+
+  const filteredJourneys = useMemo(() => {
+    return journeys.filter((j) => {
+      const matchesSearch = j.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (j.triggerKey || '').toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = filterStatus === 'all' || j.status === filterStatus;
+      const matchesTrigger = filterTrigger === 'all' || (j.triggerKey || '').toLowerCase().includes(filterTrigger.toLowerCase());
+      return matchesSearch && matchesStatus && matchesTrigger;
+    });
+  }, [journeys, searchQuery, filterStatus, filterTrigger]);
+
+  // Minimal derived stats (no analytics yet)
+  const stats = useMemo(() => {
+    const activeCount = journeys.filter((j) => j.status === 'active').length;
+    return { totalContacts: 0, totalCompleted: 0, activeCount, avgCompletion: 0, totalRevenue: 0 };
+  }, [journeys]);
+
+  async function postAction(id: string, action: 'publish' | 'pause' | 'resume' | 'duplicate') {
+    try {
+      const res = await fetch(`/api/journeys/${id}/${action}`, { method: 'POST', credentials: 'include' })
+      if (!res.ok) throw new Error(`${action} failed (${res.status})`)
+      setRefreshSeq((s) => s + 1)
+      const label = action.charAt(0).toUpperCase() + action.slice(1)
+      toast.success(`${label} successful`)
+    } catch (err) {
+      console.error('journey action error', err)
+      setError((err as any)?.message || `${action} failed`)
+      toast.error((err as any)?.message || `Failed to ${action}`)
+    }
+  }
+
+  function openEdit(j: JourneyDoc) {
+    setSelectedJourney(j);
+    setEditOpen(true);
+  }
+
+  function openView(j: JourneyDoc) {
+    setSelectedJourney(j);
+    setViewOpen(true);
+  }
+
+  function openAnalytics(j: JourneyDoc) {
+    setSelectedJourney(j);
+    setAnalyticsOpen(true);
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -186,7 +170,6 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
         return <Badge variant="secondary">Scheduled</Badge>;
       case "completed":
         return <Badge variant="outline">Completed</Badge>;
-      case "draft":
         return <Badge className="bg-muted text-muted-foreground">Draft</Badge>;
       case "paused":
         return <Badge variant="destructive">Paused</Badge>;
@@ -199,29 +182,53 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
     return contacts > 0 ? ((completed / contacts) * 100).toFixed(1) : "0";
   };
 
-  const JourneySteps = ({ steps, performance }: { steps: any[], performance: any }) => (
-    <div className="flex items-center space-x-2 text-xs">
+  const stepIcon = (type: JourneyStep['type']) => {
+    switch (type) {
+      case 'trigger':
+        return Users;
+      case 'delay':
+        return Timer;
+      case 'email':
+        return Mail;
+      case 'sms':
+        return MessageSquare;
+      case 'condition':
+      case 'branch':
+        return GitBranch;
+      case 'exit':
+      case 'webhook':
+      default:
+        return Zap;
+    }
+  };
+
+  const JourneySteps = ({ steps, performance }: { steps: JourneyStep[], performance: any }) => (
+    <div className="flex items-center space-x-3 text-xs">
       {steps.slice(0, 4).map((step, index) => {
-        const Icon = step.icon;
+        const Icon = stepIcon(step.type);
         const completionRate = performance[`step${index + 1}`] || 0;
         return (
-          <div key={index} className="flex items-center space-x-1">
-            <div className="relative">
-              <div 
+          <div key={index} className="flex items-center space-x-2">
+            <div className="relative mr-6 pr-2 pb-1">
+              <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  completionRate > 80 ? 'bg-accent' : 
+                  completionRate > 80 ? 'bg-accent' :
                   completionRate > 50 ? 'bg-warning' : 'bg-muted'
                 }`}
               >
                 <Icon className="w-3 h-3 text-white" />
               </div>
               {completionRate > 0 && (
-                <div className="absolute -bottom-1 -right-1 text-xs font-medium">
-                  {completionRate}%
+                <div className="absolute -bottom-2 -right-3 z-10 flex flex-col items-center text-[10px] font-semibold leading-none pointer-events-none select-none pb-1">
+                  {/* Inline number + % below badge with small gap */}
+                  <div className="flex items-baseline bg-background/95 ring-1 ring-border px-1 py-[1px] rounded-sm shadow-sm">
+                    <span>{completionRate}</span>
+                    <span className="ml-[1px] text-[8px]">%</span>
+                  </div>
                 </div>
               )}
             </div>
-            {index < 3 && <ArrowRight className="w-3 h-3 text-muted-foreground" />}
+            {index < 3 && <ArrowRight className="w-3 h-3 text-muted-foreground mx-2" />}
           </div>
         );
       })}
@@ -255,6 +262,10 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
           </div>
         </div>
         <div className="flex items-center space-x-2">
+          <Button variant="outline" onClick={() => setRefreshSeq((s) => s + 1)}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
           <Button variant="outline">
             <TrendingUp className="w-4 h-4 mr-2" />
             Analytics
@@ -273,7 +284,7 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
             <div className="flex items-center space-x-2">
               <GitBranch className="w-5 h-5 text-primary" />
               <div>
-                <div className="text-2xl font-bold">12</div>
+                <div className="text-2xl font-bold">{stats.activeCount}</div>
                 <div className="text-sm text-muted-foreground">Active Journeys</div>
               </div>
             </div>
@@ -284,7 +295,7 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
             <div className="flex items-center space-x-2">
               <Users className="w-5 h-5 text-accent" />
               <div>
-                <div className="text-2xl font-bold">3.4K</div>
+                <div className="text-2xl font-bold">{stats.totalContacts.toLocaleString()}</div>
                 <div className="text-sm text-muted-foreground">Contacts in Journeys</div>
               </div>
             </div>
@@ -295,7 +306,7 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-5 h-5 text-warning" />
               <div>
-                <div className="text-2xl font-bold">72.4%</div>
+                <div className="text-2xl font-bold">{stats.avgCompletion.toFixed(1)}%</div>
                 <div className="text-sm text-muted-foreground">Avg. Completion Rate</div>
               </div>
             </div>
@@ -306,7 +317,7 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-5 h-5 text-destructive" />
               <div>
-                <div className="text-2xl font-bold">$11K</div>
+                <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
                 <div className="text-sm text-muted-foreground">Revenue Generated</div>
               </div>
             </div>
@@ -372,6 +383,12 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {error && (
+            <div className="text-sm text-destructive mb-2">{error}</div>
+          )}
+          {loading && (
+            <div className="text-sm text-muted-foreground mb-2">Loading journeys…</div>
+          )}
           <Table>
             <TableHeader>
               <TableRow>
@@ -388,52 +405,36 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
             </TableHeader>
             <TableBody>
               {filteredJourneys.map((journey) => (
-                <TableRow key={journey.id}>
+                <TableRow key={journey._id}>
                   <TableCell>
                     <div>
                       <div className="font-medium">{journey.name}</div>
                       <div className="text-sm text-muted-foreground">
-                        Created {journey.createdAt}
+                        {journey.createdAt ? `Created ${new Date(journey.createdAt).toLocaleDateString()}` : ''}
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>{getStatusBadge(journey.status)}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{journey.trigger}</Badge>
+                    <Badge variant="outline">{journey.triggerKey || '-'}</Badge>
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div className="font-medium">
-                        {journey.contacts.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {journey.active} active, {journey.completed} completed
-                      </div>
+                      <div className="font-medium">-</div>
+                      <div className="text-xs text-muted-foreground">—</div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    {journey.contacts > 0 ? (
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium">
-                          {calculateCompletionRate(journey.completed, journey.contacts)}%
-                        </span>
-                        <Progress 
-                          value={parseFloat(calculateCompletionRate(journey.completed, journey.contacts))} 
-                          className="w-16 h-1"
-                        />
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
+                    <span className="text-muted-foreground">-</span>
                   </TableCell>
                   <TableCell>
-                    <JourneySteps steps={journey.steps} performance={journey.performance} />
+                    <JourneySteps steps={journey.steps} performance={{}} />
                   </TableCell>
                   <TableCell className="font-medium">
-                    {journey.revenue}
+                    -
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {journey.lastModified}
+                    {journey.updatedAt ? new Date(journey.updatedAt).toLocaleDateString() : '-'}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -443,30 +444,60 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => openView(journey)}>
                           <Eye className="w-4 h-4 mr-2" />
                           View Canvas
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => openEdit(journey)}>
                           <Edit className="w-4 h-4 mr-2" />
                           Edit Journey
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => postAction(journey._id, 'duplicate')}>
                           <Copy className="w-4 h-4 mr-2" />
                           Duplicate
                         </DropdownMenuItem>
-                        {journey.status === "active" ? (
-                          <DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={async () => {
+                            try {
+                              if (!confirm('Delete this journey? This cannot be undone.')) return;
+                              const res = await fetch(`/api/journeys/${journey._id}`, { method: 'DELETE', credentials: 'include' })
+                              if (!res.ok) throw new Error(`delete failed (${res.status})`)
+                              setRefreshSeq((s) => s + 1)
+                              toast.success('Journey deleted')
+                            } catch (err) {
+                              console.error('delete failed', err)
+                              setError((err as any)?.message || 'Delete failed')
+                              toast.error((err as any)?.message || 'Delete failed')
+                            }
+                          }}
+                        >
+                          <Pause className="w-4 h-4 mr-2 rotate-90" />
+                          Delete
+                        </DropdownMenuItem>
+                        {journey.status === "draft" ? (
+                          journey.segmentId ? (
+                            <DropdownMenuItem onSelect={() => { if (confirm('Publish this journey now? Existing eligible profiles may enter immediately.')) postAction(journey._id, 'publish') }}>
+                              <Play className="w-4 h-4 mr-2" />
+                              Publish
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem disabled>
+                              <Play className="w-4 h-4 mr-2" />
+                              Publish (select segment first)
+                            </DropdownMenuItem>
+                          )
+                        ) : journey.status === "active" ? (
+                          <DropdownMenuItem onSelect={() => postAction(journey._id, 'pause')}>
                             <Pause className="w-4 h-4 mr-2" />
                             Pause
                           </DropdownMenuItem>
                         ) : journey.status === "paused" ? (
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => postAction(journey._id, 'resume')}>
                             <Play className="w-4 h-4 mr-2" />
                             Resume
                           </DropdownMenuItem>
                         ) : null}
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => openAnalytics(journey)}>
                           <TrendingUp className="w-4 h-4 mr-2" />
                           View Analytics
                         </DropdownMenuItem>
@@ -475,6 +506,21 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
                   </TableCell>
                 </TableRow>
               ))}
+              {filteredJourneys.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={9}>
+                    <div className="p-10 text-center">
+                      <GitBranch className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-medium mb-2">Create your first journey</h3>
+                      <p className="text-muted-foreground mb-4">Automate multi-step outreach across email and SMS, triggered by behavior.</p>
+                      <Button onClick={() => setShowCreateModal(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Journey
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -484,6 +530,29 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
       <CreateJourneyModal
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
+        onCreated={() => setRefreshSeq((s) => s + 1)}
+      />
+
+      {/* Edit Journey Modal */}
+      <EditJourneyModal
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        journey={selectedJourney}
+        onSaved={() => setRefreshSeq((s) => s + 1)}
+      />
+
+      {/* View Canvas (read-only preview) */}
+      <ViewJourneyCanvas
+        open={viewOpen}
+        onOpenChange={setViewOpen}
+        journey={selectedJourney as any}
+      />
+
+      {/* Journey Analytics (placeholder) */}
+      <JourneyAnalyticsModal
+        open={analyticsOpen}
+        onOpenChange={setAnalyticsOpen}
+        journey={selectedJourney as any}
       />
     </div>
   );

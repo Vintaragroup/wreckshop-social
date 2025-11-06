@@ -37,6 +37,7 @@ import { cn } from "./ui/utils";
 interface CreateArtistModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated?: (artist: any) => void;
 }
 
 const genreOptions = [
@@ -76,7 +77,7 @@ const STEPS = [
   { id: 3, name: 'Details', icon: Settings },
 ];
 
-export function CreateArtistModal({ open, onOpenChange }: CreateArtistModalProps) {
+export function CreateArtistModal({ open, onOpenChange, onCreated }: CreateArtistModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [artistName, setArtistName] = useState("");
   const [stageName, setStageName] = useState("");
@@ -103,23 +104,44 @@ export function CreateArtistModal({ open, onOpenChange }: CreateArtistModalProps
     }
   };
 
-  const handleCreateArtist = () => {
-    // Handle artist creation logic here
-    console.log({
-      artistName,
-      stageName,
-      bio,
+  const handleCreateArtist = async () => {
+    // Map platforms and basic info to backend artist payload
+    const payload: any = {
+      name: artistName || stageName || '',
+      stageName: stageName || undefined,
+      bio: bio || undefined,
       genres: selectedGenres,
-      platforms,
-      website,
-      email,
-      phone,
-      location,
-      recordLabel,
       status,
-      verified,
-    });
-    onOpenChange(false);
+      handles: {
+        instagram: platforms.instagram || undefined,
+        youtube: platforms.youtube || undefined,
+        tiktok: platforms.tiktok || undefined,
+        twitter: platforms.twitter || undefined,
+        spotify: platforms.spotify || undefined,
+        apple: platforms.apple || undefined,
+        soundcloud: platforms.soundcloud || undefined,
+        website: website || undefined,
+      },
+    }
+    try {
+      const res = await fetch('/api/artists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({} as any))
+        throw new Error(err?.error ? JSON.stringify(err.error) : `${res.status} ${res.statusText}`)
+      }
+      const json = await res.json()
+      onCreated?.(json?.data)
+      onOpenChange(false)
+    } catch (e) {
+      console.error('Failed to create artist', e)
+      // Non-blocking: close anyway for now; future improvement can show toast
+      onOpenChange(false)
+    }
   };
 
   const handleClose = () => {

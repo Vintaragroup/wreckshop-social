@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Users,
   TrendingUp,
@@ -37,6 +37,25 @@ export function AudienceDashboard({ onPageChange }: AudienceDashboardProps = {})
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showSMSModal, setShowSMSModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [contacts, setContacts] = useState<any[]>([])
+  const [contactsLoading, setContactsLoading] = useState(false)
+  const [contactsError, setContactsError] = useState<string | null>(null)
+
+  async function loadContacts() {
+    setContactsLoading(true); setContactsError(null)
+    try {
+      const res = await fetch('/api/audience/contacts')
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.error || `Failed to load contacts (${res.status})`)
+      setContacts(json.data || [])
+    } catch (e: any) {
+      setContactsError(e.message)
+    } finally {
+      setContactsLoading(false)
+    }
+  }
+
+  useEffect(() => { loadContacts() }, [])
 
   const topLocations = [
     { city: "Houston, TX", count: 8924, percentage: 24.8 },
@@ -200,6 +219,36 @@ export function AudienceDashboard({ onPageChange }: AudienceDashboardProps = {})
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Contacts (Live) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Users className="w-5 h-5 mr-2" />
+              Recent Contacts {contactsLoading ? '(loading...)' : `(${Math.min(contacts.length, 5)})`}
+              {contactsError ? <span className="text-destructive text-xs ml-2">{contactsError}</span> : null}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {(contacts.slice(0, 5)).map((c) => (
+              <div key={c._id} className="flex items-center justify-between border rounded-lg p-3">
+                <div>
+                  <div className="font-medium">{c.displayName || c.email || c.phone || 'Unnamed contact'}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {c.email ? c.email : ''}{c.email && c.phone ? ' • ' : ''}{c.phone ? c.phone : ''}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {c.consent?.email ? <Badge variant="outline">Email</Badge> : null}
+                  {c.consent?.sms ? <Badge variant="outline">SMS</Badge> : null}
+                </div>
+              </div>
+            ))}
+            {(!contactsLoading && contacts.length === 0 && !contactsError) && (
+              <div className="text-sm text-muted-foreground">No contacts yet.</div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Platform Breakdown */}
         <Card>
           <CardHeader>

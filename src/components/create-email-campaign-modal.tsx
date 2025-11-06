@@ -44,6 +44,7 @@ import { format } from "date-fns";
 interface CreateEmailCampaignModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated?: (campaign: any) => void;
 }
 
 const emailTemplates = [
@@ -100,7 +101,7 @@ const STEPS = [
   { id: 4, name: 'Schedule', icon: Clock },
 ];
 
-export function CreateEmailCampaignModal({ open, onOpenChange }: CreateEmailCampaignModalProps) {
+export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: CreateEmailCampaignModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [campaignName, setCampaignName] = useState("");
@@ -127,20 +128,41 @@ export function CreateEmailCampaignModal({ open, onOpenChange }: CreateEmailCamp
     }
   };
 
-  const handleCreateCampaign = () => {
-    // Handle campaign creation logic here
-    console.log({
-      template: selectedTemplate,
-      name: campaignName,
-      subject,
-      preheader,
-      body: emailBody,
-      audiences: selectedAudiences,
-      sender: { name: senderName, email: senderEmail },
-      schedule: sendNow ? null : { date: scheduleDate, time: scheduleTime },
-      abTest,
-    });
-    onOpenChange(false);
+  const handleCreateCampaign = async () => {
+    // Persist basic email campaign to backend
+    try {
+      const scheduleIso = !sendNow && scheduleDate
+        ? new Date(
+            `${scheduleDate.toDateString()} ${scheduleTime}`
+          ).toISOString()
+        : undefined
+
+      const payload: any = {
+        name: campaignName,
+        channels: {
+          email: {
+            subject,
+            bodyHtml: emailBody,
+            fromName: senderName,
+            fromEmail: senderEmail,
+          },
+        },
+        schedule: scheduleIso ? { startAt: scheduleIso } : undefined,
+        // segments to be wired later; selectedAudiences are UI-only for now
+      }
+      const res = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.error || 'Failed to create campaign')
+      onCreated?.(json.data)
+      handleClose()
+    } catch (e) {
+      console.error('Create campaign failed', e)
+      // Keep dialog open; in a future pass show a toast
+    }
   };
 
   const handleClose = () => {

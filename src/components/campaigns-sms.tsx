@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus,
   Search,
@@ -45,88 +45,13 @@ import {
 } from "./ui/select";
 import { Progress } from "./ui/progress";
 
-const smsCampaigns = [
-  {
-    id: 1,
-    name: "Last Minute Tickets",
-    status: "active",
-    audience: "Event Interested",
-    message: "🎫 LAST CHANCE! Travis Scott Houston tickets still available. Get yours: wreck.sh/tickets",
-    sent: 8920,
-    delivered: 8876,
-    opened: 7234,
-    clicked: 1456,
-    revenue: "$4,320",
-    scheduledFor: "Dec 10, 2024 6:00 PM",
-    createdAt: "Dec 10, 2024",
-    characterCount: 97,
-    quietHours: true,
-  },
-  {
-    id: 2,
-    name: "VIP Package Alert",
-    status: "paused",
-    audience: "VIP Customers",
-    message: "✨ Exclusive VIP packages now available for Houston show! Limited quantity: wreck.sh/vip",
-    sent: 1230,
-    delivered: 1225,
-    opened: 1189,
-    clicked: 234,
-    revenue: "$2,100",
-    scheduledFor: "Dec 8, 2024 12:00 PM",
-    createdAt: "Dec 7, 2024",
-    characterCount: 94,
-    quietHours: false,
-  },
-  {
-    id: 3,
-    name: "Album Drop Reminder",
-    status: "completed",
-    audience: "All Subscribers",
-    message: "🔥 UTOPIA is NOW LIVE! Stream on all platforms: wreck.sh/utopia Don't miss Travis Scott's new album!",
-    sent: 15430,
-    delivered: 15398,
-    opened: 14892,
-    clicked: 3234,
-    revenue: "$8,920",
-    scheduledFor: "Dec 1, 2024 12:01 AM",
-    createdAt: "Nov 30, 2024",
-    characterCount: 104,
-    quietHours: false,
-  },
-  {
-    id: 4,
-    name: "Flash Sale - 24hrs",
-    status: "scheduled",
-    audience: "High Engagement",
-    message: "⚡ FLASH SALE! 30% off all merch for next 24hrs only. Use code FLASH30: wreck.sh/shop",
-    sent: 0,
-    delivered: 0,
-    opened: 0,
-    clicked: 0,
-    revenue: "$0",
-    scheduledFor: "Dec 15, 2024 9:00 AM",
-    createdAt: "Dec 12, 2024",
-    characterCount: 89,
-    quietHours: true,
-  },
-  {
-    id: 5,
-    name: "Concert Reminder",
-    status: "draft",
-    audience: "Houston Locals",
-    message: "🎤 Reminder: Travis Scott Houston show TOMORROW! Gates open 7pm. See you there! 🔥",
-    sent: 0,
-    delivered: 0,
-    opened: 0,
-    clicked: 0,
-    revenue: "$0",
-    scheduledFor: null,
-    createdAt: "Dec 12, 2024",
-    characterCount: 85,
-    quietHours: true,
-  },
-];
+type CampaignDoc = {
+  _id: string
+  name: string
+  status?: 'draft'|'scheduled'|'running'|'paused'|'completed'|'failed'
+  channels?: { sms?: { bodyText?: string } }
+  schedule?: { startAt?: string | Date }
+}
 
 interface CampaignsSMSProps {
   onPageChange?: (page: string) => void;
@@ -137,12 +62,34 @@ export function CampaignsSMS({ onPageChange }: CampaignsSMSProps = {}) {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterAudience, setFilterAudience] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [items, setItems] = useState<CampaignDoc[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
+  async function loadCampaigns() {
+    setLoading(true); setError(null)
+    try {
+      const res = await fetch('/api/campaigns')
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.error || `Failed to load campaigns (${res.status})`)
+      setItems(json.data || [])
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { loadCampaigns() }, [])
+
+  const smsCampaigns = useMemo(() => items.filter(c => c.channels?.sms), [items])
   const filteredCampaigns = smsCampaigns.filter(campaign => {
+    const message = campaign.channels?.sms?.bodyText || ''
     const matchesSearch = campaign.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         campaign.message.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === "all" || campaign.status === filterStatus;
-    const matchesAudience = filterAudience === "all" || campaign.audience.toLowerCase().includes(filterAudience.toLowerCase());
+                         message.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === "all" || (campaign.status || 'draft') === filterStatus;
+    // Audience filtering not yet wired
+    const matchesAudience = filterAudience === "all";
     return matchesSearch && matchesStatus && matchesAudience;
   });
 
@@ -327,9 +274,9 @@ export function CampaignsSMS({ onPageChange }: CampaignsSMSProps = {}) {
       {/* Campaigns Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
+            <CardTitle className="flex items-center">
             <MessageSquare className="w-5 h-5 mr-2" />
-            SMS Campaigns ({filteredCampaigns.length})
+            SMS Campaigns {loading ? '(loading...)' : `(${filteredCampaigns.length})`} {error ? <span className="text-destructive text-xs ml-2">{error}</span> : null}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -349,89 +296,32 @@ export function CampaignsSMS({ onPageChange }: CampaignsSMSProps = {}) {
             </TableHeader>
             <TableBody>
               {filteredCampaigns.map((campaign) => (
-                <TableRow key={campaign.id}>
+                <TableRow key={campaign._id}>
                   <TableCell>
                     <div>
                       <div className="font-medium">{campaign.name}</div>
-                      <div className="text-sm text-muted-foreground max-w-xs line-clamp-2">
-                        {campaign.message}
-                      </div>
+                      {campaign.channels?.sms?.bodyText && (
+                        <div className="text-sm text-muted-foreground max-w-xs line-clamp-2">
+                          {campaign.channels.sms.bodyText}
+                        </div>
+                      )}
                       <div className="flex items-center space-x-2 mt-1">
-                        <span className={`text-xs ${getCharacterCountColor(campaign.characterCount)}`}>
-                          {campaign.characterCount}/160 chars
-                        </span>
-                        {campaign.quietHours && (
-                          <Badge variant="outline" className="text-xs">
-                            <Clock className="w-3 h-3 mr-1" />
-                            Quiet Hours
-                          </Badge>
-                        )}
+                        <span className="text-xs text-muted-foreground">Preview</span>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{getStatusBadge(campaign.status)}</TableCell>
+                  <TableCell>{getStatusBadge(campaign.status || 'draft')}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       <Users className="w-4 h-4 text-muted-foreground" />
-                      <Badge variant="outline">{campaign.audience}</Badge>
+                      <Badge variant="outline">Segments TBD</Badge>
                     </div>
                   </TableCell>
+                  <TableCell><span className="text-muted-foreground">-</span></TableCell>
+                  <TableCell><span className="text-muted-foreground">-</span></TableCell>
+                  <TableCell className="font-medium"><span className="text-muted-foreground">-</span></TableCell>
                   <TableCell>
-                    {campaign.sent > 0 ? (
-                      <div>
-                        <div className="font-medium">
-                          {campaign.sent.toLocaleString()}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {campaign.delivered.toLocaleString()} delivered
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {campaign.sent > 0 ? (
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium">
-                          {calculateDeliveryRate(campaign.delivered, campaign.sent)}%
-                        </span>
-                        <Progress 
-                          value={parseFloat(calculateDeliveryRate(campaign.delivered, campaign.sent))} 
-                          className="w-16 h-1"
-                        />
-                      </div>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {campaign.delivered > 0 ? (
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium">
-                          {calculateClickRate(campaign.clicked, campaign.delivered)}%
-                        </span>
-                        <Progress 
-                          value={parseFloat(calculateClickRate(campaign.clicked, campaign.delivered))} 
-                          className="w-16 h-1"
-                        />
-                      </div>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {campaign.revenue}
-                  </TableCell>
-                  <TableCell>
-                    {campaign.scheduledFor ? (
-                      <div className="text-sm">
-                        <div>{campaign.scheduledFor.split(' ')[0]}</div>
-                        <div className="text-muted-foreground">
-                          {campaign.scheduledFor.split(' ').slice(1).join(' ')}
-                        </div>
-                      </div>
-                    ) : (
+                    {campaign.schedule?.startAt ? new Date(campaign.schedule.startAt).toLocaleString() : (
                       <span className="text-muted-foreground">Not scheduled</span>
                     )}
                   </TableCell>
@@ -455,18 +345,18 @@ export function CampaignsSMS({ onPageChange }: CampaignsSMSProps = {}) {
                           <Copy className="w-4 h-4 mr-2" />
                           Duplicate
                         </DropdownMenuItem>
-                        {campaign.status === "active" ? (
+                        {(campaign.status || 'draft') === "running" ? (
                           <DropdownMenuItem>
                             <Pause className="w-4 h-4 mr-2" />
                             Pause
                           </DropdownMenuItem>
-                        ) : campaign.status === "paused" ? (
+                        ) : (campaign.status || 'draft') === "paused" ? (
                           <DropdownMenuItem>
                             <Play className="w-4 h-4 mr-2" />
                             Resume
                           </DropdownMenuItem>
                         ) : null}
-                        {campaign.status === "draft" && (
+                        {(campaign.status || 'draft') === "draft" && (
                           <DropdownMenuItem>
                             <Send className="w-4 h-4 mr-2" />
                             Send Now
@@ -486,6 +376,7 @@ export function CampaignsSMS({ onPageChange }: CampaignsSMSProps = {}) {
       <CreateSMSCampaignModal
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
+        onCreated={() => { setShowCreateModal(false); loadCampaigns() }}
       />
     </div>
   );

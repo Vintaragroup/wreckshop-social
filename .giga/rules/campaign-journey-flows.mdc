@@ -1,54 +1,66 @@
 ---
-description: Defines campaign orchestration, journey automation, and multi-channel sequencing rules for music marketing platform
+description: Specifications for campaign orchestration, journey automation, and multi-channel messaging flows
 ---
 
 
 # campaign-journey-flows
 
-Core Journey Orchestration Logic:
+Core Journey Orchestration Components:
 
-1. Multi-Channel Campaign Creation
-File: src/components/create-campaign-modal.tsx
-- Campaign type differentiation (email, SMS, journey)
-- Audience reach estimation based on segment rules
-- Quiet hours compliance checks
-- Cross-channel frequency capping
+1. Journey Creation Logic
+`src/components/create-journey-modal.tsx`
+- Multi-channel journey orchestration engine
+- Behavioral trigger mapping system
+- Dynamic path branching based on user actions
+- Exit condition management with goal tracking
+- Performance metrics calculation per journey stage
+Importance Score: 90
 
-2. Journey Automation Engine 
-File: src/components/create-journey-modal.tsx
-- Behavioral trigger definitions for fan engagement
-- Multi-step journey branching logic
-- A/B testing splits with performance optimization
-- Goal tracking with exit conditions
-- Re-engagement rules based on inactivity
+2. Campaign Automation Rules
+`src/components/campaigns-journeys.tsx`
+- Cross-channel campaign sequencing
+- Intelligent delivery timing optimization
+- Audience segment targeting rules
+- A/B testing path management
+- Journey analytics integration
+Importance Score: 85
 
-3. SMS Campaign Orchestration
-File: src/components/create-sms-campaign-modal.tsx
-- Message segmentation with character limits
-- Cost calculation per segment/recipient
-- 10DLC compliance validation
-- Delivery rate throttling rules
+3. SMS Campaign Logic 
+`src/components/create-sms-campaign-modal.tsx`
+- SMS compliance enforcement (quiet hours)
+- Message segmentation for length limits
+- Cost calculation per segment/audience
+- Rate limiting and throttling rules
+- Link shortening with tracking
+Importance Score: 75
 
-4. Release Campaign Workflows
-File: src/components/create-release-modal.tsx
-- Distribution platform selection logic
-- Rights management validation
-- Pre-save campaign triggers
-- Smart link generation rules
+4. Email Campaign Management
+`src/components/create-email-campaign-modal.tsx`
+- Email template personalization engine
+- Delivery timing optimization
+- Bounce handling rules
+- Engagement tracking integration
+- List segmentation management
+Importance Score: 70
 
-Key Domain Patterns:
-- Fan engagement scoring based on interaction types
-- Platform-specific quiet period enforcement
-- Genre-based targeting rules
-- Artist-specific campaign templates
-- Release date-driven journey triggers
+Key Journey Flow Rules:
+- Multi-stage progression logic
+- Channel coordination rules
+- Timing optimization algorithms
+- Goal completion tracking
+- Performance measurement
+- Audience segmentation integration
+- Compliance enforcement
+- Cost optimization
 
-Campaign Performance Optimization:
-- Send time optimization based on timezone/activity
-- Dynamic content selection from asset library
-- Engagement-based journey path selection
-- Cross-channel coordination rules
-- Frequency capping across channels
+The system implements sophisticated journey orchestration with:
+- Behavioral triggers
+- Multi-channel coordination
+- Dynamic branching
+- Goal tracking
+- Performance analytics
+- Compliance rules
+- Cost management
 
 $END$
 

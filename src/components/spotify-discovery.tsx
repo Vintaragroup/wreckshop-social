@@ -12,8 +12,7 @@ import {
 import { Input } from './ui/input'
 import { Badge } from './ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4002'
+import { apiUrl } from '../lib/api'
 
 interface Genre {
   id: string
@@ -58,8 +57,8 @@ export function SpotifyUserDiscovery() {
     const loadOptions = async () => {
       try {
         const [genresRes, typesRes] = await Promise.all([
-          fetch(`${BACKEND_URL}/api/spotify/discover/genres`),
-          fetch(`${BACKEND_URL}/api/spotify/discover/artist-types`),
+          fetch(apiUrl('/spotify/discover/genres')),
+          fetch(apiUrl('/spotify/discover/artist-types')),
         ])
 
         if (genresRes.ok) {
@@ -98,12 +97,15 @@ export function SpotifyUserDiscovery() {
     try {
       const accessToken = sessionStorage.getItem('spotify_access_token')
       if (!accessToken) {
-        setError('Please connect your Spotify account first')
+        setError(
+          'Spotify authentication required to perform new discovery searches. ' +
+          'Your already-discovered users are available in the Audience section.'
+        )
         setIsLoading(false)
         return
       }
 
-      const url = new URL(`${BACKEND_URL}/api/spotify/discover/users`)
+  const url = new URL(apiUrl('/spotify/discover/users'))
       url.searchParams.set('genre', selectedGenre)
       url.searchParams.set('artistType', selectedArtistType)
       url.searchParams.set('maxResults', maxResults)
@@ -138,7 +140,7 @@ export function SpotifyUserDiscovery() {
             Discover Spotify Users
           </CardTitle>
           <CardDescription>
-            Find audiences based on music genre and artist type preferences
+            Search for new fans based on music genre and artist type. Requires Spotify authentication.
           </CardDescription>
         </CardHeader>
 
@@ -347,7 +349,8 @@ export function SpotifyDiscoveryCard() {
 
       <CardContent className="space-y-3">
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Search for Spotify users interested in specific music genres and artist types.
+          Search for Spotify users interested in specific music genres and artist types. 
+          Already-discovered users are available in your Audience section.
         </p>
 
         <Button onClick={() => setShowFullView(true)} className="w-full">
