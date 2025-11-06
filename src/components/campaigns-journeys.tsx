@@ -26,6 +26,7 @@ import { CreateJourneyModal } from "./create-journey-modal";
 import { EditJourneyModal } from "./edit-journey-modal";
 import { ViewJourneyCanvas } from "./view-journey-canvas";
 import { JourneyAnalyticsModal } from "./journey-analytics-modal";
+import { apiUrl } from "../lib/api";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -101,7 +102,7 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
       setLoading(true);
       setError(null);
       try {
-        const url = new URL('/api/journeys', window.location.origin);
+        const url = new URL(apiUrl('/journeys'), window.location.origin);
         if (filterStatus !== 'all') url.searchParams.set('status', filterStatus);
         const res = await fetch(url.toString(), { credentials: 'include' });
         if (!res.ok) throw new Error(`Failed to load journeys (${res.status})`);
@@ -130,12 +131,22 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
   // Minimal derived stats (no analytics yet)
   const stats = useMemo(() => {
     const activeCount = journeys.filter((j) => j.status === 'active').length;
-    return { totalContacts: 0, totalCompleted: 0, activeCount, avgCompletion: 0, totalRevenue: 0 };
+    let totalContacts = 0;
+    let totalCompleted = 0;
+    journeys.forEach((j) => {
+      const metrics = j.metrics || [];
+      const journeyEntered = metrics.reduce((sum: number, m: any) => sum + (m.entered || 0), 0);
+      const journeyCompleted = metrics.reduce((sum: number, m: any) => sum + (m.completed || 0), 0);
+      totalContacts += journeyEntered;
+      totalCompleted += journeyCompleted;
+    });
+    const avgCompletion = totalContacts > 0 ? (totalCompleted / totalContacts) * 100 : 0;
+    return { totalContacts, totalCompleted, activeCount, avgCompletion, totalRevenue: 0 };
   }, [journeys]);
 
   async function postAction(id: string, action: 'publish' | 'pause' | 'resume' | 'duplicate') {
     try {
-      const res = await fetch(`/api/journeys/${id}/${action}`, { method: 'POST', credentials: 'include' })
+      const res = await fetch(apiUrl(`/journeys/${id}/${action}`), { method: 'POST', credentials: 'include' })
       if (!res.ok) throw new Error(`${action} failed (${res.status})`)
       setRefreshSeq((s) => s + 1)
       const label = action.charAt(0).toUpperCase() + action.slice(1)
@@ -404,7 +415,13 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredJourneys.map((journey) => (
+              {filteredJourneys.map((journey) => {
+                const metrics = journey.metrics || [];
+                const entered = metrics.reduce((sum: number, m: any) => sum + (m.entered || 0), 0);
+                const completed = metrics.reduce((sum: number, m: any) => sum + (m.completed || 0), 0);
+                const completionRate = entered > 0 ? ((completed / entered) * 100).toFixed(1) : '0';
+                
+                return (
                 <TableRow key={journey._id}>
                   <TableCell>
                     <div>
@@ -420,12 +437,12 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div className="font-medium">-</div>
-                      <div className="text-xs text-muted-foreground">—</div>
+                      <div className="font-medium">{entered.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">{completed.toLocaleString()} completed</div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="text-muted-foreground">-</span>
+                    <span className="font-medium">{completionRate}%</span>
                   </TableCell>
                   <TableCell>
                     <JourneySteps steps={journey.steps} performance={{}} />
@@ -460,7 +477,7 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
                           onSelect={async () => {
                             try {
                               if (!confirm('Delete this journey? This cannot be undone.')) return;
-                              const res = await fetch(`/api/journeys/${journey._id}`, { method: 'DELETE', credentials: 'include' })
+                              const res = await fetch(apiUrl(`/journeys/${journey._id}`), { method: 'DELETE', credentials: 'include' })
                               if (!res.ok) throw new Error(`delete failed (${res.status})`)
                               setRefreshSeq((s) => s + 1)
                               toast.success('Journey deleted')
@@ -505,7 +522,8 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+              );
+              })}
               {filteredJourneys.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={9}>

@@ -136,3 +136,30 @@ journeys.delete('/journeys/:id', async (req, res) => {
   if (!doc) return res.status(404).json({ ok: false, error: 'not found' })
   res.json({ ok: true })
 })
+
+// Analytics for a journey
+journeys.get('/journeys/:id/analytics', async (req, res) => {
+  const doc = await JourneyModel.findById(req.params.id)
+  if (!doc) return res.status(404).json({ ok: false, error: 'not found' })
+  
+  // Return basic analytics structure
+  // In a real app, this would aggregate metrics from journey execution logs
+  const metrics = doc.metrics || []
+  const totalEntered = metrics.reduce((sum: number, m: any) => sum + (m.entered || 0), 0)
+  const totalCompleted = metrics.reduce((sum: number, m: any) => sum + (m.completed || 0), 0)
+  const completionRate = totalEntered > 0 ? (totalCompleted / totalEntered) * 100 : 0
+  
+  res.json({
+    ok: true,
+    data: {
+      journeyId: doc._id,
+      journeyName: doc.name,
+      status: doc.status,
+      contactsEntered: totalEntered,
+      contactsCompleted: totalCompleted,
+      completionRate: completionRate.toFixed(1),
+      estimatedRevenue: 0, // Would calculate from engagement data
+      stepMetrics: metrics,
+    }
+  })
+})

@@ -5,6 +5,7 @@ import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
+import { apiUrl } from "../lib/api";
 
 type JourneyStep = {
   id: string;
@@ -50,7 +51,7 @@ export function EditJourneyModal({ open, onOpenChange, journey, onSaved }: EditJ
     let aborted = false;
     async function load() {
       try {
-        const res = await fetch('/api/segments', { credentials: 'include' });
+        const res = await fetch(apiUrl('/segments'), { credentials: 'include' });
         if (!res.ok) throw new Error('failed to load segments');
         const json = await res.json();
         if (!aborted) setSegments(json.data || []);
@@ -67,7 +68,7 @@ export function EditJourneyModal({ open, onOpenChange, journey, onSaved }: EditJ
     setSaving(true);
     try {
       const body = { name, triggerKey, segmentId: segmentId || undefined };
-      const res = await fetch(`/api/journeys/${journey._id}`, {
+      const res = await fetch(apiUrl(`/journeys/${journey._id}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
