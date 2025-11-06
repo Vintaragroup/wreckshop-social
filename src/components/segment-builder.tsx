@@ -38,6 +38,8 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Label } from "./ui/label";
+import { SaveSegmentModal } from "./save-segment-modal";
+import { toast } from "sonner";
 
 interface SegmentRule {
   id: string;
@@ -159,6 +161,7 @@ export function SegmentBuilder({ onPageChange }: SegmentBuilderProps = {}) {
   ]);
   const [estimatedSize, setEstimatedSize] = useState(0);
   const [showBuilder, setShowBuilder] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const addRule = (groupId: string) => {
     setGroups(groups.map(group => 
@@ -234,15 +237,35 @@ export function SegmentBuilder({ onPageChange }: SegmentBuilderProps = {}) {
   };
 
   const handleSaveSegment = () => {
-    console.log("Saving segment:", { segmentName, segmentDescription, groups });
+    // Validate segment has a name
+    if (!segmentName.trim()) {
+      toast.error("Please enter a segment name");
+      return;
+    }
+
+    // Validate at least one rule exists
+    const hasRules = groups.some((g) => g.rules.some((r) => r.field && r.operator && r.value));
+    if (!hasRules) {
+      toast.error("Please add at least one filter rule");
+      return;
+    }
+
+    // Show save modal
+    setShowSaveModal(true);
+  };
+
+  const handleSegmentSaved = (segment: any) => {
+    // Reset form after successful save
     setShowBuilder(false);
-    // Reset form
     setSegmentName("");
     setSegmentDescription("");
     setGroups([{
       id: "1",
       rules: [{ id: "1", field: "", operator: "", value: "" }],
     }]);
+    
+    // Optionally navigate to segments list
+    onPageChange?.("segments");
   };
 
   return (
@@ -430,6 +453,17 @@ export function SegmentBuilder({ onPageChange }: SegmentBuilderProps = {}) {
           </CardContent>
         </Card>
       )}
+
+      {/* Save Segment Modal */}
+      <SaveSegmentModal
+        open={showSaveModal}
+        onOpenChange={setShowSaveModal}
+        segmentName={segmentName}
+        segmentDescription={segmentDescription}
+        groups={groups}
+        estimatedSize={calculateEstimatedSize()}
+        onSaved={handleSegmentSaved}
+      />
 
       {/* Existing Segments */}
       <Card>
