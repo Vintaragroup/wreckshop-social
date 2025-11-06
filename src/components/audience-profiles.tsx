@@ -772,7 +772,7 @@ export function AudienceProfiles({ onPageChange }: AudienceProfilesProps = {}) {
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                               {Object.entries(stats).map(([key, value]) => (
                                 <div key={key} className="text-center">
-                                  <div className="text-2xl font-bold">{value.toLocaleString()}</div>
+                                  <div className="text-2xl font-bold">{(value as number).toLocaleString()}</div>
                                   <div className="text-sm text-muted-foreground capitalize">
                                     {key.replace(/([A-Z])/g, ' $1').trim()}
                                   </div>
@@ -800,7 +800,7 @@ export function AudienceProfiles({ onPageChange }: AudienceProfilesProps = {}) {
                               <div>
                                 <div className="font-medium">{activity.action}</div>
                                 <div className="text-sm text-muted-foreground">
-                                  {activity.campaign || activity.track || activity.artist || activity.item || activity.playlist || activity.album}
+                                  {(activity as any).campaign || (activity as any).track || (activity as any).artist || (activity as any).item || (activity as any).playlist || (activity as any).album}
                                 </div>
                               </div>
                               <div className="text-sm text-muted-foreground">
