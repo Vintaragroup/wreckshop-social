@@ -281,9 +281,9 @@ campaigns.get('/campaigns/:id/analytics', async (req, res) => {
           timelineData.unshift({
             time: hourStart.toISOString(),
             label: hourStart.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-            opened: hourEvents.filter(e => e.type === 'opened').reduce((sum, e) => sum + (e.count || 1), 0),
-            clicked: hourEvents.filter(e => e.type === 'clicked').reduce((sum, e) => sum + (e.count || 1), 0),
-            bounced: hourEvents.filter(e => e.type === 'bounced').reduce((sum, e) => sum + (e.count || 1), 0),
+            opened: hourEvents.filter((e: any) => e.type === 'opened').reduce((sum: number, e: any) => sum + (e.count || 1), 0),
+            clicked: hourEvents.filter((e: any) => e.type === 'clicked').reduce((sum: number, e: any) => sum + (e.count || 1), 0),
+            bounced: hourEvents.filter((e: any) => e.type === 'bounced').reduce((sum: number, e: any) => sum + (e.count || 1), 0),
           })
         }
       } else {
@@ -301,9 +301,9 @@ campaigns.get('/campaigns/:id/analytics', async (req, res) => {
           timelineData.unshift({
             time: dayStart.toISOString(),
             label: dayStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            opened: dayEvents.filter(e => e.type === 'opened').reduce((sum, e) => sum + (e.count || 1), 0),
-            clicked: dayEvents.filter(e => e.type === 'clicked').reduce((sum, e) => sum + (e.count || 1), 0),
-            bounced: dayEvents.filter(e => e.type === 'bounced').reduce((sum, e) => sum + (e.count || 1), 0),
+            opened: dayEvents.filter((e: any) => e.type === 'opened').reduce((sum: number, e: any) => sum + (e.count || 1), 0),
+            clicked: dayEvents.filter((e: any) => e.type === 'clicked').reduce((sum: number, e: any) => sum + (e.count || 1), 0),
+            bounced: dayEvents.filter((e: any) => e.type === 'bounced').reduce((sum: number, e: any) => sum + (e.count || 1), 0),
           })
         }
       }
