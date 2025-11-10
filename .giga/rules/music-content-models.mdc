@@ -1,65 +1,63 @@
 ---
-description: Defines data models and workflows for music industry content like artists, releases, and events
+description: Technical specification for music content data models including artist, release and event metadata handling
 ---
 
 
 # music-content-models
 
-Core Model Implementation Score: 90/100
+Core business data models for managing music industry content:
 
 ## Artist Model
-Path: `backend/src/models/profile.ts`
-- Industry-standard artist profile schema with platform integration metadata
-- Multi-platform identity mapping (Spotify, Apple Music, YouTube, etc.)
-- Genre taxonomy with hierarchical categorization
-- Automated profile enrichment pipeline with data validation
-- Platform-specific URL and identifier validation
-- Automated marketing workflow triggers
+Path: `backend/src/models/artist.ts`
+Importance Score: 95
 
-## Release Model
+- Industry-standard artist profile schema
+- Handles multiple artist identifiers (ISRC, IPI, ISWC)
+- Manages artist type classification (band, solo, featured)
+- Tracks cross-platform social metrics
+- Maps genre taxonomy and subgenres
+- Links related artists and collaborators
+
+## Release Model 
 Path: `backend/src/models/release.ts`
-- Complete music release workflow with distribution scheduling
-- ISRC/UPC code generation and validation
-- Smart link generation for cross-platform promotion
-- Pre-save campaign automation
-- Release type classification system
-- Platform-specific metadata requirements
-- Automated marketing campaign generation
+Importance Score: 90
+
+- Comprehensive release metadata handling
+- UPC/EAN/ISRC code management
+- Multi-platform distribution tracking
+- Release type classification (album, EP, single)
+- Pre-save campaign configuration
+- Release schedule management across territories
 
 ## Event Model
-Path: `src/components/create-event-modal.tsx`
-- Venue capacity and ticket allocation management
-- Revenue projection system
-- Presale access control logic
-- Cross-platform ticket sales integration
-- Automated promotional campaign creation
-- Event type classification system
+Path: `backend/src/models/event.ts`
+Importance Score: 85
 
-## Distribution Workflow
-Path: `backend/src/services/ingest/ingest.service.ts`
-- Multi-platform release distribution pipeline
-- Content validation against platform requirements
-- Automated metadata synchronization
-- Release schedule optimization
-- Platform-specific asset preparation
+- Event capacity and revenue forecasting
+- Ticket tier configuration
+- Presale window management
+- Geographic venue mapping
+- Support act relationships
+- Show type classification (headline, festival, support)
+
+## Platform Integration Models
+Path: `backend/src/models/platform-integration.ts`
+Importance Score: 80
+
+- Platform-specific metadata mapping
 - Distribution status tracking
+- Release schedule synchronization
+- Platform-specific asset requirements
+- Regional availability rules
+- Content delivery verification
 
-## Platform Integration
-Path: `backend/src/providers/*`
-- Platform-specific content validation rules
-- Metadata mapping between platforms
-- Asset format conversion pipeline
-- Release timing coordination
-- Analytics aggregation
-- Performance tracking
-
-## Marketing Automation
-Path: `backend/src/services/marketing/*`
-- Release-triggered campaign generation
-- Cross-platform promotion scheduling
-- Smart link analytics tracking
-- Audience segmentation by release engagement
-- Pre-save to streaming conversion tracking
+Key Features:
+- Industry-standard identifier support (ISRC, UPC, ISWC)
+- Multi-platform content synchronization
+- Geographic distribution management
+- Revenue share calculations
+- Rights management tracking
+- Platform-specific validation rules
 
 $END$
 

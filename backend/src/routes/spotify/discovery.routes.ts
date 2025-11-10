@@ -7,7 +7,9 @@ import {
   getDiscoveredUsersByArtistType,
   getDiscoveryStats,
 } from '../../services/spotify/discovered-user.service'
+import { GeolocationService } from '../../services/geolocation.service'
 import DiscoveredUserModel from '../../models/discovered-user'
+import SegmentModel from '../../models/segment'
 import { env } from '../../env'
 
 export const spotifyDiscoveryRouter = Router()
@@ -237,12 +239,25 @@ spotifyDiscoveryRouter.post('/spotify/discover/save-results', async (req: Reques
 /**
  * POST /api/spotify/discover/create-segment
  * Create an audience segment from discovered users
- * Body: { name: string, filters: { genres?: string[], artistTypes?: string[], minScore?: number } }
+ * Body: { 
+ *   name: string, 
+ *   filters: { 
+ *     genres?: string[], 
+ *     artistTypes?: string[], 
+ *     minScore?: number,
+ *     countries?: string[],
+ *     states?: string[],
+ *     cities?: string[],
+ *     timezone?: string[],
+ *     geoRadius?: { centerLat: number, centerLng: number, radiusKm: number }
+ *   }, 
+ *   ownerProfileId?: string 
+ * }
  */
 spotifyDiscoveryRouter.post(
   '/spotify/discover/create-segment',
   async (req: Request, res: Response) => {
-    const { name, filters } = req.body
+    const { name, filters, ownerProfileId } = req.body
 
     if (!name) {
       return res.status(400).json({
@@ -252,35 +267,90 @@ spotifyDiscoveryRouter.post(
     }
 
     try {
-      // Build query based on filters
-      const query: any = {}
-
-      if (filters?.genres && filters.genres.length > 0) {
-        query['discoveredVia.musicGenre'] = { $in: filters.genres }
-      }
-
-      if (filters?.artistTypes && filters.artistTypes.length > 0) {
-        query['discoveredVia.artistType'] = { $in: filters.artistTypes }
-      }
-
-      if (filters?.minScore) {
-        query.matchScore = { $gte: filters.minScore }
-      }
+      // Build query using GeolocationService for combined music + geo filters
+      const query = GeolocationService.buildCombinedQuery(
+        {
+          genres: filters?.genres,
+          artistTypes: filters?.artistTypes,
+          minScore: filters?.minScore,
+        },
+        {
+          countries: filters?.countries,
+          states: filters?.states,
+          cities: filters?.cities,
+          timezone: filters?.timezone,
+          geoRadius: filters?.geoRadius,
+        }
+      )
 
       // Count matching users
       const count = await DiscoveredUserModel.countDocuments(query)
 
-      // For now, we'll return the count and query info
-      // In a full implementation, this would create a Segment document
+      // Determine geographic scope
+      let geographicScope = 'global'
+      if (filters?.geoRadius) geographicScope = 'radius'
+      else if (filters?.cities?.length > 0) geographicScope = 'city'
+      else if (filters?.states?.length > 0) geographicScope = 'state'
+      else if (filters?.countries?.length > 0) geographicScope = 'country'
+
+      // Build description
+      const parts = []
+      if (filters?.genres?.length > 0) parts.push(`Genres: ${filters.genres.join(', ')}`)
+      if (filters?.artistTypes?.length > 0) parts.push(`Artist Types: ${filters.artistTypes.join(', ')}`)
+      if (filters?.countries?.length > 0) parts.push(`Countries: ${filters.countries.join(', ')}`)
+      if (filters?.states?.length > 0) parts.push(`States: ${filters.states.join(', ')}`)
+      if (filters?.cities?.length > 0) parts.push(`Cities: ${filters.cities.join(', ')}`)
+      if (filters?.timezone?.length > 0) parts.push(`Timezones: ${filters.timezone.join(', ')}`)
+      if (filters?.geoRadius)
+        parts.push(
+          `Radius: ${filters.geoRadius.radiusKm}km from (${filters.geoRadius.centerLat}, ${filters.geoRadius.centerLng})`
+        )
+      if (filters?.minScore) parts.push(`Min Score: ${filters.minScore}%`)
+
+      const description =
+        parts.length > 0 ? `Discovered users segment - ${parts.join(' | ')}` : 'Discovered users segment'
+
+      // Create and save segment to database
+      const segment = await SegmentModel.create({
+        name,
+        description,
+        ownerProfileId: ownerProfileId || null,
+        query: {
+          type: 'discovered-user',
+          filters: {
+            genres: filters?.genres || [],
+            artistTypes: filters?.artistTypes || [],
+            minScore: filters?.minScore || 0,
+            countries: filters?.countries || [],
+            states: filters?.states || [],
+            cities: filters?.cities || [],
+            timezone: filters?.timezone || [],
+            geoRadius: filters?.geoRadius || null,
+          },
+        },
+        tags: [
+          'discovered-users',
+          ...(filters?.genres || []),
+          ...(filters?.artistTypes || []),
+          ...(filters?.countries || []),
+          ...(filters?.states || []),
+          ...(filters?.cities || []),
+        ],
+        estimatedCount: count,
+        geographicScope,
+      })
+
       return res.json({
         ok: true,
         data: {
-          name,
+          id: segment._id,
+          name: segment.name,
           filters,
           userCount: count,
-          query: JSON.stringify(query),
+          geographicScope,
+          createdAt: segment.createdAt,
         },
-        message: `Created segment "${name}" with ${count} users`,
+        message: `Created segment "${name}" with ${count} users (${geographicScope} scope)`,
       })
     } catch (err: any) {
       console.error('[Discovery] Error creating segment:', err)
@@ -291,6 +361,7 @@ spotifyDiscoveryRouter.post(
     }
   }
 )
+
 
 /**
  * GET /api/spotify/discover/segment-suggestions
@@ -347,4 +418,328 @@ spotifyDiscoveryRouter.get('/spotify/discover/segment-suggestions', async (req: 
     })
   }
 })
+
+/**
+ * GET /api/spotify/discover/segments
+ * List all discovered user segments
+ */
+spotifyDiscoveryRouter.get('/spotify/discover/segments', async (req: Request, res: Response) => {
+  try {
+    const segments = await SegmentModel.find({
+      'query.type': 'discovered-user',
+    })
+      .sort({ createdAt: -1 })
+      .lean()
+
+    return res.json({
+      ok: true,
+      data: segments,
+    })
+  } catch (err: any) {
+    console.error('[Discovery] Error listing segments:', err)
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || 'Failed to list segments',
+    })
+  }
+})
+
+/**
+ * GET /api/spotify/discover/segments/:id
+ * Get a discovered user segment and its users
+ */
+spotifyDiscoveryRouter.get('/spotify/discover/segments/:id', async (req: Request, res: Response) => {
+  try {
+    const segment = await SegmentModel.findById(req.params.id)
+    if (!segment) {
+      return res.status(404).json({
+        ok: false,
+        error: 'Segment not found',
+      })
+    }
+
+    // Check if this is a discovered-user segment
+    const queryData = segment.query as any
+    if (queryData?.type !== 'discovered-user') {
+      return res.status(400).json({
+        ok: false,
+        error: 'This segment type is not supported for discovered users',
+      })
+    }
+
+    // Build MongoDB query from segment filters
+    const mongoQuery: any = {}
+    const filters = queryData.filters || {}
+
+    if (filters.genres && filters.genres.length > 0) {
+      mongoQuery['discoveredVia.musicGenre'] = { $in: filters.genres }
+    }
+
+    if (filters.artistTypes && filters.artistTypes.length > 0) {
+      mongoQuery['discoveredVia.artistType'] = { $in: filters.artistTypes }
+    }
+
+    if (filters.minScore && filters.minScore > 0) {
+      mongoQuery.matchScore = { $gte: filters.minScore }
+    }
+
+    // Get users in this segment
+    const users = await DiscoveredUserModel.find(mongoQuery)
+      .select('spotifyId displayName email genres matchScore discoveredVia')
+      .limit(10000)
+      .lean()
+
+    return res.json({
+      ok: true,
+      data: {
+        segment,
+        users,
+        userCount: users.length,
+      },
+    })
+  } catch (err: any) {
+    console.error('[Discovery] Error getting segment:', err)
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || 'Failed to get segment',
+    })
+  }
+})
+
+/**
+ * DELETE /api/spotify/discover/segments/:id
+ * Delete a discovered user segment
+ */
+spotifyDiscoveryRouter.delete('/spotify/discover/segments/:id', async (req: Request, res: Response) => {
+  try {
+    const segment = await SegmentModel.findByIdAndDelete(req.params.id)
+    if (!segment) {
+      return res.status(404).json({
+        ok: false,
+        error: 'Segment not found',
+      })
+    }
+
+    return res.json({
+      ok: true,
+      message: `Deleted segment "${segment.name}"`,
+    })
+  } catch (err: any) {
+    console.error('[Discovery] Error deleting segment:', err)
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || 'Failed to delete segment',
+    })
+  }
+})
+
+/**
+ * GET /api/spotify/discover/geo/countries
+ * Get list of countries with discovered users
+ */
+spotifyDiscoveryRouter.get('/spotify/discover/geo/countries', async (req: Request, res: Response) => {
+  try {
+    const countries = await DiscoveredUserModel.distinct('location.country')
+    const countryNames = await DiscoveredUserModel.distinct('location.countryName')
+
+    const countryData = GeolocationService.getCountries().filter(c =>
+      countries.includes(c.code)
+    )
+
+    return res.json({
+      ok: true,
+      data: countryData,
+    })
+  } catch (err: any) {
+    console.error('[Discovery] Error getting countries:', err)
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || 'Failed to get countries',
+    })
+  }
+})
+
+/**
+ * GET /api/spotify/discover/geo/states?country=US
+ * Get states for a specific country with discovered users
+ */
+spotifyDiscoveryRouter.get('/spotify/discover/geo/states', async (req: Request, res: Response) => {
+  try {
+    const { country } = req.query
+
+    if (!country) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Country code is required',
+      })
+    }
+
+    const states = await DiscoveredUserModel.distinct('location.state', {
+      'location.country': country,
+    })
+
+    let stateOptions: Array<{ code: string; name: string }> = []
+
+    if (country === 'US') {
+      stateOptions = GeolocationService.getUSStates().filter(s => states.includes(s.code))
+    } else {
+      stateOptions = states.map((s: any) => ({ code: s, name: s }))
+    }
+
+    return res.json({
+      ok: true,
+      data: stateOptions,
+    })
+  } catch (err: any) {
+    console.error('[Discovery] Error getting states:', err)
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || 'Failed to get states',
+    })
+  }
+})
+
+/**
+ * GET /api/spotify/discover/geo/cities?country=US&state=TX
+ * Get cities for a specific country/state with discovered users
+ */
+spotifyDiscoveryRouter.get('/spotify/discover/geo/cities', async (req: Request, res: Response) => {
+  try {
+    const { country, state } = req.query
+
+    const query: any = {}
+    if (country) query['location.country'] = country
+    if (state) query['location.state'] = state
+
+    const cities = await DiscoveredUserModel.distinct('location.city', query)
+
+    const cityData = (cities as any[])
+      .filter((c: any): c is string => Boolean(c))
+      .sort()
+      .map((city: string) => ({
+        name: city,
+        count: 0, // Would need aggregation for actual counts
+      }))
+
+    return res.json({
+      ok: true,
+      data: cityData,
+    })
+  } catch (err: any) {
+    console.error('[Discovery] Error getting cities:', err)
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || 'Failed to get cities',
+    })
+  }
+})
+
+/**
+ * GET /api/spotify/discover/geo/timezones
+ * Get timezones with discovered users
+ */
+spotifyDiscoveryRouter.get('/spotify/discover/geo/timezones', async (req: Request, res: Response) => {
+  try {
+    const timezones = await DiscoveredUserModel.distinct('location.timezone')
+
+    const timezoneData = GeolocationService.getCommonTimezones().filter(tz =>
+      timezones.includes(tz.id)
+    )
+
+    return res.json({
+      ok: true,
+      data: timezoneData,
+    })
+  } catch (err: any) {
+    console.error('[Discovery] Error getting timezones:', err)
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || 'Failed to get timezones',
+    })
+  }
+})
+
+/**
+ * GET /api/spotify/discover/geo/analytics
+ * Get geographic analytics about discovered users
+ */
+spotifyDiscoveryRouter.get('/spotify/discover/geo/analytics', async (req: Request, res: Response) => {
+  try {
+    const totalUsers = await DiscoveredUserModel.countDocuments()
+
+    // Top countries
+    const topCountries = await DiscoveredUserModel.aggregate([
+      { $group: { _id: '$location.country', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 },
+    ])
+
+    // Top states
+    const topStates = await DiscoveredUserModel.aggregate([
+      {
+        $group: {
+          _id: { country: '$location.country', state: '$location.state' },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 },
+    ])
+
+    // Top cities
+    const topCities = await DiscoveredUserModel.aggregate([
+      {
+        $group: {
+          _id: { country: '$location.country', city: '$location.city' },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+      { $limit: 15 },
+    ])
+
+    // Timezone distribution
+    const timezoneDistribution = await DiscoveredUserModel.aggregate([
+      { $group: { _id: '$location.timezone', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ])
+
+    return res.json({
+      ok: true,
+      data: {
+        totalUsers,
+        topCountries: topCountries.map((c: any) => ({
+          country: c._id,
+          count: c.count,
+          percentage: ((c.count / totalUsers) * 100).toFixed(2),
+        })),
+        topStates: topStates.map((s: any) => ({
+          country: s._id.country,
+          state: s._id.state,
+          count: s.count,
+          percentage: ((s.count / totalUsers) * 100).toFixed(2),
+        })),
+        topCities: topCities.map((c: any) => ({
+          country: c._id.country,
+          city: c._id.city,
+          count: c.count,
+          percentage: ((c.count / totalUsers) * 100).toFixed(2),
+        })),
+        timezoneDistribution: timezoneDistribution.map((t: any) => ({
+          timezone: t._id,
+          count: t.count,
+          percentage: ((t.count / totalUsers) * 100).toFixed(2),
+        })),
+      },
+    })
+  } catch (err: any) {
+    console.error('[Discovery] Error getting geo analytics:', err)
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || 'Failed to get geographic analytics',
+    })
+  }
+})
+
+
 

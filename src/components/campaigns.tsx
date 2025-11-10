@@ -13,11 +13,15 @@ import {
   Pause,
   Play,
   MoreHorizontal,
+  BarChart3,
+  Beaker,
 } from "lucide-react";
 import { CreateCampaignModal } from "./create-campaign-modal";
 import { CreateEmailCampaignModal } from "./create-email-campaign-modal";
 import { CreateSMSCampaignModal } from "./create-sms-campaign-modal";
 import { CreateJourneyModal } from "./create-journey-modal";
+import { CampaignAnalyticsModal } from "./campaign-analytics-modal";
+import { ABTestingWrapper } from "./ab-testing-wrapper";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
@@ -136,6 +140,9 @@ export function Campaigns() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showSMSModal, setShowSMSModal] = useState(false);
   const [showJourneyModal, setShowJourneyModal] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [selectedCampaignName, setSelectedCampaignName] = useState<string>("");
 
   const handleSelectCampaignType = (type: 'email' | 'sms' | 'journey') => {
     switch (type) {
@@ -149,6 +156,12 @@ export function Campaigns() {
         setShowJourneyModal(true);
         break;
     }
+  };
+
+  const handleViewAnalytics = (campaignId: string, campaignName: string) => {
+    setSelectedCampaignId(campaignId);
+    setSelectedCampaignName(campaignName);
+    setShowAnalyticsModal(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -243,6 +256,10 @@ export function Campaigns() {
             <TabsTrigger value="journeys" className="flex items-center space-x-2">
               <Calendar className="w-4 h-4" />
               <span>Journeys</span>
+            </TabsTrigger>
+            <TabsTrigger value="ab-testing" className="flex items-center space-x-2">
+              <Beaker className="w-4 h-4" />
+              <span>A/B Testing</span>
             </TabsTrigger>
           </TabsList>
 
@@ -345,6 +362,10 @@ export function Campaigns() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleViewAnalytics(campaign.id.toString(), campaign.name)}>
+                              <BarChart3 className="w-4 h-4 mr-2" />
+                              View Analytics
+                            </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Eye className="w-4 h-4 mr-2" />
                               View Details
@@ -581,6 +602,10 @@ export function Campaigns() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="ab-testing">
+          <ABTestingWrapper campaignId="default" />
+        </TabsContent>
       </Tabs>
 
       {/* Modals */}
@@ -601,6 +626,14 @@ export function Campaigns() {
         open={showJourneyModal}
         onOpenChange={setShowJourneyModal}
       />
+      {selectedCampaignId && (
+        <CampaignAnalyticsModal
+          open={showAnalyticsModal}
+          onOpenChange={setShowAnalyticsModal}
+          campaignId={selectedCampaignId}
+          campaignName={selectedCampaignName}
+        />
+      )}
     </div>
   );
 }

@@ -1,53 +1,69 @@
 ---
-description: Handles the core business logic for audience segmentation and targeting in music marketing platform
+description: Technical specification for implementing segment builder algorithms in a music marketing platform
 ---
 
 
 # segment-builder-algorithms
 
-## Core Segmentation Engine
-- Hierarchical rule system for music audience targeting
-- Real-time audience size calculation based on rule combinations
-- Genre-affinity scoring (0-100) for artist/fan matching
-- Multi-criteria filtering with AND/OR logic for audience selection
-- Dynamic operator selection based on music-specific fields:
-  - follows_artist
-  - genre_affinity
-  - platform_engagement
-  - playlist_contribution
+## Core Segmentation Logic
 
-File: `src/components/segment-builder.tsx`
+### Music Taste Segmentation
+Path: src/components/discovered-user-segment-builder.tsx
+Importance Score: 95
 
-## Discovery Pipeline
-- Cross-platform artist/fan matching algorithms
-- Genre-based correlation scoring
-- Playlist contribution analysis
-- Automated taste profile generation
-- Fan engagement level categorization
+- Genre Affinity Scoring
+  - Calculates weighted scores (0-100) based on listening history
+  - Factors in recency and frequency of genre interactions
+  - Applies genre-hierarchy mapping for related genres
 
-File: `backend/src/services/spotify/discovery.service.ts`
+- Artist Type Classification
+  - Categorizes by indie/major/unsigned status
+  - Weighs follower count distribution
+  - Considers cross-platform presence
 
-## Profile Enrichment 
-- Multi-platform identity federation
-- Music taste profile aggregation
-- Artist affinity calculations
-- Genre categorization system
-- Platform-specific engagement scoring
+### Geographic Targeting
+Path: backend/src/services/geolocation.service.ts 
+Importance Score: 85
 
-Files:
-- `backend/src/services/spotify/enrichment.service.ts`
-- `backend/src/services/spotify/discovered-user.service.ts`
+- Music Market Analysis
+  - Maps users to local music scenes
+  - Calculates venue proximity scores
+  - Identifies geographic music communities
 
-## Segment Size Estimation
-- Real-time audience calculations
-- Cross-platform reach estimates
-- Genre-weighted scoring
-- Engagement level thresholds
-- Platform-specific multipliers
+- Radius-Based Fan Targeting
+  - Concert venue proximity calculations
+  - Music festival attendance patterns
+  - Local genre popularity weighting
 
-File: `src/components/discovered-user-segment-builder.tsx`
-
+### Audience Match Scoring
+Path: backend/src/models/segment.ts
 Importance Score: 90
+
+- Multi-Factor Scoring Algorithm
+  - Genre alignment (40% weight)
+  - Artist overlap (30% weight)
+  - Geographic relevance (20% weight)
+  - Platform engagement (10% weight)
+
+- Segment Size Estimation
+  - Lookalike audience modeling
+  - Platform-specific reach calculations
+  - Engagement probability scoring
+
+### Rule Hierarchy
+Path: src/components/segment-builder.tsx
+Importance Score: 85
+
+- Conditional Logic Trees
+  - AND/OR combinations of rules
+  - Nested group support
+  - Dynamic rule validation
+
+- Rule Types
+  - Music preference rules
+  - Geographic rules
+  - Engagement rules
+  - Platform-specific rules
 
 $END$
 

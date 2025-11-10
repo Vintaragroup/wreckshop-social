@@ -8,6 +8,7 @@ import { startIngestWorker } from './services/ingest/ingest.worker'
 import { health } from './routes/health'
 import { z } from 'zod'
 import { spotifyAuth } from './routes/auth/spotify.routes'
+import instagramAuth from './routes/auth/instagram.oauth'
 import { spotifyDiscoveryRouter } from './routes/spotify/discovery.routes'
 import { profiles } from './routes/profiles.routes'
 import { adminDiscoveryRouter } from './routes/admin/discovery.routes'
@@ -20,6 +21,8 @@ import { artists } from './routes/artists.routes'
 import { journeys } from './routes/journeys.routes'
 import { segments } from './routes/segments.routes'
 import { templates } from './routes/email-templates.routes'
+import { abTests } from './routes/ab-tests.routes'
+import { integrations } from './routes/integrations.routes'
 
 async function main() {
   await connectMongo(env.MONGODB_URI)
@@ -73,7 +76,10 @@ async function main() {
   app.use('/api', journeys)
   app.use('/api', segments)
   app.use('/api', templates)
+  app.use('/api', abTests)
+  app.use('/api', integrations)
   app.use('/auth', spotifyAuth)
+  app.use('/auth', instagramAuth)
   app.use('/api', spotifyDiscoveryRouter)
   app.use('/api', adminDiscoveryRouter)
 

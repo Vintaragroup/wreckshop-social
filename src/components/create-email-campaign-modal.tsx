@@ -42,6 +42,7 @@ import { cn } from "./ui/utils";
 import { format } from "date-fns";
 import { apiUrl } from "../lib/api";
 import { EmailTemplateModal } from "./email-templates";
+import { PreSendReview } from "./pre-send-review";
 import { toast } from "sonner";
 
 interface CreateEmailCampaignModalProps {
@@ -51,7 +52,7 @@ interface CreateEmailCampaignModalProps {
 }
 
 interface EmailTemplate {
-  _id: string
+  _id?: string
   name: string
   subject: string
   fromName: string
@@ -117,6 +118,7 @@ const STEPS = [
   { id: 2, name: 'Content', icon: Type },
   { id: 3, name: 'Audience', icon: Users },
   { id: 4, name: 'Schedule', icon: Clock },
+  { id: 5, name: 'Review', icon: Eye },
 ];
 
 export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: CreateEmailCampaignModalProps) {
@@ -137,6 +139,7 @@ export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: Crea
   const [scheduleTime, setScheduleTime] = useState("09:00");
   const [sendNow, setSendNow] = useState(true);
   const [abTest, setAbTest] = useState(false);
+  const [createdCampaign, setCreatedCampaign] = useState<any>(null);
 
   const loadSegments = async () => {
     try {
@@ -169,7 +172,10 @@ export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: Crea
   }
 
   const handleNext = () => {
-    if (currentStep < STEPS.length) {
+    if (currentStep === 4) {
+      // Create campaign and proceed to Step 5
+      handleCreateCampaign()
+    } else if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -181,14 +187,8 @@ export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: Crea
   };
 
   const handleCreateCampaign = async () => {
-    // Persist basic email campaign to backend
+    // Create campaign (without sending) for Step 5 review
     try {
-      const scheduleIso = !sendNow && scheduleDate
-        ? new Date(
-            `${scheduleDate.toDateString()} ${scheduleTime}`
-          ).toISOString()
-        : undefined
-
       const payload: any = {
         name: campaignName,
         channels: {
@@ -199,21 +199,22 @@ export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: Crea
             fromEmail: senderEmail,
           },
         },
-        schedule: scheduleIso ? { startAt: scheduleIso } : undefined,
         segments: selectedSegment ? [selectedSegment._id] : [],
+        status: 'draft',
       }
-      const res = await fetch('/api/campaigns', {
+
+      const res = await fetch(apiUrl('/campaigns'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json?.error || 'Failed to create campaign')
-      onCreated?.(json.data)
-      handleClose()
-    } catch (e) {
-      console.error('Create campaign failed', e)
-      // Keep dialog open; in a future pass show a toast
+      
+      setCreatedCampaign(json.data)
+      setCurrentStep(5)
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to create campaign')
     }
   };
 
@@ -228,7 +229,13 @@ export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: Crea
     setSendNow(true);
     setScheduleDate(undefined);
     setAbTest(false);
+    setCreatedCampaign(null);
     onOpenChange(false);
+  };
+
+  const handleSendComplete = () => {
+    onCreated?.(createdCampaign)
+    handleClose()
   };
 
   const canProceedFromStep1 = selectedTemplate !== null;
@@ -764,23 +771,45 @@ export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: Crea
               </div>
             </div>
           )}
+
+          {/* Step 5: Review & Send */}
+          {currentStep === 5 && createdCampaign && (
+            <PreSendReview
+              campaignId={createdCampaign._id}
+              campaignName={createdCampaign.name}
+              subject={subject}
+              fromName={senderName}
+              fromEmail={senderEmail}
+              bodyHtml={emailBody}
+              segmentName={selectedSegment?.name}
+              estimatedRecipients={selectedSegment?.estimatedCount}
+              sendImmediately={sendNow}
+              scheduledTime={
+                !sendNow && scheduleDate
+                  ? new Date(`${scheduleDate.toDateString()} ${scheduleTime}`)
+                  : undefined
+              }
+              onSendComplete={handleSendComplete}
+              onCancel={() => setCurrentStep(4)}
+            />
+          )}
         </div>
 
         {/* Footer with Navigation */}
-        <DialogFooter className="flex flex-row items-center justify-between gap-2 sm:gap-0">
-          <div>
-            {currentStep > 1 && (
-              <Button variant="outline" onClick={handleBack} className="flex items-center gap-2">
-                <ArrowLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Back</span>
+        {currentStep < 5 && (
+          <DialogFooter className="flex flex-row items-center justify-between gap-2 sm:gap-0">
+            <div>
+              {currentStep > 1 && (
+                <Button variant="outline" onClick={handleBack} className="flex items-center gap-2">
+                  <ArrowLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Back</span>
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" onClick={handleClose}>
+                Cancel
               </Button>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={handleClose}>
-              Cancel
-            </Button>
-            {currentStep < STEPS.length ? (
               <Button 
                 onClick={handleNext} 
                 disabled={
@@ -790,21 +819,26 @@ export function CreateEmailCampaignModal({ open, onOpenChange, onCreated }: Crea
                 }
                 className="flex items-center gap-2"
               >
-                <span>Next</span>
+                <span>{currentStep === 4 ? 'Review & Send' : 'Next'}</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
-            ) : (
-              <Button 
-                onClick={handleCreateCampaign} 
-                disabled={!canCreate}
-                className="flex items-center gap-2"
-              >
-                <Send className="w-4 h-4" />
-                <span>{sendNow ? 'Create & Send' : 'Create Campaign'}</span>
-              </Button>
-            )}
+            </div>
+          </DialogFooter>
+        )}
+
+        {/* Review Step Footer - handled by PreSendReview component */}
+        {currentStep === 5 && (
+          <div className="border-t pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setCurrentStep(4)}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Schedule
+            </Button>
           </div>
-        </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -5,6 +5,7 @@ import ProfilesPage from './pages/audience/profiles'
 import ProfileDetailPage from './pages/audience/profile-detail'
 import ProfilesDiscoverPage from './pages/audience/profiles-discover'
 import SpotifyCallbackPage from './pages/auth/spotify-callback'
+import { InstagramCallbackHandler } from './components/instagram-callback'
 import { ThemeProvider } from './components/theme-provider'
 import { AppShell } from './components/app-shell'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -21,6 +22,7 @@ import { Analytics } from './components/analytics'
 import { Compliance } from './components/compliance'
 import { Settings } from './components/settings'
 import { SegmentBuilder } from './components/segment-builder'
+import { EmailTemplates } from './components/email-templates'
 import AdminDiscoveryPage from './pages/admin/discovery'
 const AudienceContactsPage = React.lazy(() => import('./pages/audience/contacts'))
 const CapturePage = React.lazy(() => import('./pages/capture'))
@@ -39,6 +41,7 @@ function usePageMapping() {
   else if (path.startsWith('/campaigns/email')) currentPage = 'campaigns-email'
   else if (path.startsWith('/campaigns/sms')) currentPage = 'campaigns-sms'
   else if (path.startsWith('/campaigns/journeys')) currentPage = 'campaigns-journeys'
+  else if (path.startsWith('/campaigns/templates')) currentPage = 'campaigns-templates'
   else if (path === '/campaigns') currentPage = 'campaigns'
   else if (path.startsWith('/content/artists')) currentPage = 'content-artists'
   else if (path.startsWith('/content/releases')) currentPage = 'content-releases'
@@ -78,6 +81,9 @@ function usePageMapping() {
         break
       case 'campaigns-journeys':
         navigate('/campaigns/journeys')
+        break
+      case 'campaigns-templates':
+        navigate('/campaigns/templates')
         break
       case 'content-artists':
         navigate('/content/artists')
@@ -146,6 +152,7 @@ export const router = createBrowserRouter([
   { path: 'campaigns/email', element: <CampaignsEmail /> },
   { path: 'campaigns/sms', element: <CampaignsSMS /> },
   { path: 'campaigns/journeys', element: <CampaignsJourneys /> },
+  { path: 'campaigns/templates', element: <EmailTemplates /> },
   { path: 'content/artists', element: <ContentArtists /> },
   { path: 'content/releases', element: <ContentReleases /> },
   { path: 'content/events', element: <ContentEvents /> },
@@ -160,6 +167,10 @@ export const router = createBrowserRouter([
   {
     path: '/auth/spotify/callback',
     element: <SpotifyCallbackPage />,
+  },
+  {
+    path: '/auth/instagram/callback',
+    element: <InstagramCallbackHandler />,
   },
 ])
 

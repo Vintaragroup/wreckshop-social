@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ import { Progress } from "./ui/progress";
 import { Checkbox } from "./ui/checkbox";
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import {
   Mail,
   MessageSquare,
@@ -39,14 +40,30 @@ import {
   Filter,
   Calendar as CalendarIcon,
   Send,
+  MapPin,
+  Globe,
 } from "lucide-react";
 import { cn } from "./ui/utils";
 import { format } from "date-fns";
+import { apiUrl } from "../lib/api";
+import { GeolocationFilterUI } from "./geolocation-filter-ui";
 
 interface CreateCampaignModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelectCampaignType: (type: 'email' | 'sms' | 'journey') => void;
+}
+
+interface GeolocationFilters {
+  countries?: string[]
+  states?: string[]
+  cities?: string[]
+  timezone?: string[]
+  geoRadius?: {
+    centerLat: number
+    centerLng: number
+    radiusKm: number
+  }
 }
 
 const campaignTypes = [
@@ -100,7 +117,8 @@ const STEPS = [
   { id: 1, name: 'Template', icon: Zap },
   { id: 2, name: 'Content', icon: Mail },
   { id: 3, name: 'Audience', icon: Users },
-  { id: 4, name: 'Schedule', icon: Clock },
+  { id: 4, name: 'Geographic', icon: MapPin },
+  { id: 5, name: 'Schedule', icon: Clock },
 ];
 
 export function CreateCampaignModal({ open, onOpenChange, onSelectCampaignType }: CreateCampaignModalProps) {
@@ -117,11 +135,43 @@ export function CreateCampaignModal({ open, onOpenChange, onSelectCampaignType }
   
   // Audience step state
   const [selectedAudience, setSelectedAudience] = useState<string[]>([]);
+  const [savedSegments, setSavedSegments] = useState<any[]>([]);
+  
+  // Geographic targeting step state
+  const [geoFilters, setGeoFilters] = useState<GeolocationFilters>({
+    countries: [],
+    states: [],
+    cities: [],
+    timezone: [],
+    geoRadius: { centerLat: 0, centerLng: 0, radiusKm: 0 },
+  });
+  const [useGeographicTargeting, setUseGeographicTargeting] = useState(false);
   
   // Schedule step state
   const [scheduleType, setScheduleType] = useState<'now' | 'scheduled'>('now');
   const [scheduleDate, setScheduleDate] = useState<Date>();
   const [scheduleTime, setScheduleTime] = useState('09:00');
+
+  // Load saved segments when modal opens
+  useEffect(() => {
+    if (open) {
+      loadSavedSegments();
+    }
+  }, [open]);
+
+  const loadSavedSegments = async () => {
+    try {
+      const response = await fetch(apiUrl("/spotify/discover/segments"));
+      if (response.ok) {
+        const json = (await response.json()) as { ok: boolean; data?: any[] };
+        if (json.ok && json.data) {
+          setSavedSegments(json.data);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load segments:", err);
+    }
+  }
 
   const handleSelectType = (type: 'email' | 'sms' | 'journey') => {
     setSelectedType(type);
@@ -149,6 +199,7 @@ export function CreateCampaignModal({ open, onOpenChange, onSelectCampaignType }
       content: messageContent,
       sender: { name: senderName, email: senderEmail },
       audience: selectedAudience,
+      geographic: useGeographicTargeting ? geoFilters : null,
       schedule: {
         type: scheduleType,
         date: scheduleDate,
@@ -169,6 +220,8 @@ export function CreateCampaignModal({ open, onOpenChange, onSelectCampaignType }
     setPreviewText('');
     setMessageContent('');
     setSelectedAudience([]);
+    setUseGeographicTargeting(false);
+    setGeoFilters({ countries: [], states: [], cities: [], timezone: [], geoRadius: { centerLat: 0, centerLng: 0, radiusKm: 0 } });
     setScheduleType('now');
     setScheduleDate(undefined);
     onOpenChange(false);
@@ -178,6 +231,7 @@ export function CreateCampaignModal({ open, onOpenChange, onSelectCampaignType }
   const canProceedFromStep2 = campaignName.trim() !== '' && 
     (selectedType === 'sms' || (subject.trim() !== '' && messageContent.trim() !== ''));
   const canProceedFromStep3 = selectedAudience.length > 0;
+  const canProceedFromStep4 = true; // Geographic targeting is optional
   const canCreate = canProceedFromStep1 && canProceedFromStep2 && canProceedFromStep3;
 
   const toggleAudience = (audienceId: string) => {
@@ -471,6 +525,7 @@ export function CreateCampaignModal({ open, onOpenChange, onSelectCampaignType }
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                {/* Default segments */}
                 {audienceSegments.map((segment) => {
                   const isSelected = selectedAudience.includes(segment.id);
                   
@@ -506,6 +561,44 @@ export function CreateCampaignModal({ open, onOpenChange, onSelectCampaignType }
                     </Card>
                   );
                 })}
+
+                {/* Saved discovered user segments */}
+                {savedSegments.map((segment) => {
+                  const segmentId = `discovered-${segment._id}`;
+                  const isSelected = selectedAudience.includes(segmentId);
+                  
+                  return (
+                    <Card
+                      key={segmentId}
+                      className={cn(
+                        "cursor-pointer transition-all hover:shadow-md border-accent/30",
+                        isSelected && "ring-2 ring-accent"
+                      )}
+                      onClick={() => toggleAudience(segmentId)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleAudience(segmentId)}
+                            className="mt-1"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <h4 className="text-sm font-medium">{segment.name}</h4>
+                              <Badge variant="secondary" className="text-xs">
+                                {segment.estimatedCount?.toLocaleString() || 0}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-snug">
+                              {segment.description}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
 
               {selectedAudience.length > 0 && (
@@ -523,8 +616,9 @@ export function CreateCampaignModal({ open, onOpenChange, onSelectCampaignType }
                           Total reach: ~
                           {selectedAudience
                             .reduce((sum, id) => {
-                              const segment = audienceSegments.find(s => s.id === id);
-                              return sum + (segment ? parseInt(segment.count.replace(/,/g, '')) : 0);
+                              const defaultSeg = audienceSegments.find(s => s.id === id);
+                              const savedSeg = savedSegments.find(s => `discovered-${s._id}` === id);
+                              return sum + (defaultSeg ? parseInt(defaultSeg.count.replace(/,/g, '')) : 0) + (savedSeg ? (savedSeg.estimatedCount || 0) : 0);
                             }, 0)
                             .toLocaleString()} subscribers
                         </div>
@@ -536,11 +630,153 @@ export function CreateCampaignModal({ open, onOpenChange, onSelectCampaignType }
             </div>
           )}
 
-          {/* Step 4: Schedule */}
+          {/* Step 4: Geographic Targeting */}
           {currentStep === 4 && (
             <div className="space-y-4 md:space-y-6">
               <div>
-                <h3 className="mb-1">Schedule Campaign</h3>
+                <h3 className="mb-1">Geographic Targeting</h3>
+                <p className="text-sm text-muted-foreground">
+                  Optional: Target your campaign by geographic location
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Enable/Disable Geographic Targeting */}
+                <Card className="bg-muted/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id="use-geo"
+                        checked={useGeographicTargeting}
+                        onCheckedChange={(checked) => setUseGeographicTargeting(checked as boolean)}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <label htmlFor="use-geo" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                          <Globe className="w-4 h-4" />
+                          Enable Geographic Targeting
+                        </label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Narrow your reach to specific regions, countries, cities, or timezone zones
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Geographic Filters */}
+                {useGeographicTargeting && (
+                  <Card className="border-accent/30">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        Geographic Filters
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <GeolocationFilterUI filters={geoFilters} onChange={setGeoFilters} />
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Geographic Reach Summary */}
+                {useGeographicTargeting && (
+                  <Card className="bg-accent/5 border-accent/20">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="font-medium flex items-center gap-2">
+                          <Globe className="w-4 h-4" />
+                          Geographic Reach Summary
+                        </div>
+                        
+                        {geoFilters.countries && geoFilters.countries.length > 0 && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Countries:</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {geoFilters.countries.map((country) => (
+                                <Badge key={country} variant="secondary" className="text-xs">
+                                  {country}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {geoFilters.states && geoFilters.states.length > 0 && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">States/Regions:</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {geoFilters.states.map((state) => (
+                                <Badge key={state} variant="secondary" className="text-xs">
+                                  {state}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {geoFilters.cities && geoFilters.cities.length > 0 && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Cities:</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {geoFilters.cities.map((city) => (
+                                <Badge key={city} variant="secondary" className="text-xs">
+                                  {city}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {geoFilters.timezone && geoFilters.timezone.length > 0 && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Timezones:</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {geoFilters.timezone.map((tz) => (
+                                <Badge key={tz} variant="secondary" className="text-xs">
+                                  {tz}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {geoFilters.geoRadius?.radiusKm && geoFilters.geoRadius.radiusKm > 0 && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Radius Search:</span>
+                            <Badge variant="secondary" className="text-xs mt-1">
+                              {geoFilters.geoRadius.radiusKm}km from ({geoFilters.geoRadius.centerLat.toFixed(2)}, {geoFilters.geoRadius.centerLng.toFixed(2)})
+                            </Badge>
+                          </div>
+                        )}
+
+                        {!geoFilters.countries?.length && !geoFilters.states?.length && !geoFilters.cities?.length && !geoFilters.timezone?.length && !geoFilters.geoRadius?.radiusKm && (
+                          <p className="text-xs text-muted-foreground italic">
+                            No geographic filters selected yet. Campaign will reach all selected audience segments.
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {!useGeographicTargeting && (
+                  <Card className="bg-muted/50 border-muted">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-muted-foreground">
+                        Geographic targeting is disabled. Your campaign will reach all selected audience segments regardless of location.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Step 5: Schedule */}
+          {currentStep === 5 && (
+            <div className="space-y-4 md:space-y-6">
+              <div>
+                <h3 className="mb-1">Schedule Your Campaign</h3>
                 <p className="text-sm text-muted-foreground">
                   Choose when to send your campaign
                 </p>
@@ -624,6 +860,12 @@ export function CreateCampaignModal({ open, onOpenChange, onSelectCampaignType }
                         <span className="font-medium">{selectedAudience.length}</span>
                       </div>
                       <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Geographic Targeting:</span>
+                        <Badge variant={useGeographicTargeting ? "default" : "secondary"} className="text-xs">
+                          {useGeographicTargeting ? 'Enabled' : 'Disabled'}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Est. Reach:</span>
                         <span className="font-medium">
                           ~{selectedAudience
@@ -685,7 +927,8 @@ export function CreateCampaignModal({ open, onOpenChange, onSelectCampaignType }
                 disabled={
                   (currentStep === 1 && !canProceedFromStep1) ||
                   (currentStep === 2 && !canProceedFromStep2) ||
-                  (currentStep === 3 && !canProceedFromStep3)
+                  (currentStep === 3 && !canProceedFromStep3) ||
+                  (currentStep === 4 && !canProceedFromStep4)
                 }
                 className="flex items-center gap-2"
               >

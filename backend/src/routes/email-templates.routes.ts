@@ -16,6 +16,50 @@ const EmailTemplateBody = z.object({
   tags: z.array(z.string()).optional().default([]),
 })
 
+// Default templates for new users
+const DEFAULT_TEMPLATES = [
+  {
+    name: 'Album Launch',
+    subject: '🎵 New Album Available Now',
+    fromName: 'Wreckshop Records',
+    fromEmail: 'noreply@wreckshop.com',
+    bodyHtml: '<h1>New Album Available</h1><p>Stream the latest release across all platforms.</p>',
+    tags: ['release', 'album'],
+  },
+  {
+    name: 'Event Presale',
+    subject: '🎟️ VIP Early Access - Concert Presale',
+    fromName: 'Wreckshop Events',
+    fromEmail: 'events@wreckshop.com',
+    bodyHtml: '<h1>Exclusive Presale</h1><p>Get your tickets before they sell out.</p>',
+    tags: ['event', 'presale'],
+  },
+  {
+    name: 'Merchandise Drop',
+    subject: '👕 Limited Edition Merch Now Available',
+    fromName: 'Wreckshop Shop',
+    fromEmail: 'shop@wreckshop.com',
+    bodyHtml: '<h1>New Merchandise</h1><p>Check out our latest drops and exclusive designs.</p>',
+    tags: ['merchandise', 'shop'],
+  },
+  {
+    name: 'Newsletter Update',
+    subject: '📰 Wreckshop Newsletter - Latest Updates',
+    fromName: 'Wreckshop Team',
+    fromEmail: 'newsletter@wreckshop.com',
+    bodyHtml: '<h1>Newsletter</h1><p>Stay updated with exclusive content and behind-the-scenes news.</p>',
+    tags: ['newsletter', 'content'],
+  },
+  {
+    name: 'Blank Template',
+    subject: 'Your Subject Here',
+    fromName: 'Wreckshop Records',
+    fromEmail: 'noreply@wreckshop.com',
+    bodyHtml: '<p>Your email content goes here.</p>',
+    tags: ['custom', 'blank'],
+  },
+]
+
 // Create template
 templates.post('/email-templates', async (req, res) => {
   try {
@@ -57,6 +101,19 @@ templates.get('/email-templates', async (req, res) => {
     }
 
     const docs = await query.sort({ createdAt: -1 }).limit(200)
+    
+    // If user has no templates, return defaults
+    if (docs.length === 0) {
+      const defaultDocs = DEFAULT_TEMPLATES.map(t => ({
+        _id: undefined,
+        userId: null,
+        ...t,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }))
+      return res.json({ ok: true, data: defaultDocs })
+    }
+    
     res.json({ ok: true, data: docs })
   } catch (error: any) {
     res.status(500).json({ 

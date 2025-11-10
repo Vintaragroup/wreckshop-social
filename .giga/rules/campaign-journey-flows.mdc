@@ -1,66 +1,69 @@
 ---
-description: Specifications for campaign orchestration, journey automation, and multi-channel messaging flows
+description: Documentation for campaign orchestration logic, journey automation, and multi-channel sequencing flows
 ---
 
 
 # campaign-journey-flows
 
-Core Journey Orchestration Components:
+## Journey Orchestration Engine
+Path: src/components/campaigns-journeys.tsx
+Importance: 95
 
-1. Journey Creation Logic
-`src/components/create-journey-modal.tsx`
-- Multi-channel journey orchestration engine
-- Behavioral trigger mapping system
-- Dynamic path branching based on user actions
-- Exit condition management with goal tracking
-- Performance metrics calculation per journey stage
-Importance Score: 90
+- Multi-step journey automation with branching logic
+- Trigger types: email open, link click, custom event, time delay
+- Journey state machine with draft/active/completed/error states
+- Branch evaluation using conditional operators on contact properties
+- Custom wait steps with timezone handling
+- Re-entry rules for completed journeys
+- Engagement scoring per journey step
 
-2. Campaign Automation Rules
-`src/components/campaigns-journeys.tsx`
-- Cross-channel campaign sequencing
-- Intelligent delivery timing optimization
-- Audience segment targeting rules
-- A/B testing path management
-- Journey analytics integration
-Importance Score: 85
+## Campaign Sequencing Logic
+Path: src/components/create-campaign-modal.tsx
+Importance: 90
 
-3. SMS Campaign Logic 
-`src/components/create-sms-campaign-modal.tsx`
-- SMS compliance enforcement (quiet hours)
-- Message segmentation for length limits
-- Cost calculation per segment/audience
-- Rate limiting and throttling rules
-- Link shortening with tracking
-Importance Score: 75
+- Campaign type determination (one-time, recurring, triggered)
+- Delivery timing optimization by timezone
+- A/B test variant distribution
+- Quiet hours compliance (9pm-8am recipient time)
+- Channel capacity throttling
+- Custom frequency capping rules
+- Engagement-based send time optimization
 
-4. Email Campaign Management
-`src/components/create-email-campaign-modal.tsx`
-- Email template personalization engine
-- Delivery timing optimization
-- Bounce handling rules
-- Engagement tracking integration
-- List segmentation management
-Importance Score: 70
+## Multi-Channel Orchestration
+Path: backend/src/services/journey/orchestration.service.ts
+Importance: 85
 
-Key Journey Flow Rules:
-- Multi-stage progression logic
-- Channel coordination rules
-- Timing optimization algorithms
-- Goal completion tracking
-- Performance measurement
-- Audience segmentation integration
-- Compliance enforcement
-- Cost optimization
+- Channel selection based on contact preferences
+- Cross-channel frequency limits
+- Channel fallback sequences
+- Message templating by channel
+- Delivery confirmation tracking
+- Custom retry logic per channel
+- Channel performance scoring
 
-The system implements sophisticated journey orchestration with:
-- Behavioral triggers
-- Multi-channel coordination
-- Dynamic branching
-- Goal tracking
-- Performance analytics
-- Compliance rules
-- Cost management
+## Journey Analytics
+Path: src/components/journey-analytics-modal.tsx
+Importance: 80
+
+- Step completion rate calculations
+- Branch distribution analysis
+- Time-in-journey metrics
+- Drop-off point identification
+- Goal conversion tracking
+- Journey comparison metrics
+- Custom success criteria evaluation
+
+## Performance Optimization Rules
+Path: backend/src/services/campaign/optimization.service.ts
+Importance: 75
+
+- Send time optimization by historical engagement
+- Dynamic content selection rules
+- Audience fatigue detection
+- Channel preference learning
+- Custom throttling algorithms
+- Performance-based journey adjustments
+- A/B test winner selection logic
 
 $END$
 

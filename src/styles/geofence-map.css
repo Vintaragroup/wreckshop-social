@@ -1,0 +1,182 @@
+/* Geofence Map Styling - Google Maps inspired */
+
+.leaflet-container {
+  background-color: #e5e3df;
+  font-family: "Roboto", "Arial", sans-serif;
+}
+
+/* Tile layer customization */
+.leaflet-tile {
+  filter: saturate(1.2) brightness(1.05);
+}
+
+/* Markers */
+.leaflet-marker-icon {
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.leaflet-marker-icon.active {
+  border: 3px solid #ff6b6b;
+}
+
+/* Popups */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.2);
+  background-color: white;
+  font-family: "Roboto", "Arial", sans-serif;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  font-size: 12px;
+}
+
+.leaflet-popup-tip {
+  background-color: white;
+}
+
+/* Circle styling */
+.leaflet-circle {
+  stroke: #ff6b6b;
+  fill-color: #ff6b6b;
+}
+
+/* Draw controls */
+.leaflet-draw-toolbar {
+  border-radius: 4px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+}
+
+.leaflet-draw-toolbar a {
+  background-color: white;
+  color: #333;
+  border: 1px solid #e0e0e0;
+}
+
+.leaflet-draw-toolbar a:hover {
+  background-color: #f5f5f5;
+  border-color: #ccc;
+}
+
+.leaflet-draw-toolbar a.leaflet-disabled {
+  background-color: #f9f9f9;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* Search input styling */
+.geofence-search-input {
+  border-radius: 24px;
+  border: none;
+  padding: 10px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  font-family: "Roboto", "Arial", sans-serif;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.geofence-search-input:focus {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  outline: none;
+}
+
+/* Search results */
+.geofence-search-results {
+  border-radius: 8px;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.2);
+  background-color: white;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.geofence-search-result-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.geofence-search-result-item:hover {
+  background-color: #f5f5f5;
+}
+
+.geofence-search-result-item:last-child {
+  border-bottom: none;
+}
+
+/* Radius control */
+.geofence-radius-control {
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+/* Active geofences list */
+.geofence-list-item {
+  padding: 12px;
+  background-color: #f9f9f9;
+  border-left: 4px solid #ff6b6b;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.geofence-list-item:hover {
+  background-color: #f0f0f0;
+}
+
+/* Badge styling for geofences */
+.geofence-badge {
+  background-color: #ff6b6b;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+/* Custom controls container */
+.geofence-controls-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.geofence-loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #ff6b6b;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .leaflet-draw-toolbar {
+    flex-direction: column;
+  }
+
+  .geofence-search-input {
+    width: 100%;
+  }
+
+  .leaflet-popup-content-wrapper {
+    font-size: 11px;
+  }
+}

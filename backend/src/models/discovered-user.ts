@@ -37,6 +37,29 @@ const DiscoveredUserSchema = new Schema(
       timestamp: { type: Date, default: Date.now },
     },
 
+    // Geolocation data
+    location: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        default: [0, 0],
+      },
+      latitude: { type: Number },
+      longitude: { type: Number },
+      country: { type: String }, // ISO 3166-1 alpha-2 code
+      countryName: { type: String },
+      state: { type: String }, // US state abbreviation or region
+      stateName: { type: String },
+      city: { type: String },
+      postalCode: { type: String },
+      timezone: { type: String }, // IANA timezone
+      geohash: { type: String }, // For efficient nearby queries
+    },
+
     // Tags for segmentation
     tags: { type: [String], default: [] },
     segmentIds: { type: [mongoose.Types.ObjectId], default: [], ref: 'Segment' },
@@ -109,6 +132,12 @@ DiscoveredUserSchema.index({ matchScore: -1 })
 DiscoveredUserSchema.index({ isSynced: 1 })
 DiscoveredUserSchema.index({ createdAt: -1 })
 DiscoveredUserSchema.index({ segmentIds: 1 })
+// Geospatial indexes
+DiscoveredUserSchema.index({ 'location.coordinates': '2dsphere' })
+DiscoveredUserSchema.index({ 'location.country': 1, 'location.state': 1 })
+DiscoveredUserSchema.index({ 'location.city': 1 })
+DiscoveredUserSchema.index({ 'location.timezone': 1 })
+DiscoveredUserSchema.index({ 'location.geohash': 1 })
 
 export type DiscoveredUser = InferSchemaType<typeof DiscoveredUserSchema>
 
