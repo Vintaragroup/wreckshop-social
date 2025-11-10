@@ -10,11 +10,28 @@ dist/
 .turbo/
 coverage/
 
-# Env files
+# Env files (CRITICAL: Never commit .env files with secrets)
 .env
-.env.*
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
 !.env.example
+
+# Docker env files
 .env.docker
+.env.docker.local
+
+# Secret files
+*.key
+*.pem
+*.p8
+*.p12
+*.pfx
+*.jks
+secrets/
+.secrets/
 
 # Logs
 npm-debug.log*
