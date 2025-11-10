@@ -1,0 +1,89 @@
+name: wreckshop_social
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend-root
+    container_name: wreckshop-frontend-dev
+    environment:
+      - API_PROXY_TARGET=http://backend:${BACKEND_PORT:-4002}
+      # Intentionally do NOT set VITE_API_BASE_URL, so the browser uses relative /api and Vite proxies
+      - VITE_ENABLE_LASTFM=true
+      - VITE_ENABLE_SOUNDCLOUD=true
+      - VITE_ENABLE_DEEZER=true
+      - VITE_ENABLE_YOUTUBE=true
+      - VITE_ENABLE_AUDIUS=true
+    ports:
+      - "${FRONTEND_PORT:-5176}:5176"
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      - backend
+    command: ["sh", "-lc", "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5176"]
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wreckshop-backend-dev
+    environment:
+      - PORT=${BACKEND_PORT:-4002}
+      - MONGODB_URI=mongodb://mongo:27017/wreckshop
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=300
+      - SPOTIFY_CLIENT_ID=359d80a99deb496c989d77d8e20af741
+      - SPOTIFY_CLIENT_SECRET=0a440f76465a4af89604cb66ae89e68e
+      - SPOTIFY_REDIRECT_URI=http://localhost:${BACKEND_PORT:-4002}/auth/spotify/callback
+      - CORS_ORIGIN=http://localhost:${FRONTEND_PORT:-5176}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
+      - SOUNDCLOUD_CLIENT_ID=${SOUNDCLOUD_CLIENT_ID:-}
+      - LASTFM_API_KEY=${LASTFM_API_KEY:-}
+    ports:
+      - "${BACKEND_PORT:-4002}:4002"
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+    depends_on:
+      - mongo
+      - redis
+    command: ["sh", "-lc", "npm install --no-audit --no-fund && npm run dev"]
+
+  mongo:
+    image: mongo:7
+    container_name: wreckshop-mongo
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    container_name: wreckshop-redis
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+
+  scripts:
+    build:
+      context: .
+      dockerfile: Dockerfile.scripts
+    container_name: wreckshop-scripts
+    environment:
+      - LASTFM_API_KEY=${LASTFM_API_KEY:-}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
+      - BACKEND_BASE_URL=http://backend:${BACKEND_PORT:-4002}
+    working_dir: /app
+    volumes:
+      - ./:/app
+    depends_on:
+      - backend
+    # Provide a larger shared memory for Chromium
+    shm_size: "2gb"
+    command: ["bash", "-lc", "sleep infinity"]
+
+volumes:
+  frontend_node_modules:
+  backend_node_modules:
+  mongo_data:
