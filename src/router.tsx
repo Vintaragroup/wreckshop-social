@@ -1,5 +1,5 @@
 import React from 'react'
-import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, Outlet, RouterProvider, Navigate } from 'react-router-dom'
 import { Dashboard } from './components/dashboard'
 import ProfilesPage from './pages/audience/profiles'
 import ProfileDetailPage from './pages/audience/profile-detail'
@@ -24,9 +24,16 @@ import { Settings } from './components/settings'
 import { SegmentBuilder } from './components/segment-builder'
 import { EmailTemplates } from './components/email-templates'
 import AdminDiscoveryPage from './pages/admin/discovery'
+import { LoginPage } from './pages/auth/login'
+import { SignupPage } from './pages/auth/signup'
+import { AuthProvider, useAuth } from './lib/auth/context'
+
 const AudienceContactsPage = React.lazy(() => import('./pages/audience/contacts'))
 const CapturePage = React.lazy(() => import('./pages/capture'))
 
+/**
+ * Protected Layout - only shown when authenticated
+ */
 function usePageMapping() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -121,8 +128,30 @@ function usePageMapping() {
   return { currentPage, onPageChange }
 }
 
+/**
+ * Protected Layout - wraps authenticated pages with AppShell
+ */
 function Layout() {
   const { currentPage, onPageChange } = usePageMapping()
+  const { isAuthenticated, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
+        <div className="text-center">
+          <div className="inline-block">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+          </div>
+          <p className="text-white mt-4">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
   return (
     <ThemeProvider defaultTheme="dark">
       <AppShell currentPage={currentPage} onPageChange={onPageChange}>
@@ -133,37 +162,23 @@ function Layout() {
 }
 
 export const router = createBrowserRouter([
+  // Auth Routes (public)
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
+    path: '/signup',
+    element: <SignupPage />,
+  },
+  
+  // Capture page (public)
   {
     path: '/c/:slug',
     element: <React.Suspense fallback={<div style={{padding:16}}>Loading…</div>}><CapturePage /></React.Suspense>,
   },
-  {
-    path: '/',
-    element: <Layout />,
-    children: [
-  { index: true, element: <Dashboard /> },
-  { path: 'audience', element: <AudienceDashboard /> },
-  { path: 'audience/contacts', element: <React.Suspense fallback={<div style={{padding:16}}>Loading…</div>}><AudienceContactsPage /></React.Suspense> },
-  { path: 'audience/segments', element: <SegmentBuilder /> },
-  { path: 'audience/profiles', element: <ProfilesPage /> },
-  { path: 'audience/profiles/discover', element: <ProfilesDiscoverPage /> },
-  { path: 'audience/profiles/:id', element: <ProfileDetailPage /> },
-  { path: 'campaigns', element: <div style={{padding:16}}>Select a campaign channel from the sidebar.</div> },
-  { path: 'campaigns/email', element: <CampaignsEmail /> },
-  { path: 'campaigns/sms', element: <CampaignsSMS /> },
-  { path: 'campaigns/journeys', element: <CampaignsJourneys /> },
-  { path: 'campaigns/templates', element: <EmailTemplates /> },
-  { path: 'content/artists', element: <ContentArtists /> },
-  { path: 'content/releases', element: <ContentReleases /> },
-  { path: 'content/events', element: <ContentEvents /> },
-  { path: 'content/assets', element: <ContentAssets /> },
-  { path: 'integrations', element: <Integrations /> },
-  { path: 'analytics', element: <Analytics /> },
-  { path: 'compliance', element: <Compliance /> },
-  { path: 'settings', element: <Settings /> },
-  { path: 'admin/discovery', element: <AdminDiscoveryPage /> },
-    ],
-  },
+  
+  // OAuth Callbacks (public)
   {
     path: '/auth/spotify/callback',
     element: <SpotifyCallbackPage />,
@@ -172,15 +187,52 @@ export const router = createBrowserRouter([
     path: '/auth/instagram/callback',
     element: <InstagramCallbackHandler />,
   },
+  
+  // Protected Routes (require auth)
+  {
+    path: '/',
+    element: <Layout />,
+    children: [
+      { index: true, element: <Dashboard /> },
+      { path: 'audience', element: <AudienceDashboard /> },
+      { path: 'audience/contacts', element: <React.Suspense fallback={<div style={{padding:16}}>Loading…</div>}><AudienceContactsPage /></React.Suspense> },
+      { path: 'audience/segments', element: <SegmentBuilder /> },
+      { path: 'audience/profiles', element: <ProfilesPage /> },
+      { path: 'audience/profiles/discover', element: <ProfilesDiscoverPage /> },
+      { path: 'audience/profiles/:id', element: <ProfileDetailPage /> },
+      { path: 'campaigns', element: <div style={{padding:16}}>Select a campaign channel from the sidebar.</div> },
+      { path: 'campaigns/email', element: <CampaignsEmail /> },
+      { path: 'campaigns/sms', element: <CampaignsSMS /> },
+      { path: 'campaigns/journeys', element: <CampaignsJourneys /> },
+      { path: 'campaigns/templates', element: <EmailTemplates /> },
+      { path: 'content/artists', element: <ContentArtists /> },
+      { path: 'content/releases', element: <ContentReleases /> },
+      { path: 'content/events', element: <ContentEvents /> },
+      { path: 'content/assets', element: <ContentAssets /> },
+      { path: 'integrations', element: <Integrations /> },
+      { path: 'analytics', element: <Analytics /> },
+      { path: 'compliance', element: <Compliance /> },
+      { path: 'settings', element: <Settings /> },
+      { path: 'admin/discovery', element: <AdminDiscoveryPage /> },
+    ],
+  },
+
+  // Fallback - redirect to login
+  {
+    path: '*',
+    element: <Navigate to="/login" replace />,
+  },
 ])
 
 export function AppRouter() {
   return (
-    <RouterProvider
-      router={router}
-      future={{
-        v7_startTransition: true,
-      }}
-    />
+    <AuthProvider>
+      <RouterProvider
+        router={router}
+        future={{
+          v7_startTransition: true,
+        }}
+      />
+    </AuthProvider>
   )
 }

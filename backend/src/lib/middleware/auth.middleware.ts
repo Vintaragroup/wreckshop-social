@@ -59,6 +59,18 @@ export function extractToken(authHeader?: string): string | null {
  */
 export async function verifyToken(token: string): Promise<any> {
   try {
+    // First try to decode demo token (base64 encoded JSON)
+    try {
+      const decoded = JSON.parse(Buffer.from(token, 'base64').toString('utf-8'));
+      if (decoded.userId) {
+        // It's a demo token
+        return decoded;
+      }
+    } catch (e) {
+      // Not a demo token, continue to Stack Auth verification
+    }
+
+    // Try Stack Auth verification
     const decoded = await verifyStackAuthToken(token);
     return decoded;
   } catch (error) {
