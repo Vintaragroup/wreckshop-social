@@ -1,4 +1,5 @@
-FROM node:20-alpine
+# Stage 1: Build
+FROM node:20-alpine as builder
 
 WORKDIR /app
 
@@ -7,8 +8,18 @@ RUN npm install --no-audit --no-fund
 
 COPY . .
 
-ENV VITE_API_BASE_URL=http://backend:4002
+# Build for production
+RUN npm run build
+
+# Stage 2: Serve with nginx
+FROM nginx:alpine
+
+# Copy nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy built app
+COPY --from=builder /app/build /app/build
+
 EXPOSE 5176
 
-# Run dev server
-CMD ["npm", "run", "dev"]
+CMD ["nginx", "-g", "daemon off;"]

@@ -75,10 +75,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(true);
     setError(null);
     try {
-      // This will be replaced with actual Stack Auth SDK call
-      // For now, we'll use a mock implementation
+      // Determine API URL: use env var if set, otherwise use relative path for Docker
+      // When running in Docker container, use /api directly (proxied through nginx/vite)
+      // When running locally with vite dev server, use the proxy path
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4002'}/api/auth/login`,
+        `${apiBaseUrl}/auth/login`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -110,8 +112,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(true);
     setError(null);
     try {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4002'}/api/auth/signup`,
+        `${apiBaseUrl}/auth/signup`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -144,8 +147,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       // Call logout endpoint if needed
       if (token) {
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
         await fetch(
-          `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4002'}/api/auth/logout`,
+          `${apiBaseUrl}/auth/logout`,
           {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
@@ -167,8 +171,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshToken = useCallback(async () => {
     try {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4002'}/api/auth/refresh`,
+        `${apiBaseUrl}/auth/refresh`,
         {
           method: 'POST',
           headers: {
