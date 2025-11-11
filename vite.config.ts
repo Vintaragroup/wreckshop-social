@@ -58,6 +58,7 @@
       outDir: 'build',
     },
     server: {
+      host: '0.0.0.0',
       port: 5176,
       // Disable auto-opening the browser to avoid xdg-open errors in containers
       open: false,
@@ -65,13 +66,13 @@
         '/api': {
           // Use a proxy target intended for the dev server process, not the browser.
           // Falls back to VITE_API_BASE_URL for backward compatibility, then localhost.
-          target: process.env.API_PROXY_TARGET || process.env.VITE_API_BASE_URL || 'http://localhost:4002',
+          target: process.env.API_PROXY_TARGET || process.env.VITE_API_BASE_URL || 'http://backend:4002',
           changeOrigin: true,
           secure: false,
         },
         '/auth': {
           // Proxy OAuth routes to backend
-          target: process.env.API_PROXY_TARGET || process.env.VITE_API_BASE_URL || 'http://localhost:4002',
+          target: process.env.API_PROXY_TARGET || process.env.VITE_API_BASE_URL || 'http://backend:4002',
           changeOrigin: true,
           secure: false,
         },

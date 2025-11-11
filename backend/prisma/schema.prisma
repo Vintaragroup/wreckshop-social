@@ -1,0 +1,247 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../node_modules/.prisma/client"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ARTIST & MANAGER MODELS
+// ============================================
+
+model Artist {
+  id String @id @default(cuid())
+
+  // Stack Auth integration
+  stackAuthUserId String @unique
+  email String @unique
+  profilePictureUrl String?
+
+  // Profile info
+  stageName String
+  fullName String?
+  bio String?
+
+  // Music metadata
+  genres String[] // ["Hip-Hop", "Trap"]
+  niches String[] // ["West Coast", "Underground"]
+
+  // Location
+  countryCode String?
+  region String?
+
+  // Account settings
+  accountType String @default("ARTIST") // "ARTIST" or "ARTIST_AND_MANAGER"
+  isVerified Boolean @default(false)
+  verificationDate DateTime?
+
+  // Gamification
+  publicMetricsOptIn Boolean @default(false)
+  leaderboardRank Int?
+  leaderboardScore Int @default(0)
+
+  // Relationships - Artists managed by this user
+  managedArtists ManagerArtist[] @relation("ManagerArtists")
+  
+  // Relationships - Managers managing this artist
+  managers ManagerArtist[] @relation("ManagedByManagers")
+
+  // Integrations
+  spotifyIntegration SpotifyIntegration?
+  instagramIntegration InstagramIntegration?
+  youtubeIntegration YoutubeIntegration?
+  tikTokIntegration TikTokIntegration?
+
+  // Audit log
+  auditLogs AuditLog[] @relation("UserAuditLogs")
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([stackAuthUserId])
+  @@index([email])
+}
+
+model ManagerArtist {
+  id String @id @default(cuid())
+
+  // Relationships
+  managerId String
+  manager Artist @relation("ManagerArtists", fields: [managerId], references: [id], onDelete: Cascade)
+
+  artistId String
+  artist Artist @relation("ManagedByManagers", fields: [artistId], references: [id], onDelete: Cascade)
+
+  // Status
+  status String @default("PENDING") // "PENDING" | "ACTIVE" | "INACTIVE" | "REJECTED"
+
+  // Permissions (granular control per artist)
+  viewAnalytics Boolean @default(false)
+  createCampaign Boolean @default(false)
+  editCampaign Boolean @default(false)
+  deleteCampaign Boolean @default(false)
+  postSocial Boolean @default(false)
+  editProfile Boolean @default(false)
+  configureIntegrations Boolean @default(false)
+  inviteCollaborator Boolean @default(false)
+  manageTeam Boolean @default(false)
+
+  // Metadata
+  invitedAt DateTime @default(now())
+  approvedAt DateTime?
+  rejectedAt DateTime?
+
+  // Unique: one manager per artist (but multiple managers can manage different artists)
+  @@unique([managerId, artistId])
+  @@index([status])
+}
+
+// ============================================
+// PLATFORM INTEGRATIONS
+// ============================================
+
+model SpotifyIntegration {
+  id String @id @default(cuid())
+
+  artistId String @unique
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  // OAuth info
+  spotifyAccountId String @unique
+  displayName String?
+  profileUrl String?
+  profileImageUrl String?
+
+  // Metadata
+  followers Int @default(0)
+  isArtistAccount Boolean @default(false)
+  genres String[]
+  
+  // Token info (stored securely via Stack Auth)
+  // Stack Auth manages the actual OAuth token
+  tokenStoredAt DateTime @default(now())
+
+  // Stats cache
+  monthlyListeners Int @default(0)
+  dailyStreams Int @default(0)
+  totalStreams Int @default(0)
+  lastSyncedAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([artistId])
+}
+
+model InstagramIntegration {
+  id String @id @default(cuid())
+
+  artistId String @unique
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  // OAuth info
+  instagramAccountId String @unique
+  username String @unique
+  profileUrl String?
+  profileImageUrl String?
+
+  // Metadata
+  followers Int @default(0)
+  isBusinessAccount Boolean @default(false)
+
+  // Stats cache
+  monthlyReach Int @default(0)
+  monthlyImpressions Int @default(0)
+  engagementRate Float @default(0)
+  lastSyncedAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([artistId])
+}
+
+model YoutubeIntegration {
+  id String @id @default(cuid())
+
+  artistId String @unique
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  // OAuth info
+  youtubeChannelId String @unique
+  channelTitle String?
+  channelUrl String?
+  channelImageUrl String?
+
+  // Metadata
+  subscribers Int @default(0)
+  totalViews Int @default(0)
+
+  // Stats cache
+  monthlyViews Int @default(0)
+  monthlySubscribers Int @default(0)
+  lastSyncedAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([artistId])
+}
+
+model TikTokIntegration {
+  id String @id @default(cuid())
+
+  artistId String @unique
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  // OAuth info
+  tiktokUserId String @unique
+  username String @unique
+  profileUrl String?
+  profileImageUrl String?
+
+  // Metadata
+  followers Int @default(0)
+  totalLikes Int @default(0)
+  videoCount Int @default(0)
+
+  // Stats cache
+  monthlyViews Int @default(0)
+  monthlyEngagement Int @default(0)
+  lastSyncedAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([artistId])
+}
+
+// ============================================
+// AUDIT TRAIL
+// ============================================
+
+model AuditLog {
+  id String @id @default(cuid())
+
+  userId String
+  user Artist @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: Cascade)
+
+  action String // "CREATE_MANAGER", "UPDATE_PERMISSIONS", etc.
+  resourceType String // "ARTIST", "MANAGER_ARTIST", etc.
+  resourceId String
+  
+  changes Json? // What changed
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}

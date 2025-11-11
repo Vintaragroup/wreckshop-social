@@ -10,6 +10,8 @@ import { z } from 'zod'
 import { spotifyAuth } from './routes/auth/spotify.routes'
 import instagramAuth from './routes/auth/instagram.oauth'
 import authRoutes from './routes/auth.routes'
+import testDbRoutes from './routes/test-db.routes'
+import webhooks from './routes/webhooks.routes'
 import { spotifyDiscoveryRouter } from './routes/spotify/discovery.routes'
 import { profiles } from './routes/profiles.routes'
 import { adminDiscoveryRouter } from './routes/admin/discovery.routes'
@@ -80,6 +82,8 @@ async function main() {
   app.use('/api', abTests)
   app.use('/api', integrations)
   app.use('/api/auth', authRoutes)
+  app.use('/api/test', testDbRoutes)
+  app.use('/api/webhooks', webhooks)
   app.use('/auth', spotifyAuth)
   app.use('/auth', instagramAuth)
   app.use('/api', spotifyDiscoveryRouter)
