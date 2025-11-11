@@ -27,6 +27,11 @@ import { templates } from './routes/email-templates.routes'
 import { abTests } from './routes/ab-tests.routes'
 import { integrations } from './routes/integrations.routes'
 import { authenticateJWT, optionalAuth } from './lib/middleware/auth.middleware'
+import managerRoutes from './routes/manager/manager.routes'
+import campaignManagerRoutes from './routes/manager/campaigns.manager.routes'
+import integrationManagerRoutes from './routes/manager/integrations.manager.routes'
+import contentManagerRoutes from './routes/manager/content.manager.routes'
+import analyticsManagerRoutes from './routes/manager/analytics.manager.routes'
 
 async function main() {
   await connectMongo(env.MONGODB_URI)
@@ -95,6 +100,13 @@ async function main() {
   app.use('/api', authenticateJWT, templates)
   app.use('/api', authenticateJWT, abTests)
   app.use('/api', authenticateJWT, integrations)
+
+  // Manager-specific routes (all require authentication)
+  app.use('/api', authenticateJWT, managerRoutes)
+  app.use('/api', authenticateJWT, campaignManagerRoutes)
+  app.use('/api', authenticateJWT, integrationManagerRoutes)
+  app.use('/api', authenticateJWT, contentManagerRoutes)
+  app.use('/api', authenticateJWT, analyticsManagerRoutes)
 
   // Example zod-validated echo route
   app.post('/api/echo', (req, res) => {
