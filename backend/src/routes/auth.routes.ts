@@ -12,6 +12,7 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import { stackAuthConfig } from '../lib/stack-auth.js';
+import { authenticateJWT, extractToken, verifyToken } from '../lib/middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -68,18 +69,27 @@ router.get('/health', async (req: Request, res: Response) => {
  *   "id": "user_xxx",
  *   "email": "user@example.com",
  *   "displayName": "John Doe",
- *   "profilePictureUrl": "https://..."
+ *   "profilePictureUrl": "https://...",
+ *   "accountType": "ARTIST_AND_MANAGER",
+ *   "isVerified": true
  * }
  */
-router.get('/me', async (req: Request, res: Response) => {
+router.get('/me', authenticateJWT, async (req: Request, res: Response) => {
   try {
-    // TODO: Extract JWT from Authorization header
-    // TODO: Verify JWT with Stack Auth
-    // TODO: Return user info
+    if (!req.user) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'User not authenticated',
+      });
+    }
 
-    res.status(401).json({
-      error: 'Not implemented',
-      message: 'JWT verification middleware coming in Day 4',
+    res.json({
+      id: req.user.id,
+      email: req.user.email,
+      displayName: req.user.displayName,
+      profilePictureUrl: req.user.profilePictureUrl,
+      accountType: req.user.accountType,
+      isVerified: req.user.isVerified,
     });
   } catch (error) {
     res.status(500).json({
@@ -103,7 +113,8 @@ router.get('/me', async (req: Request, res: Response) => {
  * {
  *   "valid": true,
  *   "userId": "user_xxx",
- *   "email": "user@example.com"
+ *   "email": "user@example.com",
+ *   "displayName": "John Doe"
  * }
  */
 router.post('/verify-jwt', async (req: Request, res: Response) => {
@@ -116,12 +127,21 @@ router.post('/verify-jwt', async (req: Request, res: Response) => {
       });
     }
 
-    // TODO: Verify JWT with Stack Auth
-    // TODO: Return verification result
+    // Verify token with Stack Auth
+    const decoded = await verifyToken(token);
+    
+    if (!decoded || !decoded.userId) {
+      return res.json({
+        valid: false,
+        error: 'Invalid token',
+      });
+    }
 
-    res.status(501).json({
-      error: 'Not implemented',
-      message: 'JWT verification coming in Day 4',
+    res.json({
+      valid: true,
+      userId: decoded.userId,
+      email: decoded.email,
+      displayName: decoded.displayName,
     });
   } catch (error) {
     res.status(500).json({

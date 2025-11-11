@@ -26,6 +26,7 @@ import { segments } from './routes/segments.routes'
 import { templates } from './routes/email-templates.routes'
 import { abTests } from './routes/ab-tests.routes'
 import { integrations } from './routes/integrations.routes'
+import { authenticateJWT, optionalAuth } from './lib/middleware/auth.middleware'
 
 async function main() {
   await connectMongo(env.MONGODB_URI)
@@ -68,26 +69,32 @@ async function main() {
     res.json({ ok: true })
   })
 
+  // Public routes (no authentication required)
   app.use('/api', health)
-  app.use('/api', profiles)
-  app.use('/api', releases)
-  app.use('/api', events)
-  app.use('/api', campaigns)
-  app.use('/api', audience)
-  app.use('/api', capture)
-  app.use('/api', artists)
-  app.use('/api', journeys)
-  app.use('/api', segments)
-  app.use('/api', templates)
-  app.use('/api', abTests)
-  app.use('/api', integrations)
-  app.use('/api/auth', authRoutes)
   app.use('/api/test', testDbRoutes)
   app.use('/api/webhooks', webhooks)
   app.use('/auth', spotifyAuth)
   app.use('/auth', instagramAuth)
   app.use('/api', spotifyDiscoveryRouter)
   app.use('/api', adminDiscoveryRouter)
+  app.use('/api', capture) // Events tracking - often public or anonymous
+
+  // Authentication routes (public but handles JWT)
+  app.use('/api/auth', authRoutes)
+
+  // Protected routes - require authentication
+  // Apply authenticateJWT middleware to all artist/manager endpoints
+  app.use('/api', authenticateJWT, profiles)
+  app.use('/api', authenticateJWT, releases)
+  app.use('/api', authenticateJWT, events)
+  app.use('/api', authenticateJWT, campaigns)
+  app.use('/api', authenticateJWT, audience)
+  app.use('/api', authenticateJWT, artists)
+  app.use('/api', authenticateJWT, journeys)
+  app.use('/api', authenticateJWT, segments)
+  app.use('/api', authenticateJWT, templates)
+  app.use('/api', authenticateJWT, abTests)
+  app.use('/api', authenticateJWT, integrations)
 
   // Example zod-validated echo route
   app.post('/api/echo', (req, res) => {
