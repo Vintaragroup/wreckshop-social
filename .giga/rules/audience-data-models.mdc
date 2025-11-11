@@ -1,78 +1,100 @@
 ---
-description: Specification for audience data models, profiling rules, and segmentation logic in music marketing platforms
+description: Specifications for fan data structures, segmentation rules, and engagement scoring used in audience management
 ---
 
 
 # audience-data-models
 
-## Core Profile Data Structures
+## Fan Profile Data Structure
 
-### Fan Profile Schema
-- Composite identity mapping across music platforms
-- Genre affinity scoring (0-100) based on listening history
-- Artist type categorization weights
-- Geographic music scene affiliations
-- Platform-specific engagement metrics
+Importance Score: 95/100
 
-### Segmentation Rules
-- Multi-dimensional clustering based on:
-  - Genre preferences (primary/secondary)
-  - Artist type affinity (indie/major/emerging)
-  - Geographic music market
-  - Platform engagement levels
-- Dynamic segment size estimation
-- Overlap detection algorithms
-- Auto-categorization based on listening patterns
+Core data models for managing fan profiles across music platforms:
 
-### Engagement Scoring
-- Platform-weighted engagement metrics
-- Genre-specific interaction scoring
-- Artist relationship strength calculations
-- Geographic reach multipliers
-- Time-decay factors for historical data
+```typescript
+interface FanProfile {
+  // Cross-platform music identity
+  platformIds: {
+    spotify?: string
+    lastfm?: string
+    soundcloud?: string
+  }
+  // Genre affinity scoring
+  genreAffinities: {
+    [genre: string]: {
+      score: number // 0-100
+      confidence: number // 0-1
+      lastUpdated: Date
+    }
+  }
+  // Artist relationship mapping  
+  artistFollowing: {
+    artistId: string
+    platform: string
+    engagementLevel: 'casual' | 'engaged' | 'superfan'
+    firstSeen: Date
+  }[]
+}
+```
 
-## Implementation Components
+## Segmentation Rules Engine
 
-### Discovery Service
-Path: `backend/src/services/spotify/discovery.service.ts`
-Importance Score: 95
-- Music taste profiling algorithms
-- Genre classification system
-- Artist relationship mapping
-- Platform identity resolution
-- Custom scoring formulas
+Importance Score: 90/100
 
-### Profile Enrichment
-Path: `backend/src/services/spotify/enrichment.service.ts`
-Importance Score: 90
-- Cross-platform data aggregation
-- Genre normalization
-- Artist categorization
-- Geographic market mapping
-- Engagement metric standardization
+Audience segmentation logic implementing:
 
-### Segment Builder
-Path: `src/components/segment-builder.tsx`
-Importance Score: 85
-- Dynamic segment rule generation
-- Multi-platform filtering logic
-- Geographic targeting system
-- Custom audience metrics
-- Segment overlap calculations
+- Multi-factor scoring based on:
+  - Genre affinity thresholds
+  - Artist following patterns
+  - Geographic music market presence
+  - Platform-specific engagement metrics
 
-### Data Models
-Path: `backend/src/models/`
-- audience-contact.ts (Score: 80)
-- discovered-user.ts (Score: 85)
-- profile.ts (Score: 90)
-- segment.ts (Score: 85)
+- Dynamic segment calculation with:
+  - Nested boolean conditions
+  - Weighted scoring modifiers
+  - Time-based validity rules
+  - Market-specific adjustments
 
-Defines core data structures for:
-- Fan profile composition
-- Platform identity mapping
-- Engagement metrics
-- Segmentation rules
-- Geographic targeting
+## Engagement Scoring Algorithm 
+
+Importance Score: 85/100
+
+Fan engagement calculation incorporating:
+
+- Platform-specific metrics:
+  - Spotify: Save ratio, playlist adds, listening time
+  - Instagram: Story views, post engagement, live attendance
+  - Email: Open rates, click patterns, forward behavior
+
+- Scoring weights by:
+  - Platform relevance (primary vs secondary)
+  - Action recency
+  - Market significance
+  - Genre alignment
+
+## Platform-Specific Metrics
+
+Importance Score: 80/100
+
+Specialized tracking for:
+
+1. Music Platform Engagement
+- Listen completion rates
+- Playlist curator status
+- New release response time
+- Cross-platform correlation
+
+2. Social Platform Activity  
+- Content sharing velocity
+- Comment sentiment analysis
+- Artist mention tracking
+- Live event participation
+
+3. Marketing Response
+- Channel preference scoring
+- Message type affinity
+- Conversion patterns
+- Opt-out analysis
 
 $END$
 

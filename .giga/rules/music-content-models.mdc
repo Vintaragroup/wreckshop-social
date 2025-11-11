@@ -1,63 +1,50 @@
 ---
-description: Technical specification for music content data models including artist, release and event metadata handling
+description: Documents core music content models including artist, release, and event data structures with industry metadata
 ---
 
 
 # music-content-models
 
-Core business data models for managing music industry content:
+Core data models for managing music industry content and metadata:
 
 ## Artist Model
-Path: `backend/src/models/artist.ts`
 Importance Score: 95
 
-- Industry-standard artist profile schema
-- Handles multiple artist identifiers (ISRC, IPI, ISWC)
-- Manages artist type classification (band, solo, featured)
-- Tracks cross-platform social metrics
-- Maps genre taxonomy and subgenres
-- Links related artists and collaborators
+Key Components:
+- Industry standard identifier mappings (Spotify ID, Apple Music ID, MusicBrainz ID)
+- Genre taxonomy with weighted relevance scoring
+- Social platform identity resolution (Instagram, Twitter, TikTok handles)
+- Geographic market associations and primary location data
+- Distribution platform state tracking
 
 ## Release Model 
-Path: `backend/src/models/release.ts`
 Importance Score: 90
 
-- Comprehensive release metadata handling
-- UPC/EAN/ISRC code management
-- Multi-platform distribution tracking
-- Release type classification (album, EP, single)
+Key Components:
+- ISRC/UPC code management and validation
+- Multi-format release configurations (album, EP, single)
+- Platform-specific metadata requirements
+- Distribution state machine (draft, submitted, live, taken-down)
+- Release window scheduling with timezone handling
 - Pre-save campaign configuration
-- Release schedule management across territories
 
 ## Event Model
-Path: `backend/src/models/event.ts`
 Importance Score: 85
 
-- Event capacity and revenue forecasting
-- Ticket tier configuration
-- Presale window management
-- Geographic venue mapping
-- Support act relationships
-- Show type classification (headline, festival, support)
+Key Components:
+- Venue capacity and ticket tier management
+- Support act and headliner relationships
+- Event type categorization (concert, festival, tour date)
+- Geographic market metadata
+- Pre-sale and public sale scheduling
+- Box office integration points
 
-## Platform Integration Models
-Path: `backend/src/models/platform-integration.ts`
-Importance Score: 80
-
-- Platform-specific metadata mapping
-- Distribution status tracking
-- Release schedule synchronization
-- Platform-specific asset requirements
-- Regional availability rules
-- Content delivery verification
-
-Key Features:
-- Industry-standard identifier support (ISRC, UPC, ISWC)
-- Multi-platform content synchronization
-- Geographic distribution management
-- Revenue share calculations
-- Rights management tracking
-- Platform-specific validation rules
+The core business value lies in the industry-specific metadata handling and platform integrations, particularly around:
+- Standard music identifiers (ISRC/UPC)
+- Distribution workflow states
+- Platform-specific requirements
+- Artist/release relationships
+- Event capacity management
 
 $END$
 

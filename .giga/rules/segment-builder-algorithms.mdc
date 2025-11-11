@@ -1,69 +1,62 @@
 ---
-description: Technical specification for implementing segment builder algorithms in a music marketing platform
+description: Technical documentation for segment builder implementation including rule hierarchy, condition mapping, and audience size calculation algorithms
 ---
 
 
 # segment-builder-algorithms
 
-## Core Segmentation Logic
+Audience Segmentation Engine implements hierarchical rule-based targeting with dynamic size estimation:
 
-### Music Taste Segmentation
-Path: src/components/discovered-user-segment-builder.tsx
-Importance Score: 95
+## Rule Hierarchy Structure
+- Root segment conditions combined with AND/OR operators
+- Nested condition groups with unlimited depth
+- Dynamic operator precedence based on group nesting
+- Support for exclusion rules at any nesting level
 
-- Genre Affinity Scoring
-  - Calculates weighted scores (0-100) based on listening history
-  - Factors in recency and frequency of genre interactions
-  - Applies genre-hierarchy mapping for related genres
+## Core Condition Types
+```typescript
+interface SegmentCondition {
+  field: string
+  operator: ConditionOperator
+  value: any
+  type: 'profile' | 'behavior' | 'custom'
+}
 
-- Artist Type Classification
-  - Categorizes by indie/major/unsigned status
-  - Weighs follower count distribution
-  - Considers cross-platform presence
+enum ConditionOperator {
+  EQUALS,
+  CONTAINS,
+  GREATER_THAN,
+  LESS_THAN,
+  IN_RANGE,
+  EXISTS,
+  // Music-specific operators
+  LISTENS_TO_GENRE,
+  FOLLOWS_ARTIST,
+  ATTENDED_EVENT
+}
+```
 
-### Geographic Targeting
-Path: backend/src/services/geolocation.service.ts 
-Importance Score: 85
+## Size Estimation Algorithm
+1. Recursive condition evaluation against sample dataset
+2. Statistical extrapolation for full audience size
+3. Real-time updates as conditions change
+4. Confidence scoring based on sample size
 
-- Music Market Analysis
-  - Maps users to local music scenes
-  - Calculates venue proximity scores
-  - Identifies geographic music communities
+## Music Industry Specific Rules
+- Genre affinity scoring and thresholds
+- Artist relationship mapping (direct/indirect follows)
+- Event attendance patterns
+- Platform-specific engagement metrics
+- Geographic music scene targeting
 
-- Radius-Based Fan Targeting
-  - Concert venue proximity calculations
-  - Music festival attendance patterns
-  - Local genre popularity weighting
+## Implementation Components
+- Condition Builder UI with drag-drop interface
+- Real-time size estimation display
+- Condition validation system
+- Rule export/import functionality
+- Segment duplication with inheritance
 
-### Audience Match Scoring
-Path: backend/src/models/segment.ts
-Importance Score: 90
-
-- Multi-Factor Scoring Algorithm
-  - Genre alignment (40% weight)
-  - Artist overlap (30% weight)
-  - Geographic relevance (20% weight)
-  - Platform engagement (10% weight)
-
-- Segment Size Estimation
-  - Lookalike audience modeling
-  - Platform-specific reach calculations
-  - Engagement probability scoring
-
-### Rule Hierarchy
-Path: src/components/segment-builder.tsx
-Importance Score: 85
-
-- Conditional Logic Trees
-  - AND/OR combinations of rules
-  - Nested group support
-  - Dynamic rule validation
-
-- Rule Types
-  - Music preference rules
-  - Geographic rules
-  - Engagement rules
-  - Platform-specific rules
+Importance Score: 95/100
 
 $END$
 
