@@ -32,6 +32,7 @@ import campaignManagerRoutes from './routes/manager/campaigns.manager.routes'
 import integrationManagerRoutes from './routes/manager/integrations.manager.routes'
 import contentManagerRoutes from './routes/manager/content.manager.routes'
 import analyticsManagerRoutes from './routes/manager/analytics.manager.routes'
+import dashboardRoutes from './routes/dashboard.routes'
 
 async function main() {
   await connectMongo(env.MONGODB_URI)
@@ -83,6 +84,7 @@ async function main() {
   app.use('/api', spotifyDiscoveryRouter)
   app.use('/api', adminDiscoveryRouter)
   app.use('/api', capture) // Events tracking - often public or anonymous
+  app.use('/api', optionalAuth, dashboardRoutes) // Dashboard with optional auth
 
   // Authentication routes (public but handles JWT)
   app.use('/api/auth', authRoutes)
