@@ -11,6 +11,7 @@
  */
 
 import express, { Request, Response, NextFunction } from 'express';
+import { stackAuthConfig } from '../lib/stack-auth.js';
 
 const router = express.Router();
 
@@ -24,21 +25,18 @@ const router = express.Router();
  * {
  *   "success": true,
  *   "message": "Stack Auth configured and ready",
- *   "projectId": "proj_xxx"
+ *   "projectId": "63928c12-12fd-4780-82c4-b21c2706650f"
  * }
  */
 router.get('/health', async (req: Request, res: Response) => {
   try {
-    const projectId = process.env.STACK_PROJECT_ID;
-    const secretKey = process.env.STACK_SECRET_SERVER_KEY;
-
-    if (!projectId || !secretKey) {
+    if (!stackAuthConfig.projectId || !stackAuthConfig.secretServerKey) {
       return res.status(500).json({
         success: false,
         message: 'Stack Auth not configured',
         missing: {
-          projectId: !projectId,
-          secretKey: !secretKey,
+          projectId: !stackAuthConfig.projectId,
+          secretKey: !stackAuthConfig.secretServerKey,
         },
       });
     }
@@ -46,7 +44,7 @@ router.get('/health', async (req: Request, res: Response) => {
     res.json({
       success: true,
       message: 'Stack Auth configured and ready',
-      projectId,
+      projectId: stackAuthConfig.projectId,
     });
   } catch (error) {
     res.status(500).json({
