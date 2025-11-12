@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
+import { LineChartWrapper, AreaChartWrapper, type ChartDataPoint } from '../../components/charts';
 
 const MOCK_DATA = {
   profile: {
@@ -23,6 +24,24 @@ const MOCK_DATA = {
     totalPlaylists: 2345,
   },
 };
+
+// Mock streaming trends data
+const STREAMING_TRENDS_DATA: ChartDataPoint[] = [
+  { name: 'Week 1', streams: 45000, listeners: 18000 },
+  { name: 'Week 2', streams: 52000, listeners: 21000 },
+  { name: 'Week 3', streams: 58000, listeners: 24000 },
+  { name: 'Week 4', streams: 79500, listeners: 60000 },
+];
+
+// Mock monthly listeners data
+const MONTHLY_LISTENERS_DATA: ChartDataPoint[] = [
+  { name: 'Month 1', listeners: 98000 },
+  { name: 'Month 2', listeners: 105000 },
+  { name: 'Month 3', listeners: 112000 },
+  { name: 'Month 4', listeners: 118000 },
+  { name: 'Month 5', listeners: 120000 },
+  { name: 'Month 6', listeners: 123400 },
+];
 
 function MetricCard({ label, value, change, icon: Icon }: any) {
   const isPositive = change >= 0;
@@ -175,8 +194,24 @@ export default function SpotifyPlatformPage() {
         <CardHeader>
           <CardTitle>Streaming Trends (Last 90 Days)</CardTitle>
         </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center bg-muted/50 rounded">
-          <p className="text-muted-foreground">Chart will be rendered here</p>
+        <CardContent className="pt-6">
+          <AreaChartWrapper
+            data={STREAMING_TRENDS_DATA}
+            areas={[
+              {
+                dataKey: 'streams',
+                fill: '#10b981',
+                stroke: '#10b981',
+                name: 'Streams',
+              },
+              {
+                dataKey: 'listeners',
+                fill: '#3b82f6',
+                stroke: '#3b82f6',
+                name: 'Listeners',
+              },
+            ]}
+          />
         </CardContent>
       </Card>
 
@@ -184,8 +219,17 @@ export default function SpotifyPlatformPage() {
         <CardHeader>
           <CardTitle>Monthly Listeners Trend (Last 6 Months)</CardTitle>
         </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center bg-muted/50 rounded">
-          <p className="text-muted-foreground">Chart will be rendered here</p>
+        <CardContent className="pt-6">
+          <LineChartWrapper
+            data={MONTHLY_LISTENERS_DATA}
+            lines={[
+              {
+                dataKey: 'listeners',
+                stroke: '#8b5cf6',
+                name: 'Monthly Listeners',
+              },
+            ]}
+          />
         </CardContent>
       </Card>
 

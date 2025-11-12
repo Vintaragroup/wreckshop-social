@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
+import { LineChartWrapper, AreaChartWrapper, type ChartDataPoint } from '../../components/charts';
 
 // Mock data structure
 interface InstagramMetrics {
@@ -47,6 +48,25 @@ const MOCK_DATA: InstagramMetrics = {
     avgCommentsPerPost: 145,
   },
 };
+
+// Mock follower growth data
+const FOLLOWER_GROWTH_DATA: ChartDataPoint[] = [
+  { name: 'Day 1', followers: 44500, engagement: 7.8 },
+  { name: 'Day 5', followers: 44750, engagement: 8.1 },
+  { name: 'Day 10', followers: 45000, engagement: 8.2 },
+  { name: 'Day 15', followers: 45100, engagement: 8.3 },
+  { name: 'Day 20', followers: 45150, engagement: 8.4 },
+  { name: 'Day 25', followers: 45200, engagement: 8.3 },
+  { name: 'Day 30', followers: 45200, engagement: 8.3 },
+];
+
+// Mock engagement trends data
+const ENGAGEMENT_TRENDS_DATA: ChartDataPoint[] = [
+  { name: 'Week 1', likes: 1800, comments: 120, shares: 45 },
+  { name: 'Week 2', likes: 2100, comments: 145, shares: 55 },
+  { name: 'Week 3', likes: 2350, comments: 155, shares: 62 },
+  { name: 'Week 4', likes: 2341, comments: 145, shares: 58 },
+];
 
 function MetricCard({ 
   label, 
@@ -227,8 +247,17 @@ export default function InstagramPlatformPage() {
         <CardHeader>
           <CardTitle>Follower Growth (Last 30 Days)</CardTitle>
         </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center bg-muted/50 rounded">
-          <p className="text-muted-foreground">Chart will be rendered here</p>
+        <CardContent className="pt-6">
+          <LineChartWrapper
+            data={FOLLOWER_GROWTH_DATA}
+            lines={[
+              {
+                dataKey: 'followers',
+                stroke: '#3b82f6',
+                name: 'Followers',
+              },
+            ]}
+          />
         </CardContent>
       </Card>
 
@@ -236,8 +265,30 @@ export default function InstagramPlatformPage() {
         <CardHeader>
           <CardTitle>Engagement Trends</CardTitle>
         </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center bg-muted/50 rounded">
-          <p className="text-muted-foreground">Chart will be rendered here</p>
+        <CardContent className="pt-6">
+          <AreaChartWrapper
+            data={ENGAGEMENT_TRENDS_DATA}
+            areas={[
+              {
+                dataKey: 'likes',
+                fill: '#ef4444',
+                stroke: '#ef4444',
+                name: 'Likes',
+              },
+              {
+                dataKey: 'comments',
+                fill: '#3b82f6',
+                stroke: '#3b82f6',
+                name: 'Comments',
+              },
+              {
+                dataKey: 'shares',
+                fill: '#10b981',
+                stroke: '#10b981',
+                name: 'Shares',
+              },
+            ]}
+          />
         </CardContent>
       </Card>
 

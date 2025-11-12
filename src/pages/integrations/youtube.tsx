@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
+import { LineChartWrapper, BarChartWrapper, type ChartDataPoint } from '../../components/charts';
 
 const MOCK_DATA = {
   profile: {
@@ -23,6 +24,24 @@ const MOCK_DATA = {
     avgWatchDuration: '4m 32s',
   },
 };
+
+// Mock views and growth data
+const VIEWS_GROWTH_DATA: ChartDataPoint[] = [
+  { name: 'Week 1', views: 18000, subscribers: 400 },
+  { name: 'Week 2', views: 22000, subscribers: 520 },
+  { name: 'Week 3', views: 28000, subscribers: 620 },
+  { name: 'Week 4', views: 55400, subscribers: 760 },
+];
+
+// Mock subscriber growth data
+const SUBSCRIBER_GROWTH_DATA: ChartDataPoint[] = [
+  { name: 'Month 1', subscribers: 195000 },
+  { name: 'Month 2', subscribers: 205000 },
+  { name: 'Month 3', subscribers: 215000 },
+  { name: 'Month 4', subscribers: 222000 },
+  { name: 'Month 5', subscribers: 228000 },
+  { name: 'Month 6', subscribers: 234000 },
+];
 
 function MetricCard({ label, value, change, icon: Icon }: any) {
   const isPositive = change >= 0;
@@ -170,8 +189,22 @@ export default function YouTubePlatformPage() {
         <CardHeader>
           <CardTitle>Views & Growth (Last 60 Days)</CardTitle>
         </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center bg-muted/50 rounded">
-          <p className="text-muted-foreground">Chart will be rendered here</p>
+        <CardContent className="pt-6">
+          <BarChartWrapper
+            data={VIEWS_GROWTH_DATA}
+            bars={[
+              {
+                dataKey: 'views',
+                fill: '#ef4444',
+                name: 'Views',
+              },
+              {
+                dataKey: 'subscribers',
+                fill: '#3b82f6',
+                name: 'New Subscribers',
+              },
+            ]}
+          />
         </CardContent>
       </Card>
 
@@ -179,8 +212,17 @@ export default function YouTubePlatformPage() {
         <CardHeader>
           <CardTitle>Subscriber Growth (Last 6 Months)</CardTitle>
         </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center bg-muted/50 rounded">
-          <p className="text-muted-foreground">Chart will be rendered here</p>
+        <CardContent className="pt-6">
+          <LineChartWrapper
+            data={SUBSCRIBER_GROWTH_DATA}
+            lines={[
+              {
+                dataKey: 'subscribers',
+                stroke: '#3b82f6',
+                name: 'Subscribers',
+              },
+            ]}
+          />
         </CardContent>
       </Card>
 

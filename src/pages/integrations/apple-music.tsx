@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
+import { LineChartWrapper, BarChartWrapper, type ChartDataPoint } from '../../components/charts';
 
 const MOCK_DATA = {
   profile: {
@@ -22,6 +23,22 @@ const MOCK_DATA = {
     listenersChange: 9.1,
   },
 };
+
+// Mock plays and sales data
+const PLAYS_SALES_DATA: ChartDataPoint[] = [
+  { name: 'Week 1', plays: 45000, sales: 85 },
+  { name: 'Week 2', plays: 52000, sales: 95 },
+  { name: 'Week 3', plays: 68000, sales: 125 },
+  { name: 'Week 4', plays: 69500, sales: 151 },
+];
+
+// Mock top tracks data
+const TOP_TRACKS_DATA: ChartDataPoint[] = [
+  { name: 'Track 1', plays: 45000, revenue: 450 },
+  { name: 'Track 2', plays: 32000, revenue: 320 },
+  { name: 'Track 3', plays: 28000, revenue: 280 },
+  { name: 'Track 4', plays: 22500, revenue: 225 },
+];
 
 function MetricCard({ label, value, change, icon: Icon }: any) {
   const isPositive = change >= 0;
@@ -170,17 +187,40 @@ export default function AppleMusicPlatformPage() {
         <CardHeader>
           <CardTitle>Plays & Sales Trend (Last 90 Days)</CardTitle>
         </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center bg-muted/50 rounded">
-          <p className="text-muted-foreground">Chart will be rendered here</p>
+        <CardContent className="pt-6">
+          <BarChartWrapper
+            data={PLAYS_SALES_DATA}
+            bars={[
+              {
+                dataKey: 'plays',
+                fill: '#ef4444',
+                name: 'Plays',
+              },
+              {
+                dataKey: 'sales',
+                fill: '#10b981',
+                name: 'Sales',
+              },
+            ]}
+          />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Top Tracks</CardTitle>
+          <CardTitle>Top Tracks by Plays</CardTitle>
         </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center bg-muted/50 rounded">
-          <p className="text-muted-foreground">Table will be rendered here</p>
+        <CardContent className="pt-6">
+          <BarChartWrapper
+            data={TOP_TRACKS_DATA}
+            bars={[
+              {
+                dataKey: 'plays',
+                fill: '#8b5cf6',
+                name: 'Plays',
+              },
+            ]}
+          />
         </CardContent>
       </Card>
 

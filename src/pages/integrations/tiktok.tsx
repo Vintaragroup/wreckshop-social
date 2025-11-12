@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { ArrowLeft, RefreshCw, TrendingUp, TrendingDown, Zap } from 'lucide-react';
+import { ArrowLeft, RefreshCw, TrendingUp, TrendingDown, Heart } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
+import { LineChartWrapper, AreaChartWrapper, type ChartDataPoint } from '../../components/charts';
 
 const MOCK_DATA = {
   profile: {
-    username: '@artisthandle',
+    username: '@creatorhandle',
     profileImageUrl: 'https://via.placeholder.com/200',
     followerCount: 128000,
     totalLikes: 3200000,
@@ -15,13 +16,28 @@ const MOCK_DATA = {
   metrics: {
     followersThisMonth: 8200,
     followerChange: 6.8,
-    profileViewsThisMonth: 234500,
     profileViewsChange: 12.0,
-    videoViewsThisMonth: 456700,
     videoViewsChange: 18.5,
     engagementRate: 12.5,
+    avgLikesPerVideo: 28500,
   },
 };
+
+// Mock follower growth data
+const FOLLOWER_GROWTH_DATA: ChartDataPoint[] = [
+  { name: 'Week 1', followers: 119800, views: 280000 },
+  { name: 'Week 2', followers: 123000, views: 320000 },
+  { name: 'Week 3', followers: 126000, views: 380000 },
+  { name: 'Week 4', followers: 128000, views: 425000 },
+];
+
+// Mock video performance data
+const VIDEO_PERFORMANCE_DATA: ChartDataPoint[] = [
+  { name: 'Video 1', views: 245000, likes: 18500 },
+  { name: 'Video 2', views: 312000, likes: 24000 },
+  { name: 'Video 3', views: 198000, likes: 15200 },
+  { name: 'Video 4', views: 435000, likes: 32500 },
+];
 
 function MetricCard({ label, value, change, icon: Icon }: any) {
   const isPositive = change >= 0;
@@ -144,25 +160,25 @@ export default function TikTokPlatformPage() {
           label="Followers This Month"
           value={`+${MOCK_DATA.metrics.followersThisMonth.toLocaleString()}`}
           change={MOCK_DATA.metrics.followerChange}
-          icon={<Zap className="w-5 h-5 text-yellow-500" />}
+          icon={<Heart className="w-5 h-5 text-red-500" />}
         />
         <MetricCard
           label="Profile Views"
-          value={(MOCK_DATA.metrics.profileViewsThisMonth / 1000).toFixed(0) + 'K'}
+          value="+12.0%"
           change={MOCK_DATA.metrics.profileViewsChange}
-          icon={<Zap className="w-5 h-5" />}
+          icon={<Heart className="w-5 h-5" />}
         />
         <MetricCard
           label="Video Views"
-          value={(MOCK_DATA.metrics.videoViewsThisMonth / 1000).toFixed(0) + 'K'}
+          value="+18.5%"
           change={MOCK_DATA.metrics.videoViewsChange}
-          icon={<Zap className="w-5 h-5" />}
+          icon={<Heart className="w-5 h-5" />}
         />
         <MetricCard
           label="Engagement Rate"
           value={MOCK_DATA.metrics.engagementRate.toFixed(1) + '%'}
           change={2.1}
-          icon={<Zap className="w-5 h-5" />}
+          icon={<Heart className="w-5 h-5" />}
         />
       </div>
 
@@ -170,8 +186,17 @@ export default function TikTokPlatformPage() {
         <CardHeader>
           <CardTitle>Follower Growth (Last 30 Days)</CardTitle>
         </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center bg-muted/50 rounded">
-          <p className="text-muted-foreground">Chart will be rendered here</p>
+        <CardContent className="pt-6">
+          <LineChartWrapper
+            data={FOLLOWER_GROWTH_DATA}
+            lines={[
+              {
+                dataKey: 'followers',
+                stroke: '#ec4899',
+                name: 'Followers',
+              },
+            ]}
+          />
         </CardContent>
       </Card>
 
@@ -179,8 +204,24 @@ export default function TikTokPlatformPage() {
         <CardHeader>
           <CardTitle>Video Performance Trends</CardTitle>
         </CardHeader>
-        <CardContent className="h-64 flex items-center justify-center bg-muted/50 rounded">
-          <p className="text-muted-foreground">Chart will be rendered here</p>
+        <CardContent className="pt-6">
+          <AreaChartWrapper
+            data={VIDEO_PERFORMANCE_DATA}
+            areas={[
+              {
+                dataKey: 'views',
+                fill: '#3b82f6',
+                stroke: '#3b82f6',
+                name: 'Views',
+              },
+              {
+                dataKey: 'likes',
+                fill: '#ec4899',
+                stroke: '#ec4899',
+                name: 'Likes',
+              },
+            ]}
+          />
         </CardContent>
       </Card>
 
