@@ -62,6 +62,14 @@
       port: 5176,
       // Disable auto-opening the browser to avoid xdg-open errors in containers
       open: false,
+      // Allow ngrok domain and other hosts for development
+      allowedHosts: [
+        'localhost',
+        '127.0.0.1',
+        'wreckshop.ngrok.app',
+        '*.ngrok.app',
+        '*.ngrok.io',
+      ],
       proxy: {
         '/api': {
           // Use a proxy target intended for the dev server process, not the browser.
