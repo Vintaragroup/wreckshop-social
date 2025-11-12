@@ -1,0 +1,116 @@
+name: wreckshop_social_ngrok
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend-root
+    container_name: wreckshop-frontend-ngrok
+    environment:
+      - API_PROXY_TARGET=http://backend:${BACKEND_PORT:-4002}
+      # For ngrok testing, frontend still uses internal docker networking
+      # but the API_BASE_URL is set for external API calls
+      - VITE_API_BASE_URL=https://wreckshop.ngrok.app/api
+      - VITE_ENABLE_LASTFM=true
+      - VITE_ENABLE_SOUNDCLOUD=true
+      - VITE_ENABLE_DEEZER=true
+      - VITE_ENABLE_YOUTUBE=true
+      - VITE_ENABLE_AUDIUS=true
+    ports:
+      - "${FRONTEND_PORT:-5176}:5176"
+    working_dir: /app
+    volumes:
+      - ../../:/app
+      - frontend_node_modules_ngrok:/app/node_modules
+    depends_on:
+      - backend
+    command: ["sh", "-lc", "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5176"]
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: wreckshop-postgres-ngrok
+    environment:
+      - POSTGRES_USER=wreckshop
+      - POSTGRES_PASSWORD=wreckshop_dev_password
+      - POSTGRES_DB=wreckshop
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_ngrok:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wreckshop"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wreckshop-backend-ngrok
+    environment:
+      - PORT=${BACKEND_PORT:-4002}
+      - DATABASE_URL=postgresql://wreckshop:wreckshop_dev_password@postgres:5432/wreckshop
+      - MONGODB_URI=mongodb://mongo:27017/wreckshop
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=300
+      - SPOTIFY_CLIENT_ID=359d80a99deb496c989d77d8e20af741
+      - SPOTIFY_CLIENT_SECRET=0a440f76465a4af89604cb66ae89e68e
+      # For ngrok, update callback URL
+      - SPOTIFY_REDIRECT_URI=https://wreckshop.ngrok.app/auth/spotify/callback
+      # CORS allows ngrok domain
+      - CORS_ORIGIN=https://wreckshop.ngrok.app
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
+      - SOUNDCLOUD_CLIENT_ID=${SOUNDCLOUD_CLIENT_ID:-}
+      - LASTFM_API_KEY=${LASTFM_API_KEY:-}
+    ports:
+      - "${BACKEND_PORT:-4002}:4002"
+    working_dir: /app
+    volumes:
+      - ../../backend:/app
+      - backend_node_modules_ngrok:/app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+      redis:
+        condition: service_started
+    command: ["sh", "-lc", "npm install --no-audit --no-fund && npm run dev"]
+
+  mongo:
+    image: mongo:7
+    container_name: wreckshop-mongo-ngrok
+    volumes:
+      - mongo_data_ngrok:/data/db
+
+  redis:
+    image: redis:7-alpine
+    container_name: wreckshop-redis-ngrok
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+
+  scripts:
+    build:
+      context: .
+      dockerfile: Dockerfile.scripts
+    container_name: wreckshop-scripts-ngrok
+    environment:
+      - LASTFM_API_KEY=${LASTFM_API_KEY:-}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
+      - BACKEND_BASE_URL=http://backend:${BACKEND_PORT:-4002}
+    working_dir: /app
+    volumes:
+      - ../../:/app
+    depends_on:
+      - backend
+    # Provide a larger shared memory for Chromium
+    shm_size: "2gb"
+    command: ["bash", "-lc", "sleep infinity"]
+
+volumes:
+  frontend_node_modules_ngrok:
+  backend_node_modules_ngrok:
+  mongo_data_ngrok:
+  postgres_data_ngrok:
