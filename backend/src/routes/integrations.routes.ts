@@ -1,8 +1,12 @@
 import { Router, Request, Response } from 'express'
 import { InstagramConnection } from '../models/instagram-connection'
 import { z } from 'zod'
+import { spotifyAnalyticsRouter } from './integrations/spotify-analytics.routes'
 
 export const integrations = Router()
+
+// Register Spotify analytics routes
+integrations.use('/spotify/analytics', spotifyAnalyticsRouter)
 
 /**
  * POST /api/integrations/instagram/callback
