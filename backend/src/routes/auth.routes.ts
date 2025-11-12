@@ -91,6 +91,7 @@ router.get('/me', authenticateJWT, async (req: Request, res: Response) => {
       profilePictureUrl: req.user.profilePictureUrl,
       accountType: req.user.accountType,
       isVerified: req.user.isVerified,
+      isAdmin: req.user.isAdmin,
     });
   } catch (error) {
     res.status(500).json({
@@ -226,6 +227,7 @@ router.post('/login', async (req: Request, res: Response) => {
             name: newArtist.stageName,
             role: 'ARTIST',
             accountType: newArtist.accountType,
+            isAdmin: newArtist.isAdmin,
           },
         },
       });
@@ -250,6 +252,7 @@ router.post('/login', async (req: Request, res: Response) => {
           name: artist.stageName,
           role: 'ARTIST',
           accountType: artist.accountType,
+          isAdmin: artist.isAdmin,
         },
       },
     });

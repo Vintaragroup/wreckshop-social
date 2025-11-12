@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart3,
   Users,
@@ -20,7 +20,7 @@ import {
 import { Button } from "./ui/button";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth/context";
-import { isManager, canConfigureIntegrations, canCreateCampaigns, canManageAudience } from "../lib/auth/roles";
+import { isManager, canConfigureIntegrations, canCreateCampaigns, canManageAudience, isAdmin } from "../lib/auth/roles";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import {
@@ -97,9 +97,14 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const isMobile = useIsMobile();
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   const userIsManager = isManager(user);
+
+  // Refresh user profile on mount to get latest admin/permission status
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
 
   const handleLogout = async () => {
     try {
@@ -129,7 +134,7 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
     // Show Integrations if user can configure integrations
     if (item.id === 'integrations' && !canConfigureIntegrations(user)) return false;
     // Show Admin only for admins
-    if (item.id === 'admin' && user?.role !== 'ADMIN') return false;
+    if (item.id === 'admin' && !isAdmin(user)) return false;
     return true;
   });
 
@@ -376,6 +381,11 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
                     <div className="text-xs text-muted-foreground">
                       {user?.email}
                     </div>
+                    {user?.isAdmin && (
+                      <div className="text-xs text-amber-600 font-semibold mt-1">
+                        ⭐ Super Admin
+                      </div>
+                    )}
                     {user?.accountType && (
                       <div className="text-xs text-muted-foreground mt-1">
                         {user.accountType === 'ARTIST_AND_MANAGER' ? '👤 Artist & Manager' : '🎵 Artist'}

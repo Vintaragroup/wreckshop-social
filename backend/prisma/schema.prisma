@@ -39,6 +39,7 @@ model Artist {
 
   // Account settings
   accountType String @default("ARTIST") // "ARTIST" or "ARTIST_AND_MANAGER"
+  isAdmin Boolean @default(false) // Admin access to platform
   isVerified Boolean @default(false)
   verificationDate DateTime?
 

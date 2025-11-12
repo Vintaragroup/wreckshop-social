@@ -15,6 +15,7 @@ export interface AuthUser {
   name: string;
   role: 'ARTIST' | 'MANAGER' | 'ADMIN';
   accountType?: 'ARTIST' | 'ARTIST_AND_MANAGER';
+  isAdmin?: boolean;
   permissions?: {
     configureIntegrations?: boolean;
     viewAnalytics?: boolean;
@@ -34,6 +35,7 @@ export interface AuthContextType {
   signup: (email: string, password: string, name: string, accountType?: 'ARTIST' | 'ARTIST_AND_MANAGER') => Promise<void>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 // ============================================================================
@@ -224,6 +226,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [token, logout]);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      if (!token) return;
+
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+      const response = await fetch(
+        `${apiBaseUrl}/auth/me`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to refresh user profile');
+      }
+
+      const userData = await response.json();
+      const updatedUser: AuthUser = {
+        id: userData.id,
+        email: userData.email,
+        name: userData.displayName || userData.email,
+        role: userData.accountType === 'ARTIST_AND_MANAGER' ? 'MANAGER' : 'ARTIST',
+        accountType: userData.accountType,
+        isAdmin: userData.isAdmin,
+      };
+
+      setUser(updatedUser);
+      localStorage.setItem('auth_user', JSON.stringify(updatedUser));
+    } catch (err) {
+      console.error('Failed to refresh user profile:', err);
+      // Don't throw - allow the app to continue with stale data
+    }
+  }, [token]);
+
   const value: AuthContextType = {
     user,
     token,
@@ -234,6 +273,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signup,
     logout,
     refreshToken,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

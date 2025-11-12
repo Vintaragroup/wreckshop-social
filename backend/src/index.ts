@@ -30,6 +30,7 @@ import { integrations } from './routes/integrations.routes'
 import { spotifyIntegrationRouter } from './routes/integrations/spotify.integration'
 import { instagramIntegrationRouter } from './routes/integrations/instagram.integration'
 import { permissionsRouter } from './routes/manager/permissions.routes'
+import { adminRouter } from './routes/admin/admin.routes'
 import { authenticateJWT, optionalAuth } from './lib/middleware/auth.middleware'
 import { validateStackAuthToken, optionalStackAuthToken } from './middleware/stack-auth.middleware'
 import managerRoutes from './routes/manager/manager.routes'
@@ -62,7 +63,7 @@ async function main() {
       origin: env.CORS_ORIGIN,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'x-admin-key'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key'],
     })
   )
   // Handle preflight quickly
@@ -70,7 +71,7 @@ async function main() {
     origin: env.CORS_ORIGIN,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'x-admin-key'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key'],
   }))
   app.use(morgan('dev'))
   app.use(express.json())
@@ -120,6 +121,9 @@ async function main() {
   app.use('/api', authenticateJWT, integrationManagerRoutes)
   app.use('/api', authenticateJWT, contentManagerRoutes)
   app.use('/api', authenticateJWT, analyticsManagerRoutes)
+
+  // Admin management routes (all require authentication)
+  app.use('/api/admin', authenticateJWT, adminRouter)
 
   // Example zod-validated echo route
   app.post('/api/echo', (req, res) => {

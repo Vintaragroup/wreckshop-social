@@ -30,7 +30,8 @@ export function isArtistOnly(user: AuthUser | null): boolean {
  */
 export function isAdmin(user: AuthUser | null): boolean {
   if (!user) return false;
-  return user.role === 'ADMIN';
+  // Check both the new isAdmin boolean field and the legacy role field
+  return user.isAdmin === true || user.role === 'ADMIN';
 }
 
 /**

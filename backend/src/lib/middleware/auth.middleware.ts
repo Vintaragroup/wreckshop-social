@@ -26,6 +26,7 @@ declare global {
         profilePictureUrl?: string;
         accountType?: string;
         isVerified?: boolean;
+        isAdmin?: boolean;
       };
       token?: string;
     }
@@ -119,7 +120,7 @@ export async function authenticateJWT(
     }
 
     // Fetch user profile from database
-    const artist = await prisma.artist.findUnique({
+    let artist = await prisma.artist.findUnique({
       where: { stackAuthUserId: decoded.userId },
       select: {
         id: true,
@@ -129,15 +130,43 @@ export async function authenticateJWT(
         profilePictureUrl: true,
         accountType: true,
         isVerified: true,
+        isAdmin: true,
       },
     });
 
+    // Auto-create artist profile on first login if it doesn't exist
     if (!artist) {
-      res.status(401).json({
-        error: 'Unauthorized',
-        message: 'User profile not found. Please complete registration.',
-      });
-      return;
+      try {
+        artist = await prisma.artist.create({
+          data: {
+            stackAuthUserId: decoded.userId,
+            email: decoded.email || 'unknown@example.com',
+            stageName: decoded.displayName || decoded.email?.split('@')[0] || 'Artist',
+            fullName: decoded.displayName || 'Unknown Artist',
+            accountType: 'ARTIST',
+            isVerified: false,
+            isAdmin: false,
+          },
+          select: {
+            id: true,
+            stackAuthUserId: true,
+            email: true,
+            stageName: true,
+            profilePictureUrl: true,
+            accountType: true,
+            isVerified: true,
+            isAdmin: true,
+          },
+        });
+        console.log('[auth] Created new artist profile:', artist.email);
+      } catch (createError) {
+        console.error('[auth] Failed to create artist profile:', createError);
+        res.status(500).json({
+          error: 'Failed to initialize user profile',
+          message: 'Could not create artist profile on first login',
+        });
+        return;
+      }
     }
 
     // Attach user to request
@@ -149,6 +178,7 @@ export async function authenticateJWT(
       profilePictureUrl: artist.profilePictureUrl || undefined,
       accountType: artist.accountType,
       isVerified: artist.isVerified,
+      isAdmin: artist.isAdmin,
     };
     req.token = token;
 
