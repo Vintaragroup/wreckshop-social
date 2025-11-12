@@ -1,54 +1,58 @@
 ---
-description: Technical specification for building audience segments with custom rules and algorithms for size estimation
+description: Technical documentation for segment builder implementation including audience targeting and filtering algorithms
 ---
 
 
 # segment-builder-algorithms
 
-## Rule Engine Components
+## Segment Rule Engine 
+The segmentation engine implements a hierarchical rule system for audience targeting:
 
-### Segment Rule Hierarchy
-- Multi-level rule nesting using AND/OR operators
-- Custom rule types mapped to specific operators per data type:
-  - String: contains, matches, starts/ends with
+1. Rule Groups (Importance: 90)
+- Top-level AND/OR logic groups
+- Nested rule support up to 5 levels deep
+- Dynamic operator resolution based on field type
+- Rule inheritance and override system for duplicated segments
+
+2. Condition Mapping (Importance: 85)
+- Field type specific operators:
   - Numeric: equals, greater/less than, between
-  - Date: before, after, within range
-  - Boolean: is, is not
-- Rule inheritance for duplicated segments
+  - String: contains, starts/ends with, regex
+  - Array: includes, excludes, contains any/all
+  - Date: before, after, between
+  - Geo: within radius, country/region matches
+- Custom music genre mapping with hierarchical inheritance
+- Platform-specific field normalization (Spotify, Instagram, etc)
 
-### Condition Mapping
-- Dynamic SQL/NoSQL query generation from rule trees
-- Custom operators mapped to database-specific implementations
-- Real-time translation of UI conditions to query language
-- Cross-database compatibility layer for consistent behavior
+3. Audience Size Calculation (Importance: 95)
+- Real-time estimation using statistical sampling
+- Progressive refinement based on rule complexity
+- Cached intermediary results for compound conditions
+- Platform-specific audience intersection calculations
+- Geographic density factoring for location rules
 
-### Audience Size Calculation
-- Async size estimation for complex rule combinations 
-- Query optimization for large datasets using sampling
-- Progressive refinement:
-  1. Initial fast estimate using sample data
-  2. Background calculation of exact count
-  3. Real-time updates as rules change
+4. Segment Building Workflow (Importance: 80) 
+- Multi-step rule creation with validation
+- Dynamic field suggestions based on partial matches
+- Rule impact preview showing audience delta
+- Duplicate detection with similarity scoring
+- Segment version control with change tracking
 
-## Rule Types
+5. Music Industry Specific Rules (Importance: 85)
+- Genre affinity scoring
+- Artist similarity matching
+- Venue preference mapping
+- Event attendance patterns
+- Platform engagement levels
 
-### Behavioral Rules
-- Event-based targeting using activity history
-- Engagement scoring with custom thresholds
-- Cross-channel interaction tracking
-- Time-windowed behavior analysis
+Core Files:
+/src/services/segmentation/
+- rule-engine.ts - Core rule processing logic
+- condition-mapper.ts - Field type operators
+- size-calculator.ts - Audience estimation
+- music-rules.ts - Industry specific implementations
 
-### Demographic Rules
-- Location-based targeting with radius support
-- Custom field validation per data type
-- Normalized field mappings across data sources
-- Multi-select options with exclusions
-
-### Custom Field Rules
-- Dynamic rule generation for user-defined fields
-- Type inference for custom properties
-- Validation rules per field type
-- Operator compatibility checking
+The segment builder implements specialized music industry targeting with emphasis on genre, artist, and venue based segmentation while providing real-time audience size estimates.
 
 $END$
 

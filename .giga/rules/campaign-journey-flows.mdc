@@ -1,68 +1,66 @@
 ---
-description: Specification for marketing campaign journey flows, automation logic, and multi-channel orchestration rules
+description: Documents marketing campaign journey orchestration, automation rules, and multi-channel sequencing logic
 ---
 
 
 # campaign-journey-flows
 
-Core journey orchestration components managing the flow of marketing campaigns across multiple channels.
+Journey Orchestration Core (85/100):
+- Multi-step campaign journey definitions with conditional branching
+- Event-driven progression through journey stages
+- Channel-specific delay and timing rules
+- Engagement-based path selection
+- Custom wait conditions and exit criteria
 
-## Journey Step Types
-Importance Score: 85
+Channel Sequencing Engine (80/100):
+- Cross-channel campaign coordination
+- Channel-specific delivery windows
+- Audience fatigue management
+- Priority-based channel selection
+- Adaptive channel switching based on engagement
 
-- Trigger Events
-  - Platform-specific actions (song save, playlist add)
-  - Engagement thresholds (listen count, share count)
-  - Custom event triggers with conditional logic
+Journey Analytics System (75/100):
+- Step-level conversion tracking
+- Path performance analysis
+- Dropout detection and alerting
+- Journey completion metrics
+- Segment progression tracking
 
-- Delay Nodes
-  - Dynamic wait periods based on user timezone
-  - Engagement-based delay adjustments
-  - Custom quiet hours enforcement
+Campaign Flow Rules (70/100):
+- Entry criteria validation
+- Audience qualification rules
+- Re-entry policies
+- Flow capacity limits
+- Journey pause/resume logic
 
-- Branch Logic 
-  - Genre preference divergence
-  - Platform-specific engagement paths
-  - Geographic market segmentation
+Notable Domain-Specific Patterns:
+1. Journey Stage Types:
+- Trigger nodes (entry points)
+- Wait nodes (time/event based)
+- Channel nodes (email/SMS/push)
+- Decision nodes (conditional paths)
+- Exit nodes (completion/dropout)
 
-## Channel Sequencing
-Importance Score: 80
+2. Flow Control Rules:
+- Maximum journey duration
+- Minimum step intervals
+- Channel frequency caps
+- Audience overlap prevention
+- Path abandonment handling
 
-- Cross-platform delivery optimization
-  - Platform-specific delivery timing
-  - Content format adaptation
-  - Engagement history influence
+3. Journey Templates:
+- Welcome series
+- Re-engagement flows
+- Event promotion sequences
+- Release announcement campaigns
+- Tour promotion journeys
 
-- Channel Priority Rules
-  - Primary channel selection based on user preferences
-  - Fallback channel sequencing
-  - Geographic restrictions handling
-
-## Performance Optimization
-Importance Score: 75
-
-- Engagement Scoring
-  - Channel-specific engagement weights
-  - Genre affinity impact
-  - Geographic market factors
-
-- Send Time Optimization
-  - Timezone-based delivery windows
-  - Historical engagement patterns
-  - Market-specific timing rules
-
-## Journey Analytics
-Importance Score: 70
-
-- Step Performance Tracking
-  - Conversion rates by step type
-  - Channel effectiveness metrics
-  - Drop-off analysis
-
-- Optimization Rules
-  - Dynamic path adjustment
-  - Channel reallocation logic
-  - Engagement threshold updates
+Relevant Components:
+/src/components/journey/
+- builder.tsx - Journey construction interface
+- analyzer.tsx - Performance monitoring
+- validator.tsx - Rule enforcement
+- orchestrator.tsx - Execution engine
 
 $END$
 

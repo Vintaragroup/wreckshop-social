@@ -1,79 +1,54 @@
 ---
-description: Defines core audience data models, segmentation rules and engagement scoring for music marketing platform
+description: Specification for implementing fan profile data structures and audience segmentation rules in music marketing platforms
 ---
 
 
 # audience-data-models
 
-Core data structures and algorithms for audience management and segmentation:
+Core Fan Profile Structure:
+- Multi-platform music identity resolution
+- Genre affinity scoring with weighted platform preferences
+- Geographic clustering with venue radius targeting
+- Hierarchical segment membership tracking
 
-## Fan Profile Model 
-Importance Score: 95
+Segmentation Models:
+- Primary segment attributes:
+  - Genre preferences (weighted scores 0-100)
+  - Platform engagement levels (tiered 1-5)
+  - Geographic market clusters
+  - Event attendance history
+- Nested segment inheritance rules
+- Real-time segment size estimation
+- Cross-platform identity resolution
 
-Key Components:
-- Multi-platform identity resolution combining Spotify, Instagram, YouTube identifiers
-- Genre affinity scoring based on playlist contributions and listening history
-- Engagement level classification (casual, active, superfan) using weighted platform metrics
-- Geographic and timezone data for targeted delivery
-- Consent and communication preferences tracking
+Engagement Scoring:
+- Platform-specific engagement metrics:
+  - Spotify: Stream counts, playlist adds, skip rates
+  - Instagram: Story views, post interactions
+  - YouTube: Watch time, subscription status
+- Combined engagement score calculation:
+  platformScore = Σ(metricWeight * normalizedValue)
+  totalScore = Σ(platformWeight * platformScore)
 
-## Segmentation Rules
-Importance Score: 90
+Platform-Specific Metrics:
+- Spotify metrics model:
+  - Genre affinity calculation from listening history
+  - Playlist curator score (0-100)
+  - Artist connection strength (0-1.0)
+- Instagram metrics model:
+  - Story completion rates
+  - Content category engagement
+  - Artist interaction frequency
+- Cross-platform identity confidence scoring
 
-Rule Types:
-1. Music Taste Based
-- Genre affinity thresholds
-- Artist relationship strength
-- Platform-specific engagement levels
-- Scene/subgenre clustering
+File Paths:
+/models/audience/
+- ProfileSchema.ts
+- SegmentRules.ts
+- EngagementScore.ts
+- PlatformMetrics.ts
 
-2. Geographic
-- Venue proximity targeting
-- Music market boundaries
-- Timezone-based delivery windows
-- Regional scene affiliations
-
-3. Behavioral 
-- Cross-platform engagement scoring
-- Content interaction patterns
-- Purchase history weighting
-- Campaign response rates
-
-## Engagement Scoring
-Importance Score: 85
-
-Scoring Components:
-- Platform-specific metric normalization
-- Weighted engagement calculations:
-  - Playlist additions: 5x
-  - Concert attendance: 4x
-  - Social interactions: 3x
-  - Content consumption: 2x
-  - Profile views: 1x
-- Time decay factors for historical actions
-- Minimum thresholds for segment qualification
-
-## Platform-Specific Metrics
-Importance Score: 80
-
-Tracked Metrics:
-1. Spotify
-- Playlist ownership and contribution counts
-- Save/follow ratios
-- Listening time distributions
-- Genre diversity scores
-
-2. Instagram
-- Story interaction rates
-- Content engagement velocity
-- Profile visit frequency
-- Comment sentiment analysis
-
-3. YouTube
-- Watch time patterns
-- Subscription longevity
-- Notification settings
-- Comment engagement rates
+Importance Score: 95/100
 
 $END$
 
