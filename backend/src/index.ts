@@ -31,6 +31,7 @@ import { spotifyIntegrationRouter } from './routes/integrations/spotify.integrat
 import { instagramIntegrationRouter } from './routes/integrations/instagram.integration'
 import { youtubeIntegrationRouter } from './routes/integrations/youtube.integration'
 import { tiktokIntegrationRouter } from './routes/integrations/tiktok.integration'
+import { appleMusicIntegrationRouter } from './routes/integrations/apple-music.integration'
 import { permissionsRouter } from './routes/manager/permissions.routes'
 import { adminRouter } from './routes/admin/admin.routes'
 import { authenticateJWT, optionalAuth } from './lib/middleware/auth.middleware'
@@ -115,6 +116,7 @@ async function main() {
   app.use('/api/integrations', authenticateJWT, instagramIntegrationRouter)
   app.use('/api/integrations', authenticateJWT, youtubeIntegrationRouter)
   app.use('/api/integrations', authenticateJWT, tiktokIntegrationRouter)
+  app.use('/api/integrations', authenticateJWT, appleMusicIntegrationRouter)
 
   // Permission management routes (all require authentication)
   app.use('/api/manager', authenticateJWT, permissionsRouter)
