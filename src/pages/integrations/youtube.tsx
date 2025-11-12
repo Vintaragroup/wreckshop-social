@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, RefreshCw, TrendingUp, TrendingDown, Play } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -78,8 +78,74 @@ function MetricCard({ label, value, change, icon: Icon }: any) {
 
 export default function YouTubePlatformPage() {
   const navigate = useNavigate();
+  const [data, setData] = useState(MOCK_DATA);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState(new Date(Date.now() - 1 * 60 * 60 * 1000));
+  const [subscriberGrowthData, setSubscriberGrowthData] = useState<ChartDataPoint[]>(SUBSCRIBER_GROWTH_DATA);
+  const [viewsGrowthData, setViewsGrowthData] = useState<ChartDataPoint[]>(VIEWS_GROWTH_DATA);
+
+  // Fetch analytics on component mount
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/integrations/youtube/analytics?includeCharts=true');
+        const result = await response.json();
+
+        if (result.ok && result.analytics) {
+          // Map API response to component state
+          const apiData = result.analytics;
+          
+          setData({
+            profile: {
+              channelName: apiData.profile.channelTitle,
+              profileImageUrl: apiData.profile.profileImageUrl,
+              subscriberCount: apiData.profile.subscriberCount,
+              totalViews: apiData.profile.viewCount,
+            },
+            metrics: {
+              viewsThisMonth: apiData.metrics.totalViews,
+              viewsChange: 5.2,
+              subscribersThisMonth: apiData.metrics.subscribersGained,
+              subscribersChange: 0.8,
+              watchTimeHours: apiData.metrics.totalWatchTimeHours,
+              watchTimeChange: 12.3,
+              engagementRate: apiData.metrics.averageEngagementRate,
+              avgWatchDuration: `${apiData.metrics.averageViewDuration}m`,
+            },
+          });
+
+          // Transform chart data if available
+          if (result.charts?.subscriberGrowth) {
+            setSubscriberGrowthData(
+              result.charts.subscriberGrowth.map((item: any) => ({
+                name: item.date,
+                subscribers: item.subscribers,
+              }))
+            );
+          }
+
+          if (result.charts?.viewsTrend) {
+            setViewsGrowthData(
+              result.charts.viewsTrend.map((item: any) => ({
+                name: item.date,
+                views: item.views,
+                watchTime: item.watchTime,
+              }))
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch YouTube analytics:', error);
+        // Use mock data as fallback
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -115,7 +181,7 @@ export default function YouTubePlatformPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">YouTube Analytics</h1>
-            <p className="text-muted-foreground">{MOCK_DATA.profile.channelName}</p>
+            <p className="text-muted-foreground">{data.profile.channelName}</p>
           </div>
         </div>
         <Button
@@ -132,24 +198,24 @@ export default function YouTubePlatformPage() {
         <CardContent className="pt-6">
           <div className="flex gap-6 items-start">
             <img
-              src={MOCK_DATA.profile.profileImageUrl}
-              alt={MOCK_DATA.profile.channelName}
+              src={data.profile.profileImageUrl}
+              alt={data.profile.channelName}
               className="w-24 h-24 rounded-full object-cover"
             />
             <div className="flex-1">
-              <h2 className="text-2xl font-bold">{MOCK_DATA.profile.channelName}</h2>
+              <h2 className="text-2xl font-bold">{data.profile.channelName}</h2>
               
               <div className="flex gap-6 mt-4">
                 <div>
                   <p className="text-xs text-muted-foreground">Subscribers</p>
                   <p className="text-xl font-bold">
-                    {(MOCK_DATA.profile.subscriberCount / 1000).toFixed(0)}K
+                    {(data.profile.subscriberCount / 1000).toFixed(0)}K
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Total Views</p>
                   <p className="text-xl font-bold">
-                    {(MOCK_DATA.profile.totalViews / 1000000).toFixed(1)}M
+                    {(data.profile.totalViews / 1000000).toFixed(1)}M
                   </p>
                 </div>
               </div>
@@ -161,70 +227,71 @@ export default function YouTubePlatformPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           label="Views This Month"
-          value={(MOCK_DATA.metrics.viewsThisMonth / 1000).toFixed(0) + 'K'}
-          change={MOCK_DATA.metrics.viewsChange}
+          value={(data.metrics.viewsThisMonth / 1000).toFixed(0) + 'K'}
+          change={data.metrics.viewsChange}
           icon={<Play className="w-5 h-5 text-red-500" />}
         />
         <MetricCard
           label="New Subscribers"
-          value={MOCK_DATA.metrics.subscribersThisMonth.toLocaleString()}
-          change={MOCK_DATA.metrics.subscribersChange}
+          value={data.metrics.subscribersThisMonth.toLocaleString()}
+          change={data.metrics.subscribersChange}
           icon={<Play className="w-5 h-5" />}
         />
         <MetricCard
           label="Watch Time (Hours)"
-          value={(MOCK_DATA.metrics.watchTimeHours / 1000).toFixed(1) + 'K'}
-          change={MOCK_DATA.metrics.watchTimeChange}
+          value={(data.metrics.watchTimeHours / 1000).toFixed(1) + 'K'}
+          change={data.metrics.watchTimeChange}
           icon={<Play className="w-5 h-5" />}
         />
         <MetricCard
           label="Avg Watch Duration"
-          value={MOCK_DATA.metrics.avgWatchDuration}
+          value={data.metrics.avgWatchDuration}
           change={3.2}
           icon={<Play className="w-5 h-5" />}
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Views & Growth (Last 60 Days)</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <BarChartWrapper
-            data={VIEWS_GROWTH_DATA}
-            bars={[
-              {
-                dataKey: 'views',
-                fill: '#ef4444',
-                name: 'Views',
-              },
-              {
-                dataKey: 'subscribers',
-                fill: '#3b82f6',
-                name: 'New Subscribers',
-              },
-            ]}
-          />
-        </CardContent>
-      </Card>
+      {isLoading ? (
+        <div className="text-center py-8">Loading analytics...</div>
+      ) : (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Views & Growth (Last 60 Days)</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <BarChartWrapper
+                data={viewsGrowthData}
+                bars={[
+                  {
+                    dataKey: 'views',
+                    fill: '#ef4444',
+                    name: 'Views',
+                  },
+                ]}
+              />
+            </CardContent>
+          </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Subscriber Growth (Last 6 Months)</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <LineChartWrapper
-            data={SUBSCRIBER_GROWTH_DATA}
-            lines={[
-              {
-                dataKey: 'subscribers',
-                stroke: '#3b82f6',
-                name: 'Subscribers',
-              },
-            ]}
-          />
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Subscriber Growth (Last 90 Days)</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <LineChartWrapper
+                data={subscriberGrowthData}
+                lines={[
+                  {
+                    dataKey: 'subscribers',
+                    stroke: '#3b82f6',
+                    name: 'Subscribers',
+                  },
+                ]}
+              />
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       <div className="text-sm text-muted-foreground text-center border-t pt-4">
         Last synced: {formatTimeAgo(lastSync)}

@@ -29,6 +29,7 @@ import { abTests } from './routes/ab-tests.routes'
 import { integrations } from './routes/integrations.routes'
 import { spotifyIntegrationRouter } from './routes/integrations/spotify.integration'
 import { instagramIntegrationRouter } from './routes/integrations/instagram.integration'
+import { youtubeIntegrationRouter } from './routes/integrations/youtube.integration'
 import { permissionsRouter } from './routes/manager/permissions.routes'
 import { adminRouter } from './routes/admin/admin.routes'
 import { authenticateJWT, optionalAuth } from './lib/middleware/auth.middleware'
@@ -111,6 +112,7 @@ async function main() {
   app.use('/api', authenticateJWT, integrations)
   app.use('/api/integrations', authenticateJWT, spotifyIntegrationRouter)
   app.use('/api/integrations', authenticateJWT, instagramIntegrationRouter)
+  app.use('/api/integrations', authenticateJWT, youtubeIntegrationRouter)
 
   // Permission management routes (all require authentication)
   app.use('/api/manager', authenticateJWT, permissionsRouter)
