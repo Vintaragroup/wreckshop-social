@@ -30,6 +30,12 @@ import { useAuth } from './lib/auth/context'
 
 const AudienceContactsPage = React.lazy(() => import('./pages/audience/contacts'))
 const CapturePage = React.lazy(() => import('./pages/capture'))
+const PlatformAnalyticsPage = React.lazy(() => import('./pages/analytics/platforms'))
+const InstagramPage = React.lazy(() => import('./pages/integrations/instagram'))
+const SpotifyPage = React.lazy(() => import('./pages/integrations/spotify'))
+const YouTubePage = React.lazy(() => import('./pages/integrations/youtube'))
+const TikTokPage = React.lazy(() => import('./pages/integrations/tiktok'))
+const AppleMusicPage = React.lazy(() => import('./pages/integrations/apple-music'))
 
 /**
  * Protected Layout - only shown when authenticated
@@ -54,7 +60,13 @@ function usePageMapping() {
   else if (path.startsWith('/content/releases')) currentPage = 'content-releases'
   else if (path.startsWith('/content/events')) currentPage = 'content-events'
   else if (path.startsWith('/content/assets')) currentPage = 'content-assets'
+  else if (path.startsWith('/integrations/instagram')) currentPage = 'integrations'
+  else if (path.startsWith('/integrations/spotify')) currentPage = 'integrations'
+  else if (path.startsWith('/integrations/youtube')) currentPage = 'integrations'
+  else if (path.startsWith('/integrations/tiktok')) currentPage = 'integrations'
+  else if (path.startsWith('/integrations/apple-music')) currentPage = 'integrations'
   else if (path.startsWith('/integrations')) currentPage = 'integrations'
+  else if (path.startsWith('/analytics/platforms')) currentPage = 'analytics'
   else if (path.startsWith('/analytics')) currentPage = 'analytics'
   else if (path.startsWith('/compliance')) currentPage = 'compliance'
   else if (path.startsWith('/settings')) currentPage = 'settings'
@@ -211,7 +223,13 @@ export const router = createBrowserRouter([
       { path: 'content/events', element: <ContentEvents /> },
       { path: 'content/assets', element: <ContentAssets /> },
       { path: 'integrations', element: <Integrations /> },
+      { path: 'integrations/instagram', element: <React.Suspense fallback={<div style={{padding:16}}>Loading…</div>}><InstagramPage /></React.Suspense> },
+      { path: 'integrations/spotify', element: <React.Suspense fallback={<div style={{padding:16}}>Loading…</div>}><SpotifyPage /></React.Suspense> },
+      { path: 'integrations/youtube', element: <React.Suspense fallback={<div style={{padding:16}}>Loading…</div>}><YouTubePage /></React.Suspense> },
+      { path: 'integrations/tiktok', element: <React.Suspense fallback={<div style={{padding:16}}>Loading…</div>}><TikTokPage /></React.Suspense> },
+      { path: 'integrations/apple-music', element: <React.Suspense fallback={<div style={{padding:16}}>Loading…</div>}><AppleMusicPage /></React.Suspense> },
       { path: 'analytics', element: <Analytics /> },
+      { path: 'analytics/platforms', element: <React.Suspense fallback={<div style={{padding:16}}>Loading…</div>}><PlatformAnalyticsPage /></React.Suspense> },
       { path: 'compliance', element: <Compliance /> },
       { path: 'settings', element: <Settings /> },
       { path: 'admin/discovery', element: <AdminDiscoveryPage /> },
