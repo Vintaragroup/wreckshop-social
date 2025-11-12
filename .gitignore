@@ -48,5 +48,29 @@ pnpm-debug.log*
 # Docker
 **/.docker/
 
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# IDE Additional
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+.eslintcache
+
+# Node
+.npm/
+.node-gyp/
+
+# Prisma
+prisma/dev.db
+prisma/dev.db-journal
+
+# OS Additional
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
 # Misc
 *.local
