@@ -4,10 +4,14 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Users, Palette, Key, CreditCard, UserPlus, Copy } from "lucide-react";
+import { Users, Palette, Key, CreditCard, UserPlus, Copy, Shield } from "lucide-react";
 import { ThemeSelector } from "./theme-selector";
+import { useAuth } from "../lib/auth/context";
+import { ManagerDashboard } from "./manager-dashboard";
+import { ArtistAccessDashboard } from "./artist-access-dashboard";
 
 export function Settings() {
+  const { user } = useAuth();
   return (
     <div className="space-y-6">
       <div>
@@ -18,6 +22,10 @@ export function Settings() {
       <Tabs defaultValue="users">
         <TabsList>
           <TabsTrigger value="users" className="flex items-center space-x-2"><Users className="w-4 h-4" /><span>Users & Roles</span></TabsTrigger>
+          {user?.accountType === 'ARTIST_AND_MANAGER' && (
+            <TabsTrigger value="manager" className="flex items-center space-x-2"><Shield className="w-4 h-4" /><span>Manage Artists</span></TabsTrigger>
+          )}
+          <TabsTrigger value="access" className="flex items-center space-x-2"><Shield className="w-4 h-4" /><span>Account Access</span></TabsTrigger>
           <TabsTrigger value="brand" className="flex items-center space-x-2"><Palette className="w-4 h-4" /><span>Branding</span></TabsTrigger>
           <TabsTrigger value="api" className="flex items-center space-x-2"><Key className="w-4 h-4" /><span>API Keys</span></TabsTrigger>
           <TabsTrigger value="billing" className="flex items-center space-x-2"><CreditCard className="w-4 h-4" /><span>Billing</span></TabsTrigger>
@@ -25,6 +33,16 @@ export function Settings() {
 
         <TabsContent value="users">
           <Card><CardHeader><CardTitle className="flex items-center justify-between">Team Members<Button><UserPlus className="w-4 h-4 mr-2" />Invite User</Button></CardTitle></CardHeader><CardContent><div className="space-y-4"><div className="flex justify-between items-center p-3 border rounded"><div><div className="font-medium">Admin User</div><div className="text-sm text-muted-foreground">admin@wreckshoprecords.com</div></div><Badge>Owner</Badge></div><div className="flex justify-between items-center p-3 border rounded"><div><div className="font-medium">Marketing Manager</div><div className="text-sm text-muted-foreground">marketing@wreckshoprecords.com</div></div><Badge variant="secondary">Editor</Badge></div></div></CardContent></Card>
+        </TabsContent>
+
+        {user?.accountType === 'ARTIST_AND_MANAGER' && (
+          <TabsContent value="manager">
+            <ManagerDashboard />
+          </TabsContent>
+        )}
+
+        <TabsContent value="access">
+          <ArtistAccessDashboard />
         </TabsContent>
 
         <TabsContent value="brand">
