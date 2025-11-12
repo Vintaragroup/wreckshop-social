@@ -2,9 +2,13 @@ import { Router, Request, Response } from 'express'
 import prisma from '../../lib/prisma'
 import { authenticateJWT } from '../../lib/middleware/auth.middleware'
 import { enrichSpotifyProfile, SpotifyEnrichedData } from '../../services/spotify/enrichment.service'
+import { spotifyAnalyticsRouter } from './spotify-analytics.routes'
 import { z } from 'zod'
 
 export const spotifyIntegrationRouter = Router()
+
+// Mount analytics sub-router first (more specific routes)
+spotifyIntegrationRouter.use('/spotify/analytics', spotifyAnalyticsRouter)
 
 /**
  * POST /api/integrations/spotify
