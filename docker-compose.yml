@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  # Database Services
+  postgres:
+    image: postgres:16-alpine
+    container_name: wreckshop-postgres
+    environment:
+      POSTGRES_USER: wreckshop_user
+      POSTGRES_PASSWORD: wreckshop_password
+      POSTGRES_DB: wreckshop_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wreckshop_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wreckshop-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: wreckshop-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wreckshop-network
+
+  mongo:
+    image: mongo:7
+    container_name: wreckshop-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: wreckshop_admin
+      MONGO_INITDB_ROOT_PASSWORD: wreckshop_password
+    ports:
+      - "27020:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wreckshop-network
+
+  # Application Services
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: wreckshop-backend
+    ports:
+      - "4002:4002"
+    environment:
+      NODE_ENV: development
+      PORT: 4002
+      MONGODB_URI: mongodb://wreckshop_admin:wreckshop_password@mongo:27017/?authSource=admin
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: postgresql://wreckshop_user:wreckshop_password@postgres:5432/wreckshop_dev
+      # API Secrets - MUST be set via .env.local
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:-}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET:-}
+      SPOTIFY_REDIRECT_URI: http://localhost:4002/auth/spotify/callback
+      CORS_ORIGIN: http://localhost:5176
+      LASTFM_API_KEY: ${LASTFM_API_KEY:-}
+      INSTAGRAM_APP_ID: ${INSTAGRAM_APP_ID:-}
+      INSTAGRAM_APP_SECRET: ${INSTAGRAM_APP_SECRET:-}
+      INSTAGRAM_REDIRECT_URI: http://localhost:4002/auth/instagram/callback
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      STACK_PROJECT_ID: ${STACK_PROJECT_ID:-}
+      NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY: ${NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY:-}
+      STACK_SECRET_SERVER_KEY: ${STACK_SECRET_SERVER_KEY:-}
+      STACK_AUTH_WEBHOOK_SECRET: ${STACK_AUTH_WEBHOOK_SECRET:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    networks:
+      - wreckshop-network
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+      - ./backend/.env:/app/.env
+      - /app/node_modules
+      - /app/dist
+
+  frontend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ""
+    container_name: wreckshop-frontend
+    ports:
+      - "5176:5176"
+    environment:
+      NODE_ENV: production
+    depends_on:
+      - backend
+    networks:
+      - wreckshop-network
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./vite.config.ts:/app/vite.config.ts
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./package.json:/app/package.json
+      - /app/node_modules
+
+networks:
+  wreckshop-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  mongo_data:
