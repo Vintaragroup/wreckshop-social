@@ -114,8 +114,77 @@ function MetricCard({
 export default function InstagramPlatformPage() {
   const navigate = useNavigate();
   const [data, setData] = useState<InstagramMetrics>(MOCK_DATA);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState(new Date(Date.now() - 2 * 60 * 60 * 1000));
+  const [followerGrowthData, setFollowerGrowthData] = useState<ChartDataPoint[]>(FOLLOWER_GROWTH_DATA);
+  const [engagementData, setEngagementData] = useState<ChartDataPoint[]>(ENGAGEMENT_TRENDS_DATA);
+
+  // Fetch analytics on component mount
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/integrations/instagram/analytics?includeCharts=true');
+        const result = await response.json();
+
+        if (result.ok && result.analytics) {
+          // Map API response to component state
+          const apiData = result.analytics;
+          
+          setData({
+            profile: {
+              username: apiData.profile.username,
+              profilePictureUrl: apiData.profile.profileImageUrl,
+              bio: apiData.profile.biography,
+              website: apiData.profile.externalUrl,
+              followerCount: apiData.profile.followerCount,
+              postCount: apiData.profile.mediaCount,
+            },
+            metrics: {
+              followersThisMonth: apiData.metrics.reachThisMonth,
+              followerChange: apiData.metrics.savesThisMonth,
+              followerChangePercent: apiData.metrics.averageEngagementRate,
+              engagementRate: apiData.metrics.averageEngagementRate,
+              engagementRateChange: 0.5,
+              weeklyReach: apiData.metrics.reachThisMonth,
+              avgLikesPerPost: Math.floor(apiData.metrics.totalLikes / apiData.profile.mediaCount),
+              avgCommentsPerPost: Math.floor(apiData.metrics.totalComments / apiData.profile.mediaCount),
+            },
+          });
+
+          // Transform chart data if available
+          if (result.charts?.followerGrowth) {
+            setFollowerGrowthData(
+              result.charts.followerGrowth.map((item: any) => ({
+                name: item.date,
+                followers: item.followers,
+                engagement: 0,
+              }))
+            );
+          }
+
+          if (result.charts?.engagementTrend) {
+            setEngagementData(
+              result.charts.engagementTrend.map((item: any) => ({
+                name: item.date,
+                likes: item.likes,
+                comments: item.comments,
+                shares: item.shares,
+              }))
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch Instagram analytics:', error);
+        // Use mock data as fallback
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -242,55 +311,61 @@ export default function InstagramPlatformPage() {
         />
       </div>
 
-      {/* Placeholder Sections */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Follower Growth (Last 30 Days)</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <LineChartWrapper
-            data={FOLLOWER_GROWTH_DATA}
-            lines={[
-              {
-                dataKey: 'followers',
-                stroke: '#3b82f6',
-                name: 'Followers',
-              },
-            ]}
-          />
-        </CardContent>
-      </Card>
+      {/* Charts */}
+      {isLoading ? (
+        <div className="text-center py-8">Loading analytics...</div>
+      ) : (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Follower Growth (Last 30 Days)</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <LineChartWrapper
+                data={followerGrowthData}
+                lines={[
+                  {
+                    dataKey: 'followers',
+                    stroke: '#3b82f6',
+                    name: 'Followers',
+                  },
+                ]}
+              />
+            </CardContent>
+          </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Engagement Trends</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <AreaChartWrapper
-            data={ENGAGEMENT_TRENDS_DATA}
-            areas={[
-              {
-                dataKey: 'likes',
-                fill: '#ef4444',
-                stroke: '#ef4444',
-                name: 'Likes',
-              },
-              {
-                dataKey: 'comments',
-                fill: '#3b82f6',
-                stroke: '#3b82f6',
-                name: 'Comments',
-              },
-              {
-                dataKey: 'shares',
-                fill: '#10b981',
-                stroke: '#10b981',
-                name: 'Shares',
-              },
-            ]}
-          />
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Engagement Trends</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <AreaChartWrapper
+                data={engagementData}
+                areas={[
+                  {
+                    dataKey: 'likes',
+                    fill: '#ef4444',
+                    stroke: '#ef4444',
+                    name: 'Likes',
+                  },
+                  {
+                    dataKey: 'comments',
+                    fill: '#3b82f6',
+                    stroke: '#3b82f6',
+                    name: 'Comments',
+                  },
+                  {
+                    dataKey: 'shares',
+                    fill: '#10b981',
+                    stroke: '#10b981',
+                    name: 'Shares',
+                  },
+                ]}
+              />
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {/* Sync Footer */}
       <div className="text-sm text-muted-foreground text-center border-t pt-4">

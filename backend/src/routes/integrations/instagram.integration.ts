@@ -1,9 +1,13 @@
 import { Router, Request, Response } from 'express'
 import prisma from '../../lib/prisma'
 import { authenticateJWT } from '../../lib/middleware/auth.middleware'
+import { instagramAnalyticsRouter } from './instagram-analytics.routes'
 import { z } from 'zod'
 
 export const instagramIntegrationRouter = Router()
+
+// Mount analytics sub-router first (more specific routes)
+instagramIntegrationRouter.use('/instagram/analytics', instagramAnalyticsRouter)
 
 /**
  * POST /api/integrations/instagram
