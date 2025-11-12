@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Alert, AlertDescription } from "./ui/alert"
 import { Skeleton } from "./ui/skeleton"
 import { apiUrl } from "../lib/api"
+import { useAuth } from "../lib/auth/context"
 
 interface DiscoveredUserProfile {
   spotifyId: string
@@ -87,6 +88,7 @@ export function DiscoveredUsersSection() {
   const [selectedArtistType, setSelectedArtistType] = useState<string | undefined>()
   const [searchTerm, setSearchTerm] = useState("")
   const [limit, setLimit] = useState(50)
+  const { token } = useAuth()
 
   // Load stats and users on mount
   useEffect(() => {
@@ -107,7 +109,13 @@ export function DiscoveredUsersSection() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch(apiUrl("/spotify/discover/stats"))
+      const res = await fetch(apiUrl("/spotify/discover/stats"), {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+      })
       if (!res.ok) {
         const text = await res.text()
         throw new Error(`HTTP ${res.status}: ${text || 'Failed to fetch stats'}`)
@@ -138,7 +146,13 @@ export function DiscoveredUsersSection() {
   const url = apiUrl(`/spotify/discover/saved?${params.toString()}`)
       console.log("[DiscoveredUsers] Fetching from:", url)
       
-      const response = await fetch(url)
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+      })
       if (!response.ok) {
         const text = await response.text()
         throw new Error(`HTTP ${response.status}: ${text || 'Failed to fetch users'}`)

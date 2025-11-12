@@ -33,6 +33,7 @@ import {
   AlertDialogTitle,
 } from "./ui/alert-dialog"
 import { apiUrl } from "../lib/api"
+import { useAuth } from "../lib/auth/context"
 import { GeolocationFilterUI } from "./geolocation-filter-ui"
 
 interface GeolocationFilters {
@@ -101,6 +102,7 @@ export function DiscoveredUserSegmentBuilder() {
   const [selectedArtistTypes, setSelectedArtistTypes] = useState<string[]>([])
   const [minScore, setMinScore] = useState(0)
   const [geoFilters, setGeoFilters] = useState<GeolocationFilters>({})
+  const { token } = useAuth()
 
   const GENRES = [
     "indie",
@@ -124,7 +126,13 @@ export function DiscoveredUserSegmentBuilder() {
 
   const fetchSuggestions = async () => {
     try {
-      const response = await fetch(apiUrl("/spotify/discover/segment-suggestions"))
+      const response = await fetch(apiUrl("/spotify/discover/segment-suggestions"), {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+      })
       if (!response.ok) {
         const text = await response.text()
         throw new Error(`HTTP ${response.status}: ${text || 'Failed to fetch suggestions'}`)
@@ -140,7 +148,13 @@ export function DiscoveredUserSegmentBuilder() {
 
   const fetchSavedSegments = async () => {
     try {
-      const response = await fetch(apiUrl("/spotify/discover/segments"))
+      const response = await fetch(apiUrl("/spotify/discover/segments"), {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+      })
       if (!response.ok) {
         throw new Error("Failed to fetch saved segments")
       }
@@ -164,7 +178,11 @@ export function DiscoveredUserSegmentBuilder() {
     try {
       const response = await fetch(apiUrl("/spotify/discover/create-segment"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
         body: JSON.stringify({ name, filters }),
       })
 
@@ -194,6 +212,10 @@ export function DiscoveredUserSegmentBuilder() {
     try {
       const response = await fetch(apiUrl(`/spotify/discover/segments/${id}`), {
         method: "DELETE",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
       })
 
       const json = (await response.json()) as { ok: boolean; error?: string }

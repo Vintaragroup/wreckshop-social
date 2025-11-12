@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Badge } from './ui/badge'
 import { Loader2, LogOut, Instagram as InstagramIcon } from 'lucide-react'
 import { useAuth } from '../lib/auth/context'
+import { apiUrl } from '../lib/api'
 
 interface InstagramConnectionProps {
   userId: string
@@ -42,11 +43,13 @@ export function InstagramConnectionCard({
     try {
       setLoading(true)
       const response = await fetch(
-        `/api/integrations/instagram/${userId}`,
+        apiUrl(`/integrations/instagram/${userId}`),
         {
           headers: {
-            "Authorization": `Bearer ${token}`
-          }
+            "Authorization": `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
         }
       )
 
@@ -74,7 +77,9 @@ export function InstagramConnectionCard({
       setError(null)
 
       // Step 1: Get the Instagram OAuth login URL
-      const loginResponse = await fetch('/auth/instagram/login')
+      const loginResponse = await fetch(apiUrl('/auth/instagram/login'), {
+        credentials: 'include',
+      })
       if (!loginResponse.ok) {
         throw new Error('Failed to start Instagram OAuth')
       }
@@ -98,11 +103,12 @@ export function InstagramConnectionCard({
 
     try {
       setConnecting(true)
-      const response = await fetch(`/api/integrations/instagram/${userId}`, {
+      const response = await fetch(apiUrl(`/integrations/instagram/${userId}`), {
         method: 'DELETE',
         headers: {
-          "Authorization": `Bearer ${token}`
-        }
+          "Authorization": `Bearer ${token}`,
+        },
+        credentials: 'include',
       })
 
       if (!response.ok) {

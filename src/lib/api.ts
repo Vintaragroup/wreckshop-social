@@ -4,19 +4,33 @@ const RAW_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || ''
 // fall back to relative so requests don't fail in the browser context.
 const SHOULD_FORCE_RELATIVE = typeof window !== 'undefined' && /\bbackend(?::|$)/.test(RAW_BASE_URL)
 const BASE_URL = SHOULD_FORCE_RELATIVE ? '' : RAW_BASE_URL
+// Normalize base so it never ends with /api to avoid double "/api/api" when building URLs
+const NORMALIZED_BASE_URL = BASE_URL.replace(/\/?api\/?$/, '')
 
 // Export base helpers so components using plain fetch can share the same logic
-export const API_BASE_URL = BASE_URL
+export const API_BASE_URL = NORMALIZED_BASE_URL
 export const apiUrl = (path: string) => `${API_BASE_URL}/api${path}`
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: unknown } | any
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const url = `${BASE_URL}/api${path}`
+  const url = `${API_BASE_URL}/api${path}`
+  // Attach bearer token automatically if available
+  let authHeader: Record<string, string> = {}
+  try {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_token')
+      if (token) authHeader = { Authorization: `Bearer ${token}` }
+    }
+  } catch {
+    // ignore localStorage access issues
+  }
+
   const res = await fetch(url, {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...authHeader,
       ...(init?.headers || {}),
     },
     ...init,

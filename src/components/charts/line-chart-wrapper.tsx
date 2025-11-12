@@ -35,9 +35,9 @@ export const LineChartWrapper: React.FC<LineChartWrapperProps> = ({
   xAxisDataKey = 'name',
 }) => {
   return (
-    <div className="w-full">
+    <div className="w-full" style={{ height: `${height}px` }}>
       {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
-      <ResponsiveContainer width="100%" height={height}>
+      <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
           <XAxis dataKey={xAxisDataKey} className="text-xs" />

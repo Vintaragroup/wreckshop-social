@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
 import { LineChartWrapper, AreaChartWrapper, type ChartDataPoint } from '../../components/charts';
+import { apiUrl } from '../../lib/api';
 
 const DEFAULT_MOCK_DATA = {
   profile: {
@@ -89,7 +90,17 @@ export default function SpotifyPlatformPage() {
     const fetchAnalytics = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/integrations/spotify/analytics?includeCharts=true');
+        // Attach Authorization and use normalized API URL
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        const response = await fetch(
+          apiUrl('/integrations/spotify/analytics?includeCharts=true'),
+          {
+            credentials: 'include',
+            headers: {
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          }
+        );
         const result = await response.json();
 
         if (result.ok && result.analytics) {
@@ -128,7 +139,8 @@ export default function SpotifyPlatformPage() {
     setIsSyncing(true);
     try {
       // TODO: Implement actual sync endpoint
-      // await fetch('/api/integrations/spotify/sync', { method: 'POST' });
+      // const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      // await fetch(apiUrl('/integrations/spotify/sync'), { method: 'POST', credentials: 'include', headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
       
       // Simulate sync delay
       await new Promise(resolve => setTimeout(resolve, 2000));

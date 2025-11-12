@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
 import { LineChartWrapper, AreaChartWrapper, type ChartDataPoint } from '../../components/charts';
+import { apiUrl } from '../../lib/api';
 
 // Mock data structure
 interface InstagramMetrics {
@@ -125,7 +126,17 @@ export default function InstagramPlatformPage() {
     const fetchAnalytics = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/integrations/instagram/analytics?includeCharts=true');
+        // Attach Authorization and use normalized API URL
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        const response = await fetch(
+          apiUrl('/integrations/instagram/analytics?includeCharts=true'),
+          {
+            credentials: 'include',
+            headers: {
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          }
+        );
         const result = await response.json();
 
         if (result.ok && result.analytics) {
@@ -190,7 +201,8 @@ export default function InstagramPlatformPage() {
     setIsSyncing(true);
     try {
       // TODO: Call API endpoint to sync Instagram data
-      // await fetch('/api/integrations/instagram/sync', { method: 'POST' });
+      // const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      // await fetch(apiUrl('/integrations/instagram/sync'), { method: 'POST', credentials: 'include', headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
       
       // Simulate sync delay
       await new Promise(resolve => setTimeout(resolve, 2000));
