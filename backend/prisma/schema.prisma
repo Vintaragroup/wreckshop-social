@@ -42,6 +42,9 @@ model Artist {
   isVerified Boolean @default(false)
   verificationDate DateTime?
 
+  // Permissions for solo artists (managers override these)
+  permissions Json @default("{\"configureIntegrations\": true, \"viewAnalytics\": false, \"createCampaigns\": false, \"editProfile\": true, \"postSocial\": false}")
+
   // Gamification
   publicMetricsOptIn Boolean @default(false)
   leaderboardRank Int?

@@ -3,6 +3,7 @@ import { Music, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
+import { useAuth } from "../lib/auth/context";
 
 interface SpotifyOAuthProps {
   onTokenReceived?: (token: string) => void;
@@ -10,7 +11,7 @@ interface SpotifyOAuthProps {
 }
 
 const SPOTIFY_CLIENT_ID = "359d80a99deb496c989d77d8e20af741";
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4002";
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4002";
 
 // The OAuth scopes we request from Spotify
 const SPOTIFY_SCOPES = [
@@ -19,9 +20,10 @@ const SPOTIFY_SCOPES = [
   "user-top-read",                // Read top artists/tracks
   "playlist-read-private",        // Read private playlists
   "user-follow-read",             // Read followed artists
-].join("%20");
+].join(" ");
 
 export function SpotifyOAuth({ onTokenReceived, onConnectionChange }: SpotifyOAuthProps) {
+  const { user, token } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +33,8 @@ export function SpotifyOAuth({ onTokenReceived, onConnectionChange }: SpotifyOAu
   // Check if we're handling a callback
   const handleOAuthCallback = async () => {
     const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
+    const accessToken = params.get("spotify_token");
+    const refreshToken = params.get("spotify_refresh");
     const error = params.get("error");
 
     if (error) {
@@ -39,34 +42,16 @@ export function SpotifyOAuth({ onTokenReceived, onConnectionChange }: SpotifyOAu
       return;
     }
 
-    if (!code) return;
+    if (!accessToken) return;
 
     try {
       setIsLoading(true);
       setError(null);
 
-      // Exchange code for token via backend
-      const response = await fetch(`${BACKEND_URL}/auth/spotify/callback?code=${code}`, {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Token exchange failed");
-      }
-
-      const data = await response.json();
-      const accessToken = data.tokens?.access_token;
-
-      if (!accessToken) {
-        throw new Error("No access token received");
-      }
-
       // Store token in session/localStorage
       sessionStorage.setItem("spotify_access_token", accessToken);
-      if (data.tokens?.refresh_token) {
-        sessionStorage.setItem("spotify_refresh_token", data.tokens.refresh_token);
+      if (refreshToken) {
+        sessionStorage.setItem("spotify_refresh_token", refreshToken);
       }
 
       // Fetch user info to confirm connection
@@ -81,7 +66,7 @@ export function SpotifyOAuth({ onTokenReceived, onConnectionChange }: SpotifyOAu
       const userData = await userRes.json();
       setConnectedUser(userData.display_name || userData.email || "Connected");
       
-      // Send token to backend for profile enrichment
+      // Send token to backend for profile enrichment AND save integration
       try {
         const enrichResponse = await fetch(`${BACKEND_URL}/auth/spotify/connect`, {
           method: "POST",
@@ -92,7 +77,26 @@ export function SpotifyOAuth({ onTokenReceived, onConnectionChange }: SpotifyOAu
         if (enrichResponse.ok) {
           const enrichData = await enrichResponse.json();
           console.log("Profile enriched with data:", enrichData.data);
-          // Token will be used to fetch profile, top artists, tracks, etc
+          
+          // Now save the integration to database
+          if (user && token) {
+            const saveResponse = await fetch(`${BACKEND_URL}/integrations/spotify`, {
+              method: "POST",
+              headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                artistId: user.id,
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+              }),
+            });
+            
+            if (saveResponse.ok) {
+              console.log("Spotify integration saved to database");
+            }
+          }
         } else {
           console.warn("Profile enrichment request failed (non-critical)");
           // Continue anyway - enrichment is optional
@@ -120,7 +124,8 @@ export function SpotifyOAuth({ onTokenReceived, onConnectionChange }: SpotifyOAu
 
   // Initiate OAuth flow
   const handleConnect = () => {
-    const redirectUri = `${window.location.origin}/auth/spotify/callback`;
+    // Use ngrok tunnel for HTTPS redirect (Spotify requires secure URLs)
+    const redirectUri = "https://wreckshop-webhooks.ngrok.io/auth/spotify/callback";
     const authUrl = new URL("https://accounts.spotify.com/authorize");
 
     authUrl.searchParams.set("client_id", SPOTIFY_CLIENT_ID);

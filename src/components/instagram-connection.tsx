@@ -3,6 +3,7 @@ import { Button } from './ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Badge } from './ui/badge'
 import { Loader2, LogOut, Instagram as InstagramIcon } from 'lucide-react'
+import { useAuth } from '../lib/auth/context'
 
 interface InstagramConnectionProps {
   userId: string
@@ -24,6 +25,7 @@ export function InstagramConnectionCard({
   userId,
   onConnectionChange,
 }: InstagramConnectionProps) {
+  const { token } = useAuth();
   const [connection, setConnection] = useState<InstagramConnection | null>(null)
   const [loading, setLoading] = useState(true)
   const [connecting, setConnecting] = useState(false)
@@ -35,15 +37,22 @@ export function InstagramConnectionCard({
   }, [userId])
 
   const fetchConnectionStatus = async () => {
+    if (!token) return;
+
     try {
       setLoading(true)
       const response = await fetch(
-        `/api/integrations/instagram/${userId}`
+        `/api/integrations/instagram/${userId}`,
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        }
       )
 
       if (response.ok) {
         const data = await response.json()
-        setConnection(data.connection)
+        setConnection(data.integration)
         setError(null)
       } else if (response.status === 404) {
         // Not connected
@@ -85,10 +94,15 @@ export function InstagramConnectionCard({
   }
 
   const handleDisconnect = async () => {
+    if (!token) return;
+
     try {
       setConnecting(true)
       const response = await fetch(`/api/integrations/instagram/${userId}`, {
         method: 'DELETE',
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
       })
 
       if (!response.ok) {

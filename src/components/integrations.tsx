@@ -28,6 +28,7 @@ import { Badge } from "./ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Switch } from "./ui/switch";
+import { useAuth } from "../lib/auth/context";
 import {
   Dialog,
   DialogContent,
@@ -120,6 +121,7 @@ const smsProviders = [
 ];
 
 export function Integrations() {
+  const { user, token } = useAuth();
   const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
   const [oauthDialogOpen, setOauthDialogOpen] = useState(false);
   const [showAddIntegrationModal, setShowAddIntegrationModal] = useState(false);
@@ -129,20 +131,27 @@ export function Integrations() {
   // Fetch connection statuses from API
   useEffect(() => {
     const fetchConnectionStatuses = async () => {
+      if (!user || !token) return;
+
       try {
-        // Get current user ID (you may need to get this from context/auth)
-        const userId = "current-user-id"; // TODO: Get from auth context
-        
-        const response = await fetch(`/api/integrations?userId=${userId}`);
+        const response = await fetch(`/api/integrations/status/${user.id}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
         if (response.ok) {
-          const integrations = await response.json();
+          const data = await response.json();
           const statuses: Record<string, any> = {};
-          integrations.forEach((integration: any) => {
-            statuses[integration.platformId] = {
-              connected: true,
-              data: integration,
-            };
-          });
+          if (data.integrations) {
+            Object.entries(data.integrations).forEach(([platform, integration]: [string, any]) => {
+              if (integration?.connected) {
+                statuses[platform] = {
+                  connected: true,
+                  data: integration,
+                };
+              }
+            });
+          }
           setConnectionStatuses(statuses);
         }
       } catch (error) {
@@ -151,7 +160,7 @@ export function Integrations() {
     };
 
     fetchConnectionStatuses();
-  }, []);
+  }, [user, token]);
 
   const isConnected = (platformId: string): boolean => {
     return connectionStatuses[platformId]?.connected ?? false;
@@ -167,13 +176,15 @@ export function Integrations() {
   };
 
   const handleDisconnect = async (platformId: string) => {
-    if (!confirm(`Are you sure you want to disconnect ${platformId}?`)) return;
+    if (!user || !token || !confirm(`Are you sure you want to disconnect ${platformId}?`)) return;
     
     setLoadingStatuses((prev) => new Set(prev).add(platformId));
     try {
-      const userId = "current-user-id"; // TODO: Get from auth context
-      const response = await fetch(`/api/integrations/${platformId}/${userId}`, {
+      const response = await fetch(`/api/integrations/${platformId}/${user.id}`, {
         method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
       });
       
       if (response.ok) {
@@ -249,10 +260,10 @@ export function Integrations() {
         <h2 className="text-xl font-semibold mb-4">Social Media Platforms</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Instagram - Using OAuth Component */}
-          <InstagramConnectionCard userId="current-user-id" onConnectionChange={() => {
+          {user && <InstagramConnectionCard userId={user.id} onConnectionChange={() => {
             // Refresh connection statuses
             setConnectionStatuses((prev) => ({ ...prev }));
-          }} />
+          }} />}
 
           {/* Spotify */}
           <SpotifyIntegrationCard />

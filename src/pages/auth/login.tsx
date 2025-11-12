@@ -33,10 +33,17 @@ export function LoginPage() {
     setError(null);
 
     try {
+      console.log('[LOGIN] Starting login with email:', email);
       await login(email, password);
-      navigate('/dashboard');
+      console.log('[LOGIN] Login successful, navigating to dashboard');
+      // Use setTimeout to ensure state updates are processed
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      const errorMsg = err instanceof Error ? err.message : 'Login failed';
+      console.error('[LOGIN] Login error:', errorMsg, err);
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

@@ -8,15 +8,26 @@ export const spotifyAuth = Router()
 // GET /auth/spotify/callback?code=...&state=...
 spotifyAuth.get('/spotify/callback', async (req, res) => {
   const { code, error } = req.query as { code?: string; error?: string }
-  if (error) return res.status(400).json({ ok: false, error })
-  if (!code) return res.status(400).json({ ok: false, error: 'missing code' })
+  if (error) {
+    return res.redirect(`http://localhost:5176/integrations?error=${error}`)
+  }
+  if (!code) {
+    return res.redirect(`http://localhost:5176/integrations?error=missing_code`)
+  }
 
   try {
     const tokens = await exchangeCodeForToken(code, env.SPOTIFY_REDIRECT_URI)
-    return res.json({ ok: true, tokens })
+    
+    // Store in session/cookie for the frontend to retrieve
+    // For now, redirect with token in URL (not ideal but works for demo)
+    const accessToken = tokens.access_token
+    const refreshToken = tokens.refresh_token || ''
+    
+    // Redirect back to frontend with tokens as query params
+    return res.redirect(`http://localhost:5176/integrations?spotify_token=${accessToken}&spotify_refresh=${refreshToken}`)
   } catch (err: any) {
     const message = err?.message || 'spotify auth failed'
-    return res.status(400).json({ ok: false, error: message })
+    return res.redirect(`http://localhost:5176/integrations?error=${encodeURIComponent(message)}`)
   }
 })
 

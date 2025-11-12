@@ -18,11 +18,28 @@ services:
       - "${FRONTEND_PORT:-5176}:5176"
     working_dir: /app
     volumes:
-      - ./:/app
+      - ../../:/app
       - frontend_node_modules:/app/node_modules
     depends_on:
       - backend
     command: ["sh", "-lc", "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5176"]
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: wreckshop-postgres
+    environment:
+      - POSTGRES_USER=wreckshop
+      - POSTGRES_PASSWORD=wreckshop_dev_password
+      - POSTGRES_DB=wreckshop
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wreckshop"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
@@ -31,6 +48,7 @@ services:
     container_name: wreckshop-backend-dev
     environment:
       - PORT=${BACKEND_PORT:-4002}
+      - DATABASE_URL=postgresql://wreckshop:wreckshop_dev_password@postgres:5432/wreckshop
       - MONGODB_URI=mongodb://mongo:27017/wreckshop
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=development
@@ -47,11 +65,15 @@ services:
       - "${BACKEND_PORT:-4002}:4002"
     working_dir: /app
     volumes:
-      - ./backend:/app
+      - ../../backend:/app
       - backend_node_modules:/app/node_modules
     depends_on:
-      - mongo
-      - redis
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+      redis:
+        condition: service_started
     command: ["sh", "-lc", "npm install --no-audit --no-fund && npm run dev"]
 
   mongo:
@@ -76,7 +98,7 @@ services:
       - BACKEND_BASE_URL=http://backend:${BACKEND_PORT:-4002}
     working_dir: /app
     volumes:
-      - ./:/app
+      - ../../:/app
     depends_on:
       - backend
     # Provide a larger shared memory for Chromium
@@ -87,3 +109,4 @@ volumes:
   frontend_node_modules:
   backend_node_modules:
   mongo_data:
+  postgres_data:

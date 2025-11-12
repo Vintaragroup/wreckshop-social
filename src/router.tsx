@@ -24,9 +24,9 @@ import { Settings } from './components/settings'
 import { SegmentBuilder } from './components/segment-builder'
 import { EmailTemplates } from './components/email-templates'
 import AdminDiscoveryPage from './pages/admin/discovery'
-import { LoginPage } from './pages/auth/login'
-import { SignupPage } from './pages/auth/signup'
-import { AuthProvider, useAuth } from './lib/auth/context'
+import { LoginPage } from './pages/auth/login-stack'
+import { SignupPage } from './pages/auth/signup-stack'
+import { useAuth } from './lib/auth/context'
 
 const AudienceContactsPage = React.lazy(() => import('./pages/audience/contacts'))
 const CapturePage = React.lazy(() => import('./pages/capture'))
@@ -133,9 +133,10 @@ function usePageMapping() {
  */
 function Layout() {
   const { currentPage, onPageChange } = usePageMapping()
-  const { isAuthenticated, loading } = useAuth()
+  const { user, loading } = useAuth()
 
   if (loading) {
+    // Loading
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
         <div className="text-center">
@@ -148,7 +149,7 @@ function Layout() {
     )
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return <Navigate to="/login" replace />
   }
 
@@ -226,13 +227,11 @@ export const router = createBrowserRouter([
 
 export function AppRouter() {
   return (
-    <AuthProvider>
-      <RouterProvider
-        router={router}
-        future={{
-          v7_startTransition: true,
-        }}
-      />
-    </AuthProvider>
+    <RouterProvider
+      router={router}
+      future={{
+        v7_startTransition: true,
+      }}
+    />
   )
 }

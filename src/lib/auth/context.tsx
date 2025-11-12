@@ -14,6 +14,14 @@ export interface AuthUser {
   email: string;
   name: string;
   role: 'ARTIST' | 'MANAGER' | 'ADMIN';
+  accountType?: 'ARTIST' | 'ARTIST_AND_MANAGER';
+  permissions?: {
+    configureIntegrations?: boolean;
+    viewAnalytics?: boolean;
+    createCampaigns?: boolean;
+    editProfile?: boolean;
+    postSocial?: boolean;
+  };
 }
 
 export interface AuthContextType {
@@ -23,7 +31,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   error: Error | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string) => Promise<void>;
+  signup: (email: string, password: string, name: string, accountType?: 'ARTIST' | 'ARTIST_AND_MANAGER') => Promise<void>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
 }
@@ -79,8 +87,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // When running in Docker container, use /api directly (proxied through nginx/vite)
       // When running locally with vite dev server, use the proxy path
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+      const url = `${apiBaseUrl}/auth/login`;
+      
+      console.log('[AUTH] Login request to:', url);
+      
       const response = await fetch(
-        `${apiBaseUrl}/auth/login`,
+        url,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -88,19 +100,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       );
 
+      console.log('[AUTH] Login response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Login failed');
+        const errorData = await response.text();
+        console.error('[AUTH] Login error response:', errorData);
+        throw new Error(`Login failed with status ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('[AUTH] Login response data:', data);
+      
       const { accessToken, user: userData } = data.data || data;
 
+      if (!accessToken || !userData) {
+        console.error('[AUTH] Missing accessToken or userData in response');
+        throw new Error('Invalid login response - missing token or user data');
+      }
+
+      console.log('[AUTH] Setting token and user');
       setToken(accessToken);
       setUser(userData);
       localStorage.setItem('auth_token', accessToken);
       localStorage.setItem('auth_user', JSON.stringify(userData));
+      console.log('[AUTH] Login complete, user:', userData.email);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
+      console.error('[AUTH] Login failed:', error);
       setError(error);
       throw error;
     } finally {
@@ -108,7 +134,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  const signup = useCallback(async (email: string, password: string, name: string) => {
+  const signup = useCallback(async (email: string, password: string, name: string, accountType?: 'ARTIST' | 'ARTIST_AND_MANAGER') => {
     setLoading(true);
     setError(null);
     try {
@@ -118,7 +144,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, name }),
+          body: JSON.stringify({ email, password, name, accountType: accountType || 'ARTIST' }),
         }
       );
 

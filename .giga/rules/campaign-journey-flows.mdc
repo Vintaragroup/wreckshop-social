@@ -1,62 +1,68 @@
 ---
-description: Specification for campaign journey orchestration, automation logic, and multi-channel marketing flows
+description: Specification for marketing campaign journey flows, automation logic, and multi-channel orchestration rules
 ---
 
 
 # campaign-journey-flows
 
-Campaign Journey Orchestration Core (Importance: 95/100)
+Core journey orchestration components managing the flow of marketing campaigns across multiple channels.
 
-1. Journey Step Types
-- Trigger nodes: Entry points based on user actions or events
-- Delay nodes: Time-based wait periods with timezone optimization
-- Condition nodes: Branching logic based on user attributes/behavior
-- Action nodes: Email, SMS, webhook executions
-- Exit nodes: Journey completion handlers
+## Journey Step Types
+Importance Score: 85
 
-2. Journey State Management 
-- Draft: Initial creation and configuration
-- Active: Live journey processing audience members
-- Paused: Temporary hold on new entries
-- Archived: Historical record with performance data
+- Trigger Events
+  - Platform-specific actions (song save, playlist add)
+  - Engagement thresholds (listen count, share count)
+  - Custom event triggers with conditional logic
 
-3. Multi-Channel Sequencing Rules
-- Channel cooldown periods between touchpoints
-- Cross-channel frequency capping
-- Priority-based channel selection
-- Fallback channel configuration
+- Delay Nodes
+  - Dynamic wait periods based on user timezone
+  - Engagement-based delay adjustments
+  - Custom quiet hours enforcement
 
-4. Performance Optimization
-- Real-time completion rate monitoring
-- Step-level conversion tracking
-- Audience segment performance analysis
-- A/B test integration points
+- Branch Logic 
+  - Genre preference divergence
+  - Platform-specific engagement paths
+  - Geographic market segmentation
 
-5. Journey Analytics
-- Step-level metrics:
-  - Entry rate
-  - Completion rate
-  - Time in step
-  - Branch distribution
-- Overall journey performance:
-  - Total completion rate
-  - Average journey duration
-  - Revenue attribution
-  - Engagement scoring
+## Channel Sequencing
+Importance Score: 80
 
-Critical Files:
-/src/journeys/
-- journey-builder.tsx: Core journey creation/editing
-- journey-analytics.tsx: Performance tracking
-- journey-automation.tsx: Execution engine
-- journey-templates.tsx: Pre-built journey patterns
+- Cross-platform delivery optimization
+  - Platform-specific delivery timing
+  - Content format adaptation
+  - Engagement history influence
 
-Business Rules:
-- Maximum 25 steps per journey
-- 72-hour minimum between promotional messages
-- Geographic send time optimization
-- Dynamic channel selection based on user preferences
-- Automated journey pause if completion rate drops below 15%
+- Channel Priority Rules
+  - Primary channel selection based on user preferences
+  - Fallback channel sequencing
+  - Geographic restrictions handling
+
+## Performance Optimization
+Importance Score: 75
+
+- Engagement Scoring
+  - Channel-specific engagement weights
+  - Genre affinity impact
+  - Geographic market factors
+
+- Send Time Optimization
+  - Timezone-based delivery windows
+  - Historical engagement patterns
+  - Market-specific timing rules
+
+## Journey Analytics
+Importance Score: 70
+
+- Step Performance Tracking
+  - Conversion rates by step type
+  - Channel effectiveness metrics
+  - Drop-off analysis
+
+- Optimization Rules
+  - Dynamic path adjustment
+  - Channel reallocation logic
+  - Engagement threshold updates
 
 $END$
 

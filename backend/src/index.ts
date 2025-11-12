@@ -12,6 +12,7 @@ import instagramAuth from './routes/auth/instagram.oauth'
 import authRoutes from './routes/auth.routes'
 import testDbRoutes from './routes/test-db.routes'
 import webhooks from './routes/webhooks.routes'
+import stackAuthWebhooks from './routes/webhooks/stack-auth.routes'
 import { spotifyDiscoveryRouter } from './routes/spotify/discovery.routes'
 import { profiles } from './routes/profiles.routes'
 import { adminDiscoveryRouter } from './routes/admin/discovery.routes'
@@ -26,7 +27,10 @@ import { segments } from './routes/segments.routes'
 import { templates } from './routes/email-templates.routes'
 import { abTests } from './routes/ab-tests.routes'
 import { integrations } from './routes/integrations.routes'
+import { spotifyIntegrationRouter } from './routes/integrations/spotify.integration'
+import { instagramIntegrationRouter } from './routes/integrations/instagram.integration'
 import { authenticateJWT, optionalAuth } from './lib/middleware/auth.middleware'
+import { validateStackAuthToken, optionalStackAuthToken } from './middleware/stack-auth.middleware'
 import managerRoutes from './routes/manager/manager.routes'
 import campaignManagerRoutes from './routes/manager/campaigns.manager.routes'
 import integrationManagerRoutes from './routes/manager/integrations.manager.routes'
@@ -79,6 +83,7 @@ async function main() {
   app.use('/api', health)
   app.use('/api/test', testDbRoutes)
   app.use('/api/webhooks', webhooks)
+  app.use('/api/webhooks', stackAuthWebhooks)
   app.use('/auth', spotifyAuth)
   app.use('/auth', instagramAuth)
   app.use('/api', spotifyDiscoveryRouter)
@@ -102,6 +107,8 @@ async function main() {
   app.use('/api', authenticateJWT, templates)
   app.use('/api', authenticateJWT, abTests)
   app.use('/api', authenticateJWT, integrations)
+  app.use('/api/integrations', authenticateJWT, spotifyIntegrationRouter)
+  app.use('/api/integrations', authenticateJWT, instagramIntegrationRouter)
 
   // Manager-specific routes (all require authentication)
   app.use('/api', authenticateJWT, managerRoutes)

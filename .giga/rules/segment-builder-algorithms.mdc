@@ -1,62 +1,54 @@
 ---
-description: Technical documentation for segment builder implementation including rule hierarchy, condition mapping, and audience size calculation algorithms
+description: Technical specification for building audience segments with custom rules and algorithms for size estimation
 ---
 
 
 # segment-builder-algorithms
 
-Audience Segmentation Engine implements hierarchical rule-based targeting with dynamic size estimation:
+## Rule Engine Components
 
-## Rule Hierarchy Structure
-- Root segment conditions combined with AND/OR operators
-- Nested condition groups with unlimited depth
-- Dynamic operator precedence based on group nesting
-- Support for exclusion rules at any nesting level
+### Segment Rule Hierarchy
+- Multi-level rule nesting using AND/OR operators
+- Custom rule types mapped to specific operators per data type:
+  - String: contains, matches, starts/ends with
+  - Numeric: equals, greater/less than, between
+  - Date: before, after, within range
+  - Boolean: is, is not
+- Rule inheritance for duplicated segments
 
-## Core Condition Types
-```typescript
-interface SegmentCondition {
-  field: string
-  operator: ConditionOperator
-  value: any
-  type: 'profile' | 'behavior' | 'custom'
-}
+### Condition Mapping
+- Dynamic SQL/NoSQL query generation from rule trees
+- Custom operators mapped to database-specific implementations
+- Real-time translation of UI conditions to query language
+- Cross-database compatibility layer for consistent behavior
 
-enum ConditionOperator {
-  EQUALS,
-  CONTAINS,
-  GREATER_THAN,
-  LESS_THAN,
-  IN_RANGE,
-  EXISTS,
-  // Music-specific operators
-  LISTENS_TO_GENRE,
-  FOLLOWS_ARTIST,
-  ATTENDED_EVENT
-}
-```
+### Audience Size Calculation
+- Async size estimation for complex rule combinations 
+- Query optimization for large datasets using sampling
+- Progressive refinement:
+  1. Initial fast estimate using sample data
+  2. Background calculation of exact count
+  3. Real-time updates as rules change
 
-## Size Estimation Algorithm
-1. Recursive condition evaluation against sample dataset
-2. Statistical extrapolation for full audience size
-3. Real-time updates as conditions change
-4. Confidence scoring based on sample size
+## Rule Types
 
-## Music Industry Specific Rules
-- Genre affinity scoring and thresholds
-- Artist relationship mapping (direct/indirect follows)
-- Event attendance patterns
-- Platform-specific engagement metrics
-- Geographic music scene targeting
+### Behavioral Rules
+- Event-based targeting using activity history
+- Engagement scoring with custom thresholds
+- Cross-channel interaction tracking
+- Time-windowed behavior analysis
 
-## Implementation Components
-- Condition Builder UI with drag-drop interface
-- Real-time size estimation display
-- Condition validation system
-- Rule export/import functionality
-- Segment duplication with inheritance
+### Demographic Rules
+- Location-based targeting with radius support
+- Custom field validation per data type
+- Normalized field mappings across data sources
+- Multi-select options with exclusions
 
-Importance Score: 95/100
+### Custom Field Rules
+- Dynamic rule generation for user-defined fields
+- Type inference for custom properties
+- Validation rules per field type
+- Operator compatibility checking
 
 $END$
 

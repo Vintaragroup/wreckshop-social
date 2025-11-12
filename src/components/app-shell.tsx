@@ -18,7 +18,9 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "./ui/button";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../lib/auth/context";
+import { isManager, canConfigureIntegrations, canCreateCampaigns, canManageAudience } from "../lib/auth/roles";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import {
@@ -95,6 +97,41 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const isMobile = useIsMobile();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const userIsManager = isManager(user);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  const handleProfile = () => {
+    navigate('/settings');
+  };
+
+  // Filter navigation items based on user role and permissions
+  const filteredNavigationItems = navigationItems.filter(item => {
+    // Always show Dashboard and Settings
+    if (item.id === 'dashboard' || item.id === 'settings') return true;
+    // Always show Analytics and Compliance for all users
+    if (item.id === 'analytics' || item.id === 'compliance') return true;
+    // Show Audience only if user can manage audience
+    if (item.id === 'audience' && !canManageAudience(user)) return false;
+    // Show Campaigns only if user can create campaigns
+    if (item.id === 'campaigns' && !canCreateCampaigns(user)) return false;
+    // Show Content only for managers
+    if (item.id === 'content' && !userIsManager) return false;
+    // Show Integrations if user can configure integrations
+    if (item.id === 'integrations' && !canConfigureIntegrations(user)) return false;
+    // Show Admin only for admins
+    if (item.id === 'admin' && user?.role !== 'ADMIN') return false;
+    return true;
+  });
 
   const toggleMenuExpansion = (menuId: string) => {
     setExpandedMenus(prev => 
@@ -105,7 +142,7 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
   };
 
   const renderNavigationItems = (isInSheet = false) => {
-    return navigationItems.map((item) => (
+    return filteredNavigationItems.map((item) => (
       <div key={item.id}>
         {item.children ? (
           <div
@@ -328,14 +365,34 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                       <User className="w-4 h-4 text-primary-foreground" />
                     </div>
-                    {!isMobile && <span>Admin</span>}
+                    {!isMobile && <span>{user?.name || 'User'}</span>}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Profile</DropdownMenuItem>
-                  <DropdownMenuItem>Settings</DropdownMenuItem>
+                  <div className="px-2 py-1.5">
+                    <div className="text-sm font-medium text-foreground">
+                      {user?.name || 'User'}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {user?.email}
+                    </div>
+                    {user?.accountType && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {user.accountType === 'ARTIST_AND_MANAGER' ? '👤 Artist & Manager' : '🎵 Artist'}
+                      </div>
+                    )}
+                  </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>Sign out</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleProfile}>
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/settings')}>
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                    Sign out
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

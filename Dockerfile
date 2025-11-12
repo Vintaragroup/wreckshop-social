@@ -3,13 +3,16 @@ FROM node:20-alpine as builder
 
 WORKDIR /app
 
+# Accept build argument for API base URL
+ARG VITE_API_BASE_URL=""
+
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
 RUN npm install --no-audit --no-fund
 
 COPY . .
 
-# Build for production
-RUN npm run build
+# Build for production with the API base URL
+RUN VITE_API_BASE_URL="${VITE_API_BASE_URL}" npm run build
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine

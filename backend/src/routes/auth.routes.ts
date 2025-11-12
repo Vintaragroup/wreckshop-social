@@ -225,6 +225,7 @@ router.post('/login', async (req: Request, res: Response) => {
             email: newArtist.email,
             name: newArtist.stageName,
             role: 'ARTIST',
+            accountType: newArtist.accountType,
           },
         },
       });
@@ -248,6 +249,7 @@ router.post('/login', async (req: Request, res: Response) => {
           email: artist.email,
           name: artist.stageName,
           role: 'ARTIST',
+          accountType: artist.accountType,
         },
       },
     });
@@ -289,7 +291,7 @@ router.post('/login', async (req: Request, res: Response) => {
  */
 router.post('/signup', async (req: Request, res: Response) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, accountType } = req.body;
 
     if (!email || !password || !name) {
       return res.status(400).json({
@@ -302,6 +304,9 @@ router.post('/signup', async (req: Request, res: Response) => {
         error: 'Password must be at least 8 characters',
       });
     }
+
+    // Validate accountType
+    const validAccountType = accountType === 'ARTIST_AND_MANAGER' ? 'ARTIST_AND_MANAGER' : 'ARTIST';
 
     // Check if user already exists
     const existingArtist = await prisma.artist.findUnique({
@@ -324,7 +329,7 @@ router.post('/signup', async (req: Request, res: Response) => {
         email,
         stageName: name,
         fullName: name,
-        accountType: 'ARTIST',
+        accountType: validAccountType,
         isVerified: false,
       },
     });
@@ -347,6 +352,7 @@ router.post('/signup', async (req: Request, res: Response) => {
           email: artist.email,
           name: artist.stageName,
           role: 'ARTIST',
+          accountType: artist.accountType,
         },
       },
     });
