@@ -71,19 +71,21 @@
         '*.ngrok.io',
       ],
       proxy: {
-        '/api': {
-          // Use a proxy target intended for the dev server process, not the browser.
-          // Falls back to VITE_API_BASE_URL for backward compatibility, then localhost.
-          target: process.env.API_PROXY_TARGET || process.env.VITE_API_BASE_URL || 'http://backend:4002',
-          changeOrigin: true,
-          secure: false,
-        },
-        '/auth': {
-          // Proxy OAuth routes to backend
-          target: process.env.API_PROXY_TARGET || process.env.VITE_API_BASE_URL || 'http://backend:4002',
-          changeOrigin: true,
-          secure: false,
-        },
+        // Only use proxy if not using an absolute VITE_API_BASE_URL (like ngrok URLs)
+        ...(process.env.VITE_API_BASE_URL && process.env.VITE_API_BASE_URL.startsWith('http')
+          ? {} // No proxy needed - using absolute URL
+          : {
+              '/api': {
+                target: process.env.API_PROXY_TARGET || 'http://backend:4002',
+                changeOrigin: true,
+                secure: false,
+              },
+              '/auth': {
+                target: process.env.API_PROXY_TARGET || 'http://backend:4002',
+                changeOrigin: true,
+                secure: false,
+              },
+            }),
       },
     },
   });
