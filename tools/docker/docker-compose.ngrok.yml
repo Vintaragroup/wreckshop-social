@@ -4,12 +4,9 @@ services:
   frontend:
     build:
       context: ../..
-      dockerfile: Dockerfile
+      dockerfile: tools/docker/Dockerfile.frontend-ngrok
     container_name: wreckshop-frontend-ngrok
     environment:
-      - API_PROXY_TARGET=http://backend:${BACKEND_PORT:-4002}
-      # For ngrok testing, frontend still uses internal docker networking
-      # but the API_BASE_URL is set for external API calls
       - VITE_API_BASE_URL=https://wreckshop.ngrok.app/api
       - VITE_ENABLE_LASTFM=true
       - VITE_ENABLE_SOUNDCLOUD=true
@@ -18,13 +15,11 @@ services:
       - VITE_ENABLE_AUDIUS=true
     ports:
       - "${FRONTEND_PORT:-5176}:5176"
-    working_dir: /app
     volumes:
       - ../../:/app
       - frontend_node_modules_ngrok:/app/node_modules
     depends_on:
       - backend
-    command: ["sh", "-lc", "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5176"]
 
   postgres:
     image: postgres:16-alpine
