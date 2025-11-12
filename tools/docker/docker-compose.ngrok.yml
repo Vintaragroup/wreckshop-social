@@ -3,8 +3,8 @@ name: wreckshop_social_ngrok
 services:
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.frontend-root
+      context: ../..
+      dockerfile: Dockerfile
     container_name: wreckshop-frontend-ngrok
     environment:
       - API_PROXY_TARGET=http://backend:${BACKEND_PORT:-4002}
@@ -45,7 +45,7 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: ../../backend
       dockerfile: Dockerfile
     container_name: wreckshop-backend-ngrok
     environment:
@@ -90,24 +90,6 @@ services:
     image: redis:7-alpine
     container_name: wreckshop-redis-ngrok
     command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
-
-  scripts:
-    build:
-      context: .
-      dockerfile: Dockerfile.scripts
-    container_name: wreckshop-scripts-ngrok
-    environment:
-      - LASTFM_API_KEY=${LASTFM_API_KEY:-}
-      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
-      - BACKEND_BASE_URL=http://backend:${BACKEND_PORT:-4002}
-    working_dir: /app
-    volumes:
-      - ../../:/app
-    depends_on:
-      - backend
-    # Provide a larger shared memory for Chromium
-    shm_size: "2gb"
-    command: ["bash", "-lc", "sleep infinity"]
 
 volumes:
   frontend_node_modules_ngrok:
