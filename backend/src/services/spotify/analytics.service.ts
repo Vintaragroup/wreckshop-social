@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getClientCredentialsToken } from '../../providers/spotify.oauth';
 
 /**
  * Spotify Analytics Service
@@ -61,30 +62,55 @@ export const getMockSpotifyAnalytics = (artistId: string): SpotifyAnalytics => {
 
 /**
  * Fetch real Spotify analytics using the Spotify Web API
- * Requires a valid Spotify access token
- * 
- * Note: This implementation uses mock data for now.
- * When Spotify API credentials are set up, replace with actual API calls:
+ * Requires a valid Spotify access token (user or client credentials)
  * 
  * API Documentation: https://developer.spotify.com/documentation/web-api
- * Requires scopes: 'user-library-read', 'user-read-email', 'user-read-private'
+ * Uses client credentials flow for application access
  */
 export async function getSpotifyAnalytics(
-  spotifyAccessToken: string,
+  spotifyAccessToken: string | null,
   artistId: string
 ): Promise<SpotifyAnalytics> {
   try {
-    // TODO: Implement real Spotify API integration
-    // const response = await axios.get(`https://api.spotify.com/v1/artists/${artistId}`, {
-    //   headers: {
-    //     Authorization: `Bearer ${spotifyAccessToken}`,
-    //   },
-    // });
+    // Get token - use provided token or obtain client credentials token
+    let token = spotifyAccessToken;
+    if (!token) {
+      const response = await getClientCredentialsToken();
+      token = response.access_token;
+    }
 
-    // For now, return mock data
-    return getMockSpotifyAnalytics(artistId);
-  } catch (error) {
-    console.error('Error fetching Spotify analytics:', error);
+    // Fetch artist profile from Spotify API
+    const response = await axios.get(`https://api.spotify.com/v1/artists/${artistId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const artist = response.data;
+
+    return {
+      profile: {
+        artistId: artist.id,
+        artistName: artist.name,
+        profileImageUrl: artist.images?.[0]?.url || 'https://via.placeholder.com/200',
+        isVerified: artist.external_urls?.spotify ? true : false,
+        followerCount: artist.followers?.total || 0,
+        monthlyListeners: 0, // Spotify Web API doesn't expose this publicly
+        externalUrl: artist.external_urls?.spotify || '',
+      },
+      metrics: {
+        streamsThisMonth: 0, // Would need private API access
+        streamsChange: 0,
+        listenersChange: 0,
+        savesThisMonth: 0,
+        savesChange: 0,
+        skipRate: 0,
+        totalPlaylists: 0,
+      },
+      lastUpdated: new Date(),
+    };
+  } catch (error: any) {
+    console.error('Error fetching Spotify analytics:', error.message);
     // Fallback to mock data on error
     return getMockSpotifyAnalytics(artistId);
   }
@@ -143,24 +169,37 @@ export function getMonthlyListenersTrend(monthsBack: number = 6) {
 /**
  * Get top tracks by streams
  */
-export function getTopTracks(limit: number = 10) {
-  const genres = ['Pop', 'Hip-Hop', 'Electronic', 'Indie', 'Rock'];
-  const tracks = [];
-  
-  for (let i = 1; i <= limit; i++) {
-    tracks.push({
-      id: `track-${i}`,
-      name: `Track ${i}`,
-      streams: Math.floor(Math.random() * 1000000) + 100000,
-      saves: Math.floor(Math.random() * 50000) + 1000,
-      skipRate: Math.floor(Math.random() * 40) + 10,
-      duration: Math.floor(Math.random() * 180) + 120,
-      releaseDate: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
+export async function getTopTracks(spotifyAccessToken: string, limit: number = 10) {
+  try {
+    const response = await axios.get('https://api.spotify.com/v1/me/top/tracks', {
+      headers: {
+        Authorization: `Bearer ${spotifyAccessToken}`,
+      },
+      params: {
+        limit: Math.min(limit, 50), // Spotify API max is 50
+        time_range: 'medium_term', // Last 6 months
+      },
     });
+
+    const tracks = response.data.items || [];
+
+    return tracks.map((track: any) => ({
+      id: track.id,
+      name: track.name,
+      streams: 0, // Not available in public API
+      saves: 0, // Not available in public API
+      skipRate: 0, // Not available in public API
+      duration: track.duration_ms,
+      releaseDate: new Date(track.album?.release_date || new Date()),
+      artistNames: track.artists.map((a: any) => a.name).join(', '),
+      albumName: track.album?.name || '',
+      imageUrl: track.album?.images?.[0]?.url || '',
+      externalUrl: track.external_urls?.spotify || '',
+    }));
+  } catch (error) {
+    console.error('Error fetching top tracks:', error);
+    return [];
   }
-  
-  // Sort by streams descending
-  return tracks.sort((a, b) => b.streams - a.streams);
 }
 
 /**
