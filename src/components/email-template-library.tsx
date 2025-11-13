@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 import { toast } from 'sonner'
-import { apiUrl } from '../lib/api'
+import { apiRequest, apiUrl } from '../lib/api'
 
 interface EmailTemplate {
   _id: string
@@ -56,9 +56,7 @@ export function TemplateLibrary({
     try {
       setLoading(true)
       setError(null)
-      const res = await fetch(apiUrl('/email-templates'))
-      if (!res.ok) throw new Error('Failed to load templates')
-      const json = await res.json()
+      const json = await apiRequest<{ ok: true; data: EmailTemplate[] }>(`/email-templates`)
       setTemplates(json.data || [])
     } catch (err: any) {
       setError(err.message)
@@ -72,10 +70,7 @@ export function TemplateLibrary({
     if (!confirm('Are you sure? This cannot be undone.')) return
 
     try {
-      const res = await fetch(apiUrl(`/email-templates/${templateId}`), {
-        method: 'DELETE',
-      })
-      if (!res.ok) throw new Error('Failed to delete template')
+      await apiRequest(`/email-templates/${templateId}`, { method: 'DELETE' })
       setTemplates(templates.filter(t => t._id !== templateId))
       toast.success('Template deleted')
     } catch (err: any) {
@@ -85,11 +80,7 @@ export function TemplateLibrary({
 
   const handleDuplicate = async (template: EmailTemplate) => {
     try {
-      const res = await fetch(apiUrl(`/email-templates/${template._id}/duplicate`), {
-        method: 'POST',
-      })
-      if (!res.ok) throw new Error('Failed to duplicate template')
-      const json = await res.json()
+      const json = await apiRequest<{ ok: true; data: EmailTemplate }>(`/email-templates/${template._id}/duplicate`, { method: 'POST' })
       setTemplates([json.data, ...templates])
       toast.success('Template duplicated')
     } catch (err: any) {
@@ -176,8 +167,8 @@ export function TemplateLibrary({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTemplates.map((template) => (
-                  <TableRow key={template._id}>
+                {filteredTemplates.map((template, idx) => (
+                  <TableRow key={template._id || `template-${idx}`}>
                     <TableCell>
                       <div className="font-medium">{template.name}</div>
                     </TableCell>
@@ -195,8 +186,8 @@ export function TemplateLibrary({
                     <TableCell>
                       <div className="flex gap-1 flex-wrap">
                         {template.tags && template.tags.length > 0 ? (
-                          template.tags.map(tag => (
-                            <Badge key={tag} variant="secondary" className="text-xs">
+                          template.tags.map((tag, i) => (
+                            <Badge key={`${template._id || 't'}-${tag}-${i}`} variant="secondary" className="text-xs">
                               {tag}
                             </Badge>
                           ))

@@ -1,66 +1,61 @@
 ---
-description: Documents marketing campaign journey orchestration, automation rules, and multi-channel sequencing logic
+description: Defines campaign orchestration logic, journey automation, and multi-channel sequencing rules
 ---
 
 
 # campaign-journey-flows
 
-Journey Orchestration Core (85/100):
-- Multi-step campaign journey definitions with conditional branching
-- Event-driven progression through journey stages
-- Channel-specific delay and timing rules
-- Engagement-based path selection
-- Custom wait conditions and exit criteria
+Campaign Journey Core Components (Importance: 90/100)
 
-Channel Sequencing Engine (80/100):
-- Cross-channel campaign coordination
+1. Journey Orchestration Engine
+- Multi-step journey definitions with branching logic
+- Step types: trigger, delay, condition, email, sms, branch, exit, webhook
+- Real-time journey metrics tracking per step
+- Journey status workflow: draft → scheduled → active → paused → completed
+
+2. Journey Analytics Processing
+- Conversion funnel analysis by journey step
+- Drop-off point identification
+- Step-level engagement metrics
+- Completion rate calculations by segment
+
+3. Channel Orchestration Rules
+- Cross-channel message sequencing
 - Channel-specific delivery windows
-- Audience fatigue management
-- Priority-based channel selection
-- Adaptive channel switching based on engagement
+- Contact frequency management
+- Channel preference optimization
 
-Journey Analytics System (75/100):
-- Step-level conversion tracking
-- Path performance analysis
-- Dropout detection and alerting
-- Journey completion metrics
-- Segment progression tracking
+4. Journey Templates
+- Industry-specific journey templates
+- Pre-built workflow sequences
+- Template performance analytics
+- Customizable journey steps
 
-Campaign Flow Rules (70/100):
-- Entry criteria validation
-- Audience qualification rules
-- Re-entry policies
-- Flow capacity limits
-- Journey pause/resume logic
+Journey Performance Optimization (Importance: 85/100)
 
-Notable Domain-Specific Patterns:
-1. Journey Stage Types:
-- Trigger nodes (entry points)
-- Wait nodes (time/event based)
-- Channel nodes (email/SMS/push)
-- Decision nodes (conditional paths)
-- Exit nodes (completion/dropout)
+1. Timing Controls
+- Smart delivery time optimization
+- Geographic time zone handling
+- Quiet hours enforcement
+- Frequency capping rules
 
-2. Flow Control Rules:
-- Maximum journey duration
-- Minimum step intervals
-- Channel frequency caps
-- Audience overlap prevention
-- Path abandonment handling
+2. Branch Logic Management
+- Conditional path evaluation
+- Dynamic audience segmentation
+- Real-time engagement scoring
+- Path optimization based on performance
 
-3. Journey Templates:
-- Welcome series
-- Re-engagement flows
-- Event promotion sequences
-- Release announcement campaigns
-- Tour promotion journeys
+3. Journey Exit Criteria
+- Goal completion tracking
+- Maximum duration limits
+- Engagement threshold monitoring
+- Exit path analytics
 
-Relevant Components:
-/src/components/journey/
-- builder.tsx - Journey construction interface
-- analyzer.tsx - Performance monitoring
-- validator.tsx - Rule enforcement
-- orchestrator.tsx - Execution engine
+Notable Implementation Patterns:
+- Music industry-specific journey templates
+- Artist-fan engagement sequences
+- Event-based journey triggers
+- Platform-specific delivery rules
 
 $END$
 

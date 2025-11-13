@@ -3,17 +3,20 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import ProfilesPage from '../pages/audience/profiles'
+import { AuthProvider } from '../lib/auth/context'
 
 function renderWithProviders(ui: React.ReactElement) {
   const client = new QueryClient()
   return render(
     <MemoryRouter>
-      <QueryClientProvider client={client}>{ui}</QueryClientProvider>
+      <AuthProvider>
+        <QueryClientProvider client={client}>{ui}</QueryClientProvider>
+      </AuthProvider>
     </MemoryRouter>
   )
 }
 
-const getTrigger = () => screen.getByRole('combobox')
+const getTrigger = () => screen.getAllByRole('combobox')[0]
 
 describe('ProfilesPage provider feature flags', () => {
   const originalEnv = { ...(import.meta as any).env }

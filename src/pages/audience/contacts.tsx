@@ -10,6 +10,7 @@ import { Plug, Megaphone, UserPlus, Users, Rocket, ChevronRight, ChevronDown, Li
 import { toast } from "sonner";
 import CreateCaptureLinkModal from "../../components/create-capture-link-modal";
 import { Label } from "../../components/ui/label";
+import { apiRequest } from "../../lib/api";
 
 interface AudienceContact {
   _id: string;
@@ -54,10 +55,8 @@ export default function AudienceContactsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/audience/contacts');
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || 'Failed to load contacts');
-      setContacts(Array.isArray(json?.data) ? json.data : (json?.data?.items || []));
+      const json = await apiRequest<{ ok: true; data: any[] }>("/audience/contacts");
+      setContacts(Array.isArray(json?.data) ? json.data : (json as any)?.data?.items || []);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -71,9 +70,7 @@ export default function AudienceContactsPage() {
 
   const loadLinks = async () => {
     try {
-      const res = await fetch('/api/audience/capture-links?limit=10')
-      const json = await res.json()
-      if (!res.ok) throw new Error(json?.error || 'Failed to load capture links')
+      const json = await apiRequest<{ ok: true; data: any[] }>("/audience/capture-links?limit=10")
       setLinks(Array.isArray(json?.data) ? json.data : [])
     } catch (e: any) {
       // silent
@@ -238,14 +235,11 @@ export default function AudienceContactsPage() {
                               size="sm"
                               onClick={async () => {
                                 try {
-                                  const res = await fetch(`/api/audience/capture-links/${l.slug}`, {
+                                  const json = await apiRequest<{ ok: true; data: any }>(`/audience/capture-links/${l.slug}`, {
                                     method: 'PATCH',
-                                    headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ disabled: !l.disabled }),
                                   })
-                                  const json = await res.json()
-                                  if (!res.ok) throw new Error(json?.error || 'Failed to update link')
-                                  toast.success(json.data.disabled ? 'Link disabled' : 'Link enabled')
+                                  toast.success((json as any).data?.disabled ? 'Link disabled' : 'Link enabled')
                                   loadLinks()
                                 } catch (e: any) {
                                   toast.error('Update failed', { description: e.message })
@@ -260,9 +254,7 @@ export default function AudienceContactsPage() {
                               onClick={async () => {
                                 if (!window.confirm('Delete this capture link? This cannot be undone.')) return
                                 try {
-                                  const res = await fetch(`/api/audience/capture-links/${l.slug}`, { method: 'DELETE' })
-                                  const json = await res.json().catch(() => ({}))
-                                  if (!res.ok) throw new Error(json?.error || 'Failed to delete link')
+                                  const json = await apiRequest(`/audience/capture-links/${l.slug}`, { method: 'DELETE' })
                                   toast.success('Link deleted')
                                   loadLinks()
                                 } catch (e: any) {

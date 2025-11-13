@@ -79,6 +79,10 @@ services:
       INSTAGRAM_REDIRECT_URI: http://localhost:4002/auth/instagram/callback
       ADMIN_API_KEY: ${ADMIN_API_KEY:-}
       STACK_PROJECT_ID: ${STACK_PROJECT_ID:-}
+      STACK_CLIENT_KEY: ${STACK_CLIENT_KEY:-}
+      STACK_SERVER_KEY: ${STACK_SERVER_KEY:-}
+      STACK_WEBHOOK_SECRET: ${STACK_WEBHOOK_SECRET:-}
+      STACK_API_URL: ${STACK_API_URL:-https://api.stack-auth.com}
       NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY: ${NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY:-}
       STACK_SECRET_SERVER_KEY: ${STACK_SECRET_SERVER_KEY:-}
       STACK_AUTH_WEBHOOK_SECRET: ${STACK_AUTH_WEBHOOK_SECRET:-}
@@ -101,14 +105,13 @@ services:
   frontend:
     build:
       context: ./
-      dockerfile: Dockerfile
-      args:
-        VITE_API_BASE_URL: ""
+      dockerfile: Dockerfile.dev
     container_name: wreckshop-frontend
     ports:
       - "5176:5176"
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
+      VITE_API_BASE_URL: ""
     depends_on:
       - backend
     networks:
@@ -121,6 +124,7 @@ services:
       - ./tsconfig.json:/app/tsconfig.json
       - ./package.json:/app/package.json
       - /app/node_modules
+    command: npm run dev
 
 networks:
   wreckshop-network:

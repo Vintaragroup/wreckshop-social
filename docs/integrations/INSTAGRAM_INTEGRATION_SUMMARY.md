@@ -63,6 +63,7 @@ Integrations page now shows:
 - Shows disconnected state with action button
 - Real-time API fetching
 - Error handling
+ - UI gracefully handles 404 ("No active Instagram connection found") as a normal disconnected state
 
 **2. InstagramCallbackHandler** (`instagram-callback.tsx`)
 - Handles OAuth redirect from Instagram

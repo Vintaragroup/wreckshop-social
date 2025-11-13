@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy dependency manifests
+COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
+
+# Install dependencies
+RUN npm install --no-audit --no-fund
+
+# Copy source files (will be overridden by volumes in docker-compose.yml)
+COPY src ./src
+COPY public ./public
+COPY index.html vite.config.ts tsconfig.json ./
+
+EXPOSE 5176
+
+# Run Vite dev server (with HMR disabled by default since we're in Docker)
+# The HMR host will be set to localhost automatically
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

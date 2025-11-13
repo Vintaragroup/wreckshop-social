@@ -1,62 +1,57 @@
 ---
-description: Documents core music industry data models for artists, releases, events and related metadata/workflows
+description: Documentation of music content models and industry data flows for artist/release/event management
 ---
 
 
 # music-content-models
 
-Key Data Models:
+Core Content Models:
 
-1. Artist Model
-Importance Score: 90
-- Primary artist profile data structure
-- Platform-specific identifiers (Spotify ID, Apple Music ID)
-- Social media handles and verification status
-- Genre classification and scene tagging
-- Management relationship tracking
-- Distribution platform credentials
+1. Artist Data Model
+Importance Score: 95/100
+- ISRC handling for content identification
+- Artist type classification system (band, solo, featured, producer)
+- Rights management and distribution workflow states
+- Platform-specific profile links and verification status
+- Revenue sharing rules and splits tracking
 
-2. Release Model 
-Importance Score: 95
-- Music release metadata structure
-- ISRC/UPC code management
-- Multi-format release bundling (album/EP/single)
-- Platform-specific asset references
-- Rights management data
-- Distribution workflow state
+2. Release Model
+Importance Score: 90/100
+- UPC/EAN code management
+- Release type classification (single, EP, album, remix)
+- Distribution channel status tracking
 - Pre-save campaign configuration
-
-3. Event Model
-Importance Score: 85
-- Live event/performance data structure
-- Venue capacity and layout information
-- Ticketing platform integration data
-- Presale configuration
-- Support artist relationships
-- Geographic targeting data
-
-Core Distribution Workflows:
-
-1. Release Distribution Pipeline
-Importance Score: 90
-- Multi-platform release scheduling
-- Asset validation and delivery
-- Platform-specific metadata formatting
-- Release status tracking
-- Takedown request handling
-
-2. Pre-Release Marketing Flow
-Importance Score: 85
-- Pre-save campaign orchestration
-- Platform-specific landing page generation
-- Release notification scheduling
+- Platform-specific release timing rules
 - Cross-platform asset synchronization
 
-Notable Integrations:
-- Music distribution platforms (TuneCore, DistroKid)
-- Streaming services (Spotify, Apple Music)
-- Ticketing systems (Eventbrite, Dice)
-- Rights management databases
+3. Event Data Model
+Importance Score: 85/100
+- Venue capacity calculations
+- Ticket allocation rules by tier
+- Pre-sale configuration and timing
+- Revenue projection models
+- Geographic targeting parameters
+- Multi-vendor ticketing integration
+
+4. Distribution Workflows
+Importance Score: 90/100
+- Platform-specific delivery requirements
+- Asset validation rules
+- Release schedule coordination
+- Territory restrictions handling
+- Rights clearance tracking
+- Distribution status monitoring
+
+5. Platform Integration Models
+Importance Score: 85/100
+- Cross-platform asset mapping
+- Release timing synchronization
+- Analytics aggregation rules
+- Platform-specific metadata requirements
+- Content verification workflows
+- Asset delivery specifications
+
+Notable implementations focus on industry-standard identifiers (ISRC/UPC), rights management, and complex distribution workflows across multiple platforms. The models emphasize music industry compliance requirements and platform-specific delivery rules.
 
 $END$
 

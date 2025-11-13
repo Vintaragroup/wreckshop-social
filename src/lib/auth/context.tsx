@@ -36,6 +36,10 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  /**
+   * Complete SSO login by setting the received token and fetching the user profile
+   */
+  completeSsoLogin: (accessToken: string) => Promise<void>;
 }
 
 // ============================================================================
@@ -263,6 +267,57 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [token]);
 
+  // Complete SSO login from OAuth callback with an already issued token
+  const completeSsoLogin = useCallback(async (accessToken: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Persist token first
+      setToken(accessToken);
+      localStorage.setItem('auth_token', accessToken);
+
+      // Fetch user profile via backend using the token
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+      const response = await fetch(
+        `${apiBaseUrl}/auth/me`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        throw new Error(text || 'Failed to fetch user after SSO login');
+      }
+
+      const userData = await response.json();
+      const newUser: AuthUser = {
+        id: userData.id,
+        email: userData.email,
+        name: userData.displayName || userData.email,
+        role: userData.accountType === 'ARTIST_AND_MANAGER' ? 'MANAGER' : 'ARTIST',
+        accountType: userData.accountType,
+        isAdmin: userData.isAdmin,
+      };
+
+      setUser(newUser);
+      localStorage.setItem('auth_user', JSON.stringify(newUser));
+    } catch (err) {
+      const e = err instanceof Error ? err : new Error(String(err));
+      setError(e);
+      // Cleanup on failure
+      setToken(null);
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+      throw e;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const value: AuthContextType = {
     user,
     token,
@@ -274,6 +329,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     refreshToken,
     refreshUser,
+    completeSsoLogin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

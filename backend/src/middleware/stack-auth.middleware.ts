@@ -7,6 +7,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
+import { env } from '../env';
 
 export interface StackAuthUser {
   id: string;
@@ -47,12 +48,12 @@ export async function validateStackAuthToken(
 
     // Verify token with Stack Auth
     const verifyResponse = await axios.get(
-      'https://api.stack-auth.com/api/v1/auth/sessions',
+      `${env.STACK_API_URL.replace(/\/$/, '')}/api/v1/auth/sessions`,
       {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-Stack-Project-Id': process.env.STACK_PROJECT_ID,
-          'X-Stack-Publishable-Client-Key': process.env.STACK_CLIENT_KEY,
+          Authorization: `Bearer ${token}`,
+          'X-Stack-Project-Id': env.STACK_PROJECT_ID,
+          'X-Stack-Publishable-Client-Key': env.STACK_CLIENT_KEY,
           'X-Stack-Access-Type': 'client',
         },
       }
@@ -103,12 +104,12 @@ export async function optionalStackAuthToken(
     const token = authHeader.substring(7);
 
     const verifyResponse = await axios.get(
-      'https://api.stack-auth.com/api/v1/auth/sessions',
+      `${env.STACK_API_URL.replace(/\/$/, '')}/api/v1/auth/sessions`,
       {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-Stack-Project-Id': process.env.STACK_PROJECT_ID,
-          'X-Stack-Publishable-Client-Key': process.env.STACK_CLIENT_KEY,
+          Authorization: `Bearer ${token}`,
+          'X-Stack-Project-Id': env.STACK_PROJECT_ID,
+          'X-Stack-Publishable-Client-Key': env.STACK_CLIENT_KEY,
           'X-Stack-Access-Type': 'client',
         },
       }

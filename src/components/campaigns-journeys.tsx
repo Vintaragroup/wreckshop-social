@@ -26,7 +26,7 @@ import { CreateJourneyModal } from "./create-journey-modal";
 import { EditJourneyModal } from "./edit-journey-modal";
 import { ViewJourneyCanvas } from "./view-journey-canvas";
 import { JourneyAnalyticsModal } from "./journey-analytics-modal";
-import { apiUrl } from "../lib/api";
+import { apiRequest, apiUrl } from "../lib/api";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -102,11 +102,10 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
       setLoading(true);
       setError(null);
       try {
-        const url = new URL(apiUrl('/journeys'), window.location.origin);
-        if (filterStatus !== 'all') url.searchParams.set('status', filterStatus);
-        const res = await fetch(url.toString(), { credentials: 'include' });
-        if (!res.ok) throw new Error(`Failed to load journeys (${res.status})`);
-        const json = await res.json();
+        const params = new URLSearchParams();
+        if (filterStatus !== 'all') params.set('status', filterStatus);
+        const qs = params.toString() ? `?${params.toString()}` : '';
+        const json = await apiRequest<{ ok: true; data: JourneyDoc[] }>(`/journeys${qs}`)
         if (!aborted) setJourneys(json.data || []);
       } catch (e: any) {
         if (!aborted) setError(e?.message || 'Failed to load journeys');
@@ -146,8 +145,7 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
 
   async function postAction(id: string, action: 'publish' | 'pause' | 'resume' | 'duplicate') {
     try {
-      const res = await fetch(apiUrl(`/journeys/${id}/${action}`), { method: 'POST', credentials: 'include' })
-      if (!res.ok) throw new Error(`${action} failed (${res.status})`)
+      await apiRequest(`/journeys/${id}/${action}`, { method: 'POST' })
       setRefreshSeq((s) => s + 1)
       const label = action.charAt(0).toUpperCase() + action.slice(1)
       toast.success(`${label} successful`)
@@ -477,8 +475,7 @@ export function CampaignsJourneys({ onPageChange }: CampaignsJourneysProps = {})
                           onSelect={async () => {
                             try {
                               if (!confirm('Delete this journey? This cannot be undone.')) return;
-                              const res = await fetch(apiUrl(`/journeys/${journey._id}`), { method: 'DELETE', credentials: 'include' })
-                              if (!res.ok) throw new Error(`delete failed (${res.status})`)
+                              await apiRequest(`/journeys/${journey._id}`, { method: 'DELETE' })
                               setRefreshSeq((s) => s + 1)
                               toast.success('Journey deleted')
                             } catch (err) {

@@ -33,7 +33,7 @@ npm run dev
 
 Or if you prefer Docker (after it finishes building):
 ```bash
-docker-compose -f tools/docker/docker-compose.ngrok.yml up
+docker compose -f docker-compose.yml up
 ```
 
 ---
@@ -77,7 +77,7 @@ npm install
 npm run dev
 
 # Option 2: Docker (if you prefer, but may be slower)
-docker-compose -f tools/docker/docker-compose.ngrok.yml up
+docker compose -f docker-compose.yml up
 ```
 
 ---

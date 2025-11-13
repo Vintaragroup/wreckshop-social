@@ -448,3 +448,38 @@ router.post('/refresh', authenticateJWT, async (req: Request, res: Response) => 
 });
 
 export default router;
+
+/**
+ * SSO Code Exchange (temporary helper)
+ * 
+ * POST /api/auth/sso/exchange
+ * Body: { code: string, provider: string, redirectUri: string }
+ * 
+ * For now, returns a demo token derived from the code so that the end-to-end
+ * flow works. In production, exchange the authorization code with Stack Auth
+ * using the server secret key to obtain a real JWT.
+ */
+router.post('/sso/exchange', async (req: Request, res: Response) => {
+  try {
+    const { code, provider } = req.body as { code?: string; provider?: string };
+    if (!code || !provider) {
+      return res.status(400).json({ ok: false, error: 'code and provider are required' });
+    }
+
+    // TODO: Replace with real Stack Auth code exchange using stackAuthConfig
+    // Demo token payload
+    const payload = {
+      userId: `stack_${provider}_${Date.now()}`,
+      email: `user+${provider}@example.com`,
+      displayName: provider.charAt(0).toUpperCase() + provider.slice(1) + ' User',
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 86400,
+    };
+    const mockToken = Buffer.from(JSON.stringify(payload)).toString('base64');
+
+    return res.json({ ok: true, data: { accessToken: mockToken } });
+  } catch (error) {
+    console.error('[auth] SSO exchange error:', error);
+    res.status(500).json({ ok: false, error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});

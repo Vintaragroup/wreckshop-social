@@ -45,6 +45,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (payload as T) ?? (undefined as unknown as T)
 }
 
+// Public wrapper for components: same as request but exported
+export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  return request<T>(path, init)
+}
+
 export type Provider = 'spotify' | 'amazon' | 'lastfm' | 'soundcloud' | 'deezer' | 'youtube' | 'audius'
 
 export interface IdentityDTO {

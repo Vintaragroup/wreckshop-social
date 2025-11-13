@@ -11,6 +11,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyStackAuthToken } from '../stack-auth';
 import { prisma } from '../prisma';
+import { env } from '../../env';
 
 /**
  * Extend Express Request type to include authenticated user
@@ -119,8 +120,8 @@ export async function authenticateJWT(
       return;
     }
 
-    // Fetch user profile from database
-    let artist = await prisma.artist.findUnique({
+    // Fetch user profile from database by stackAuthUserId
+    let artist = await prisma.artist.findFirst({
       where: { stackAuthUserId: decoded.userId },
       select: {
         id: true,
@@ -137,16 +138,10 @@ export async function authenticateJWT(
     // Auto-create artist profile on first login if it doesn't exist
     if (!artist) {
       try {
-        artist = await prisma.artist.create({
-          data: {
-            stackAuthUserId: decoded.userId,
-            email: decoded.email || 'unknown@example.com',
-            stageName: decoded.displayName || decoded.email?.split('@')[0] || 'Artist',
-            fullName: decoded.displayName || 'Unknown Artist',
-            accountType: 'ARTIST',
-            isVerified: false,
-            isAdmin: false,
-          },
+        // First, check if an artist with this email already exists
+        const userEmail = decoded.email || 'unknown@example.com';
+        const existingArtist = await prisma.artist.findFirst({
+          where: { email: userEmail },
           select: {
             id: true,
             stackAuthUserId: true,
@@ -158,15 +153,81 @@ export async function authenticateJWT(
             isAdmin: true,
           },
         });
-        console.log('[auth] Created new artist profile:', artist.email);
+
+        if (existingArtist) {
+          // Artist with this email exists but has a different stackAuthUserId
+          // This could happen if user changed their Stack Auth account
+          // Log this as a warning and use the existing artist record
+          console.warn(
+            `[auth] Artist with email ${userEmail} exists with different stackAuthUserId. ` +
+            `Existing: ${existingArtist.stackAuthUserId}, New: ${decoded.userId}`
+          );
+          // Use the existing artist - don't update the stackAuthUserId since it's unique
+          artist = existingArtist;
+        } else {
+          // Create completely new artist
+          artist = await prisma.artist.create({
+            data: {
+              stackAuthUserId: decoded.userId,
+              email: userEmail,
+              stageName: decoded.displayName || userEmail.split('@')[0] || 'Artist',
+              fullName: decoded.displayName || 'Unknown Artist',
+              accountType: 'ARTIST',
+              isVerified: false,
+              isAdmin: false,
+            },
+            select: {
+              id: true,
+              stackAuthUserId: true,
+              email: true,
+              stageName: true,
+              profilePictureUrl: true,
+              accountType: true,
+              isVerified: true,
+              isAdmin: true,
+            },
+          });
+          console.log('[auth] Created new artist profile:', artist.email);
+        }
       } catch (createError) {
-        console.error('[auth] Failed to create artist profile:', createError);
+        console.error('[auth] Failed to create/link artist profile:', createError);
         res.status(500).json({
           error: 'Failed to initialize user profile',
           message: 'Could not create artist profile on first login',
         });
         return;
       }
+    }
+
+    // Auto-elevate super admin emails from environment configuration
+    try {
+      const superEmails = (env.ADMIN_SUPER_EMAILS || '')
+        .split(',')
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean);
+
+      const artistEmail = (artist.email || '').toLowerCase();
+      const shouldBeSuperAdmin = superEmails.includes(artistEmail);
+
+      if (shouldBeSuperAdmin && !artist.isAdmin) {
+        artist = await prisma.artist.update({
+          where: { id: artist.id },
+          data: { isAdmin: true },
+          select: {
+            id: true,
+            stackAuthUserId: true,
+            email: true,
+            stageName: true,
+            profilePictureUrl: true,
+            accountType: true,
+            isVerified: true,
+            isAdmin: true,
+          },
+        });
+        console.log(`[auth] Auto-elevated super admin: ${artist.email}`);
+      }
+    } catch (e) {
+      console.warn('[auth] Super admin elevation check failed:', e);
     }
 
     // Attach user to request

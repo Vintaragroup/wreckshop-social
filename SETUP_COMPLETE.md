@@ -92,7 +92,7 @@ curl -X POST https://wreckshop.ngrok.app/api/auth/signup \
 ### Keep Docker Running (Background)
 ```bash
 cd /Users/ryanmorrow/Documents/Projects2025/Wreckshop-social
-docker-compose -f tools/docker/docker-compose.ngrok.yml up -d
+docker compose -f docker-compose.yml up -d
 ```
 
 ### Keep ngrok Tunnel Running (Separate Terminal)
@@ -188,7 +188,7 @@ When ready to deploy:
 → Check `allowedHosts` in vite.config.ts includes your domain
 
 ### If Docker containers stop
-→ Restart: `docker-compose -f tools/docker/docker-compose.ngrok.yml up -d`
+→ Restart: `docker compose -f docker-compose.yml up -d`
 
 ### To check all services
 ```bash

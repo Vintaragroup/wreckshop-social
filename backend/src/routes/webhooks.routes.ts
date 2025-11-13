@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import prisma from '../lib/prisma'
+import { env } from '../env'
 
 const webhooks = Router()
 
@@ -8,7 +9,7 @@ const webhooks = Router()
  */
 function verifyWebhookSignature(req: Request): boolean {
   const signature = req.headers['x-stack-signature'] as string
-  const webhookSecret = process.env.STACK_AUTH_WEBHOOK_SECRET || 'your_webhook_secret_here'
+  const webhookSecret = env.STACK_WEBHOOK_SECRET || 'your_webhook_secret_here'
 
   if (!signature || !webhookSecret) {
     console.warn('[webhooks] Missing signature or webhook secret')

@@ -13,6 +13,12 @@ const EnvSchema = z.object({
   INSTAGRAM_REDIRECT_URI: z.string().url().optional(),
   CORS_ORIGIN: z.string().url(),
   ADMIN_API_KEY: z.string().default(''),
+  ADMIN_SUPER_EMAILS: z.string().default('ryan@vintaragroup.com'),
+  STACK_PROJECT_ID: z.string().min(1),
+  STACK_CLIENT_KEY: z.string().min(1),
+  STACK_SERVER_KEY: z.string().min(1),
+  STACK_WEBHOOK_SECRET: z.string().min(1),
+  STACK_API_URL: z.string().url().default('https://api.stack-auth.com'),
 })
 
 export const env = EnvSchema.parse({
@@ -27,4 +33,10 @@ export const env = EnvSchema.parse({
   INSTAGRAM_REDIRECT_URI: process.env.INSTAGRAM_REDIRECT_URI,
   CORS_ORIGIN: process.env.CORS_ORIGIN,
   ADMIN_API_KEY: process.env.ADMIN_API_KEY,
+  ADMIN_SUPER_EMAILS: process.env.ADMIN_SUPER_EMAILS,
+  STACK_PROJECT_ID: process.env.STACK_PROJECT_ID,
+  STACK_CLIENT_KEY: process.env.STACK_CLIENT_KEY ?? process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY,
+  STACK_SERVER_KEY: process.env.STACK_SERVER_KEY ?? process.env.STACK_SECRET_SERVER_KEY,
+  STACK_WEBHOOK_SECRET: process.env.STACK_WEBHOOK_SECRET ?? process.env.STACK_AUTH_WEBHOOK_SECRET,
+  STACK_API_URL: process.env.STACK_API_URL ?? 'https://api.stack-auth.com',
 })

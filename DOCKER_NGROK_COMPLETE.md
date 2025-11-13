@@ -9,9 +9,7 @@
 
 You now have a **complete, professional setup** for both local development and artist testing, all containerized with Docker.
 
-**Two isolated Docker environments:**
-1. **Local Development** - `docker-compose.yml`
-2. **Artist Testing** - `docker-compose.ngrok.yml` + ngrok tunnel
+> **Update (2025-01)**: Local development and artist/ngrok testing now share a single Compose stack (`docker-compose.yml`). Whenever this guide mentions multiple compose files, use `docker compose -f docker-compose.yml ...` and start/stop ngrok alongside the same containers.
 
 ---
 
@@ -21,7 +19,7 @@ You now have a **complete, professional setup** for both local development and a
 
 **Local Development Environment:**
 ```
-tools/docker/docker-compose.yml
+docker-compose.yml
 ├─ Frontend: localhost:5176
 ├─ Backend: localhost:4002
 ├─ Database: PostgreSQL (localhost:5432)
@@ -32,7 +30,7 @@ tools/docker/docker-compose.yml
 
 **Artist Testing Environment:**
 ```
-tools/docker/docker-compose.ngrok.yml
+docker-compose.yml
 ├─ Frontend: https://wreckshop.ngrok.app
 ├─ Backend: https://wreckshop.ngrok.app (via ngrok tunnel)
 ├─ Database: PostgreSQL (separate from local)
@@ -44,8 +42,8 @@ tools/docker/docker-compose.ngrok.yml
 ### Key Files
 
 **Docker Configuration:**
-- `tools/docker/docker-compose.yml` - Local development
-- `tools/docker/docker-compose.ngrok.yml` - Artist testing
+- `docker-compose.yml` - Local development
+- `docker-compose.yml` - Artist testing
 - `tools/docker/Dockerfile.frontend-root` - Frontend image
 - `tools/docker/backend/Dockerfile` - Backend image
 
@@ -62,7 +60,7 @@ tools/docker/docker-compose.ngrok.yml
 
 ```bash
 # Start all services
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 
 # Access frontend
 open http://localhost:5176
@@ -75,7 +73,7 @@ open http://localhost:4002/health
 
 **Terminal 1: Start Docker**
 ```bash
-docker-compose -f tools/docker/docker-compose.ngrok.yml up
+docker compose -f docker-compose.yml up
 ```
 
 **Terminal 2: Start ngrok Tunnel**
@@ -140,7 +138,7 @@ Both Docker Compose files are **completely isolated**:
 
 ```bash
 # Morning: Start local Docker
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 
 # Work on features
 # Access: http://localhost:5176
@@ -153,7 +151,7 @@ docker-compose down
 
 ```bash
 # Start artist testing Docker
-docker-compose -f tools/docker/docker-compose.ngrok.yml up
+docker compose -f docker-compose.yml up
 
 # Start ngrok tunnel (separate terminal)
 ngrok http --url=wreckshop.ngrok.app 4002
@@ -169,16 +167,16 @@ docker-compose down
 
 ```bash
 # Currently local
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 # (Ctrl+C)
 
 # Switch to ngrok
-docker-compose -f tools/docker/docker-compose.ngrok.yml up
+docker compose -f docker-compose.yml up
 ngrok http --url=wreckshop.ngrok.app 4002
 
 # Back to local
 docker-compose down
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 ```
 
 ### Workflow 4: Deploy Updates
@@ -188,12 +186,12 @@ docker-compose -f tools/docker/docker-compose.yml up
 git add -A && git commit -m "feat: New feature"
 
 # Test locally with Docker
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 # Verify at http://localhost:5176
 
 # Switch to ngrok for artist testing
 docker-compose down
-docker-compose -f tools/docker/docker-compose.ngrok.yml up
+docker compose -f docker-compose.yml up
 ngrok http --url=wreckshop.ngrok.app 4002
 
 # Artists test at https://wreckshop.ngrok.app
@@ -207,25 +205,25 @@ ngrok http --url=wreckshop.ngrok.app 4002
 
 ```bash
 # Start services
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 
 # Start in background
-docker-compose -f tools/docker/docker-compose.yml up -d
+docker compose -f docker-compose.yml up -d
 
 # Stop services
 docker-compose down
 
 # Rebuild images
-docker-compose -f tools/docker/docker-compose.yml up --build
+docker compose -f docker-compose.yml up --build
 
 # View logs
-docker-compose -f tools/docker/docker-compose.yml logs -f
+docker compose -f docker-compose.yml logs -f
 
 # View specific service logs
-docker-compose -f tools/docker/docker-compose.yml logs -f backend
+docker compose -f docker-compose.yml logs -f backend
 
 # Execute command in container
-docker-compose -f tools/docker/docker-compose.yml exec backend npm run build
+docker compose -f docker-compose.yml exec backend npm run build
 
 # Remove volumes (reset database)
 docker-compose down -v
@@ -235,12 +233,12 @@ docker-compose down -v
 
 ```bash
 # Start services
-docker-compose -f tools/docker/docker-compose.ngrok.yml up
+docker compose -f docker-compose.yml up
 
 # Same commands work, just replace the compose file:
-docker-compose -f tools/docker/docker-compose.ngrok.yml down
-docker-compose -f tools/docker/docker-compose.ngrok.yml up --build
-docker-compose -f tools/docker/docker-compose.ngrok.yml logs -f
+docker compose -f docker-compose.yml down
+docker compose -f docker-compose.yml up --build
+docker compose -f docker-compose.yml logs -f
 ```
 
 ---
@@ -287,16 +285,16 @@ Both environments include:
 lsof -ti:5176 | xargs kill -9
 
 # Or use different port
-docker-compose -f tools/docker/docker-compose.yml up -e FRONTEND_PORT=5177
+docker compose -f docker-compose.yml up -e FRONTEND_PORT=5177
 ```
 
 ### "Can't connect to database"
 ```bash
 # Check if postgres is running
-docker-compose -f tools/docker/docker-compose.yml logs postgres
+docker compose -f docker-compose.yml logs postgres
 
 # Restart postgres
-docker-compose -f tools/docker/docker-compose.yml restart postgres
+docker compose -f docker-compose.yml restart postgres
 ```
 
 ### "ngrok URL not working"
@@ -318,10 +316,10 @@ ngrok http --url=wreckshop.ngrok.app 4002
 ### "Need to reset database"
 ```bash
 # Local environment
-docker-compose -f tools/docker/docker-compose.yml down -v
+docker compose -f docker-compose.yml down -v
 
 # ngrok environment
-docker-compose -f tools/docker/docker-compose.ngrok.yml down -v
+docker compose -f docker-compose.yml down -v
 
 # Then restart to recreate fresh database
 ```
@@ -375,7 +373,7 @@ docker-compose -f tools/docker/docker-compose.ngrok.yml down -v
 ## Files Changed
 
 **New Files:**
-- `tools/docker/docker-compose.ngrok.yml` - Artist testing Docker config
+- `docker-compose.yml` - Artist testing Docker config
 - `.env.ngrok` - Artist testing environment variables
 - `docs/NGROK_SETUP_GUIDE.md` - Complete setup documentation
 
@@ -406,12 +404,12 @@ docker-compose -f tools/docker/docker-compose.ngrok.yml down -v
 
 1. **Test local setup:**
    ```bash
-   docker-compose -f tools/docker/docker-compose.yml up
+   docker compose -f docker-compose.yml up
    ```
 
 2. **Test artist setup:**
    ```bash
-   docker-compose -f tools/docker/docker-compose.ngrok.yml up
+   docker compose -f docker-compose.yml up
    ngrok http --url=wreckshop.ngrok.app 4002
    ```
 

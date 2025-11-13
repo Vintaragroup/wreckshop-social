@@ -11,6 +11,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
 import { Button } from "./ui/button";
+import { apiRequest } from "../lib/api";
 
 interface CreateContactModalProps {
   open: boolean;
@@ -53,13 +54,10 @@ export default function CreateContactModal({ open, onOpenChange, onCreated }: Cr
         phone: phone || undefined,
         consent: { email: consentEmail, sms: consentSms },
       };
-      const res = await fetch('/api/audience/contacts', {
+      const json = await apiRequest<{ ok: true; data: any }>("/audience/contacts", {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || 'Failed to create contact');
       onCreated?.(json.data);
       reset();
       onOpenChange(false);

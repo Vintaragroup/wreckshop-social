@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Badge } from './ui/badge'
 import { Loader2, LogOut, Instagram as InstagramIcon } from 'lucide-react'
 import { useAuth } from '../lib/auth/context'
-import { apiUrl } from '../lib/api'
+import { apiUrl, apiRequest } from '../lib/api'
 
 interface InstagramConnectionProps {
   userId: string
@@ -31,6 +31,7 @@ export function InstagramConnectionCard({
   const [loading, setLoading] = useState(true)
   const [connecting, setConnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notFound, setNotFound] = useState(false)
 
   // Load connection status on mount
   useEffect(() => {
@@ -42,30 +43,38 @@ export function InstagramConnectionCard({
 
     try {
       setLoading(true)
-      const response = await fetch(
-        apiUrl(`/integrations/instagram/${userId}`),
-        {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        }
+      setNotFound(false)
+      const data = await apiRequest<{ ok: true; connection: InstagramConnection }>(
+        `/integrations/instagram/${userId}`
       )
-
-      if (response.ok) {
-        const data = await response.json()
-        setConnection(data.integration)
+      // Mongoose route responds with { ok, connection }
+      // Normalize to our local state shape
+      const conn = data?.connection as any
+      if (conn) {
+        setConnection({
+          id: conn.id,
+          username: conn.username,
+          name: conn.name,
+          profilePictureUrl: conn.profilePictureUrl,
+          followers: conn.followers,
+          connectedAt: conn.connectedAt,
+          expiresAt: conn.expiresAt,
+          needsRefresh: !!conn.needsRefresh,
+        })
         setError(null)
-      } else if (response.status === 404) {
-        // Not connected
-        setConnection(null)
       } else {
-        throw new Error('Failed to fetch connection status')
+        setConnection(null)
       }
     } catch (err: any) {
       console.error('Error fetching Instagram connection:', err)
-      setError(err.message)
+      // 404 returns a JSON error message: 'No active Instagram connection found'
+      if (typeof err?.message === 'string' && /No active Instagram connection found/i.test(err.message)) {
+        setNotFound(true)
+        setConnection(null)
+        setError(null)
+      } else {
+        setError(err.message)
+      }
     } finally {
       setLoading(false)
     }
@@ -103,23 +112,17 @@ export function InstagramConnectionCard({
 
     try {
       setConnecting(true)
-      const response = await fetch(apiUrl(`/integrations/instagram/${userId}`), {
-        method: 'DELETE',
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-        credentials: 'include',
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to disconnect Instagram')
-      }
-
+      await apiRequest(`/integrations/instagram/${userId}`, { method: 'DELETE' })
       setConnection(null)
       onConnectionChange?.()
     } catch (err: any) {
       console.error('Error disconnecting Instagram:', err)
-      setError(err.message)
+      if (typeof err?.message === 'string' && /No active Instagram connection found/i.test(err.message)) {
+        setNotFound(true)
+        setError(null)
+      } else {
+        setError(err.message)
+      }
     } finally {
       setConnecting(false)
     }
@@ -233,6 +236,11 @@ export function InstagramConnectionCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {notFound && (
+          <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded">
+            No Instagram connection found for your account yet. Click Connect to start.
+          </div>
+        )}
         <p className="text-sm text-muted-foreground">
           Connect your Instagram business account to sync follower data, insights, and
           enable content publishing directly from WreckShop.

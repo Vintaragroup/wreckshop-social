@@ -70,6 +70,11 @@ POST /auth/instagram/validate       → Check token validity
 - [ ] Token validation works
 - [ ] User data captured
 
+## UI Behavior Notes
+
+- Disconnected state: The Integrations page shows a "Disconnected" badge and a "Connect Instagram" button.
+- Not connected (404): When the API returns `{"ok": false, "error": "No active Instagram connection found"}`, the UI displays a friendly message and remains in the disconnected state. Click "Connect Instagram" to start OAuth.
+
 ## Production Checklist
 
 - [ ] Update `INSTAGRAM_REDIRECT_URI` to production domain

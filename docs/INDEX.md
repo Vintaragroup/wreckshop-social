@@ -221,7 +221,7 @@ docker-compose exec backend npx tsx scripts/set-admin.ts admin@example.com
 ### Start Development Environment
 ```bash
 # Terminal 1: Start Docker containers
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 
 # Terminal 2: Frontend development (if not running in container)
 cd src && npm run dev

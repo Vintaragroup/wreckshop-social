@@ -44,6 +44,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Progress } from "./ui/progress";
+import { apiRequest } from "../lib/api";
 
 type CampaignDoc = {
   _id: string
@@ -69,9 +70,7 @@ export function CampaignsSMS({ onPageChange }: CampaignsSMSProps = {}) {
   async function loadCampaigns() {
     setLoading(true); setError(null)
     try {
-      const res = await fetch('/api/campaigns')
-      const json = await res.json()
-      if (!res.ok) throw new Error(json?.error || `Failed to load campaigns (${res.status})`)
+      const json = await apiRequest<{ ok: true; data: CampaignDoc[] }>("/campaigns")
       setItems(json.data || [])
     } catch (e: any) {
       setError(e.message)

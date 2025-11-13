@@ -91,6 +91,13 @@ secrets/                        # Secret directories
 - Configuration for Docker Compose local development
 - Previously had actual credentials - **FIXED**
 - Now contains placeholders only
+- Includes Stack Auth placeholders required by Docker services:
+  - `STACK_PROJECT_ID`
+  - `STACK_CLIENT_KEY`
+  - `STACK_SERVER_KEY`
+  - `STACK_WEBHOOK_SECRET`
+  - `STACK_API_URL`
+  - `STACK_APP_BASE_URL`
 
 ## Credentials Currently In Use
 
@@ -105,6 +112,10 @@ These are stored **locally in `backend/.env`** (not committed):
 | MongoDB | `MONGODB_URI` | Connection String | ✅ Locally stored |
 | LastFM | `LASTFM_API_KEY` | API Key | ✅ Locally stored |
 | Admin | `ADMIN_API_KEY` | Auth Token | ✅ Locally stored |
+| Stack Auth | `STACK_PROJECT_ID` | Project Identifier | ✅ Locally stored |
+| Stack Auth | `STACK_CLIENT_KEY` | Publishable Client Key | ✅ Locally stored |
+| Stack Auth | `STACK_SERVER_KEY` | Secret Server Key | ✅ Locally stored |
+| Stack Auth | `STACK_WEBHOOK_SECRET` | Webhook Signing Secret | ✅ Locally stored |
 
 ## Security Checklist
 

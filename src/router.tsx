@@ -26,6 +26,7 @@ import { EmailTemplates } from './components/email-templates'
 import AdminDiscoveryPage from './pages/admin/discovery'
 import { LoginPage } from './pages/auth/login-stack'
 import { SignupPage } from './pages/auth/signup-stack'
+import OAuthCallbackPage from './pages/auth/oauth-callback'
 import { useAuth } from './lib/auth/context'
 
 const AudienceContactsPage = React.lazy(() => import('./pages/audience/contacts'))
@@ -184,6 +185,7 @@ export const router = createBrowserRouter([
     path: '/signup',
     element: <SignupPage />,
   },
+  // (Optional) Stack Auth hosted pages can be wired here when package is available
   
   // Capture page (public)
   {
@@ -195,6 +197,10 @@ export const router = createBrowserRouter([
   {
     path: '/auth/spotify/callback',
     element: <SpotifyCallbackPage />,
+  },
+  {
+    path: '/auth/oauth/callback/:provider',
+    element: <OAuthCallbackPage />,
   },
   {
     path: '/auth/instagram/callback',

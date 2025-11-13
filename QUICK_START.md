@@ -50,7 +50,7 @@ curl -X POST https://wreckshop.ngrok.app/api/auth/signup \
 ### Restart Docker
 ```bash
 cd /Users/ryanmorrow/Documents/Projects2025/Wreckshop-social
-docker-compose -f tools/docker/docker-compose.ngrok.yml up -d
+docker compose -f docker-compose.yml up -d
 ```
 
 ### Restart ngrok (in separate terminal)

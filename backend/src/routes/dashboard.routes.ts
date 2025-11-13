@@ -535,3 +535,77 @@ dashboardRoutes.get(
 );
 
 export default dashboardRoutes;
+
+// ============================================
+// Artist Engagement Time Series (Authenticated)
+// ============================================
+
+/**
+ * GET /api/dashboard/artists/:artistId/engagement
+ * 
+ * Return a simple engagement time series for the given artist.
+ * Auth required. Allows the artist themselves or an ACTIVE manager for that artist.
+ * 
+ * Query params:
+ * - window: "7d" | "30d" (default: 7d)
+ * 
+ * Response:
+ * {
+ *   ok: true,
+ *   data: Array<{ date: string; emails: number; sms: number; streams: number; tickets: number }>
+ * }
+ */
+dashboardRoutes.get(
+  '/dashboard/artists/:artistId/engagement',
+  authenticateJWT,
+  async (req: Request, res: Response) => {
+    try {
+      const { artistId } = req.params as { artistId: string };
+      const windowParam = (req.query.window as string) || '7d';
+
+      if (!req.user) return res.status(401).json({ ok: false, error: 'Unauthorized' });
+
+      // Authorization: allow if requesting own artist data OR manager with ACTIVE relation
+      if (req.user.id !== artistId) {
+        const relation = await prisma.managerArtist.findFirst({
+          where: { managerId: req.user.id, artistId, status: 'ACTIVE' },
+        });
+        if (!relation) {
+          return res.status(403).json({ ok: false, error: 'Forbidden' });
+        }
+      }
+
+      // Determine number of days
+      const days = windowParam === '30d' ? 30 : 7;
+      const today = new Date();
+
+      // Generate simple synthetic series for now
+      const base = {
+        emails: 12000,
+        sms: 3000,
+        streams: 8500,
+        tickets: 400,
+      };
+
+      const data = Array.from({ length: days }).map((_, i) => {
+        const d = new Date(today);
+        d.setDate(d.getDate() - (days - 1 - i));
+
+        // Add small variability
+        const variance = (seed: number) => Math.floor(seed * (1 + (Math.sin(i / 2) * 0.05)));
+        return {
+          date: d.toISOString().slice(0, 10),
+          emails: variance(base.emails + i * 150),
+          sms: variance(base.sms + i * 40),
+          streams: variance(base.streams + i * 220),
+          tickets: Math.max(0, Math.floor(base.tickets + i * 12 + Math.sin(i) * 10)),
+        };
+      });
+
+      res.json({ ok: true, data });
+    } catch (error) {
+      console.error('[dashboard] Error fetching engagement series:', error);
+      res.status(500).json({ ok: false, error: 'Internal server error' });
+    }
+  }
+);

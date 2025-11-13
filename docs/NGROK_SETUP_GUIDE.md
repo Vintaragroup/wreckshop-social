@@ -2,6 +2,8 @@
 
 **Goal:** Easy switching between local development and artist testing via ngrok
 
+> **Update (2025-01):** There is now a single Docker Compose file (`docker-compose.yml`) for both local and ngrok testing. Use `docker compose -f docker-compose.yml ...` for every command below; start/stop ngrok alongside the same containers when you need the public tunnel.
+
 ---
 
 ## Environment Files
@@ -38,7 +40,7 @@ npm run dev
 ### Option B: Using Docker (Recommended)
 ```bash
 # Start all services (frontend, backend, postgres, mongo, redis)
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 
 # Access: http://localhost:5176
 # Backend: http://localhost:4002
@@ -50,7 +52,7 @@ docker-compose -f tools/docker/docker-compose.yml up
 ### Step 1: Start Docker with ngrok Configuration
 ```bash
 # Use ngrok-specific docker-compose (separate volumes/containers)
-docker-compose -f tools/docker/docker-compose.ngrok.yml up
+docker compose -f docker-compose.yml up
 
 # This starts everything configured for ngrok:
 # - CORS_ORIGIN set to https://wreckshop.ngrok.app
@@ -85,7 +87,7 @@ They can:
 # Stop docker: Ctrl+C or docker-compose down
 # Restart local environment
 
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 # Access: http://localhost:5176
 ```
 
@@ -99,7 +101,7 @@ Two isolated docker-compose setups ensure clean isolation:
 
 **Local Development:**
 ```bash
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 # Uses: localhost:5176 (frontend), localhost:4002 (backend)
 # Containers: wreckshop-frontend-dev, wreckshop-backend-dev
 # Volumes: frontend_node_modules, backend_node_modules
@@ -108,7 +110,7 @@ docker-compose -f tools/docker/docker-compose.yml up
 
 **ngrok Testing:**
 ```bash
-docker-compose -f tools/docker/docker-compose.ngrok.yml up
+docker compose -f docker-compose.yml up
 # Uses: https://wreckshop.ngrok.app (via ngrok tunnel)
 # Containers: wreckshop-frontend-ngrok, wreckshop-backend-ngrok
 # Volumes: frontend_node_modules_ngrok, backend_node_modules_ngrok
@@ -131,25 +133,25 @@ docker-compose -f tools/docker/docker-compose.ngrok.yml up
 
 ```bash
 # Local development - start all services
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 
 # ngrok testing - start all services
-docker-compose -f tools/docker/docker-compose.ngrok.yml up
+docker compose -f docker-compose.yml up
 
 # Stop services (both)
 docker-compose down
 
 # View logs (local)
-docker-compose -f tools/docker/docker-compose.yml logs -f
+docker compose -f docker-compose.yml logs -f
 
 # View logs (ngrok)
-docker-compose -f tools/docker/docker-compose.ngrok.yml logs -f
+docker compose -f docker-compose.yml logs -f
 
 # Rebuild containers (local)
-docker-compose -f tools/docker/docker-compose.yml up --build
+docker compose -f docker-compose.yml up --build
 
 # Rebuild containers (ngrok)
-docker-compose -f tools/docker/docker-compose.ngrok.yml up --build
+docker compose -f docker-compose.yml up --build
 ```
 
 ---
@@ -159,7 +161,7 @@ docker-compose -f tools/docker/docker-compose.ngrok.yml up --build
 ### Scenario 1: Daily Development with Docker
 ```bash
 # Morning start
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 
 # Access: http://localhost:5176
 # All services running: frontend, backend, postgres, mongo, redis
@@ -172,7 +174,7 @@ docker-compose down
 ### Scenario 2: Artist Feedback with Docker + ngrok
 ```bash
 # Start ngrok Docker configuration
-docker-compose -f tools/docker/docker-compose.ngrok.yml up
+docker compose -f docker-compose.yml up
 
 # In another terminal, start ngrok tunnel
 ngrok http --url=wreckshop.ngrok.app 4002
@@ -188,18 +190,18 @@ docker-compose down
 ### Scenario 3: Quick Switch Between Environments
 ```bash
 # Currently running local development
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 # (Ctrl+C to stop)
 
 # Switch to artist testing
-docker-compose -f tools/docker/docker-compose.ngrok.yml up
+docker compose -f docker-compose.yml up
 
 # Start ngrok in another terminal
 ngrok http --url=wreckshop.ngrok.app 4002
 
 # Back to local
 docker-compose down
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 ```
 
 ### Scenario 4: Deploy Updates
@@ -209,12 +211,12 @@ git add -A
 git commit -m "feat: New feature"
 
 # Test locally with Docker
-docker-compose -f tools/docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 # Verify it works at http://localhost:5176
 
 # Then switch to ngrok for artist testing
 docker-compose down
-docker-compose -f tools/docker/docker-compose.ngrok.yml up
+docker compose -f docker-compose.yml up
 ngrok http --url=wreckshop.ngrok.app 4002
 
 # Artists test new feature at https://wreckshop.ngrok.app

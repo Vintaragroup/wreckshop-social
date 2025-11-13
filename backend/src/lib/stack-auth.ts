@@ -7,14 +7,7 @@
  * Docs: https://docs.stack-auth.com
  */
 
-const projectId = process.env.STACK_PROJECT_ID;
-const secretKey = process.env.STACK_SECRET_SERVER_KEY;
-
-if (!projectId || !secretKey) {
-  throw new Error(
-    'Stack Auth configuration missing. Please set STACK_PROJECT_ID and STACK_SECRET_SERVER_KEY in .env or .env.local'
-  );
-}
+import { env } from '../env'
 
 /**
  * Stack Auth Configuration Object
@@ -26,10 +19,12 @@ if (!projectId || !secretKey) {
  * - Server-to-Stack Auth API calls
  */
 export const stackAuthConfig = {
-  projectId,
-  secretServerKey: secretKey,
-  baseUrl: 'https://api.stackframe.io',
-};
+  projectId: env.STACK_PROJECT_ID,
+  clientKey: env.STACK_CLIENT_KEY,
+  secretServerKey: env.STACK_SERVER_KEY,
+  webhookSecret: env.STACK_WEBHOOK_SECRET,
+  apiBaseUrl: env.STACK_API_URL.replace(/\/$/, ''),
+}
 
 /**
  * Helper function to verify JWT tokens from Stack Auth
@@ -37,28 +32,35 @@ export const stackAuthConfig = {
  */
 export async function verifyStackAuthToken(token: string): Promise<any> {
   try {
-    // In production, verify with Stack Auth API or use their SDK properly
-    // For now, basic structure - you'll implement based on Stack Auth docs
-    const response = await fetch(`${stackAuthConfig.baseUrl}/v1/tokens/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${stackAuthConfig.secretServerKey}`,
-      },
-      body: JSON.stringify({
-        token,
-        projectId: stackAuthConfig.projectId,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Token verification failed');
+    if (!token) {
+      throw new Error('Missing Stack Auth token')
     }
 
-    return await response.json();
+    const response = await fetch(`${stackAuthConfig.apiBaseUrl}/api/v1/users/me`, {
+      headers: {
+        'x-stack-access-type': 'server',
+        'x-stack-project-id': stackAuthConfig.projectId,
+        'x-stack-secret-server-key': stackAuthConfig.secretServerKey,
+        'x-stack-access-token': token,
+      },
+    })
+
+    if (!response.ok) {
+      const errorBody = await response.text()
+      throw new Error(`Token verification failed: ${response.status} ${errorBody}`)
+    }
+
+    const data = await response.json()
+
+    return {
+      raw: data,
+      userId: data.id ?? data.user_id ?? data.userId,
+      email: data.primaryEmail ?? data.email ?? data.user?.primaryEmail,
+      displayName: data.displayName ?? data.fullName ?? data.name,
+    }
   } catch (error) {
-    console.error('Token verification error:', error);
-    throw error;
+    console.error('[stack-auth] Token verification error:', error)
+    throw error
   }
 }
 

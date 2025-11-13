@@ -29,6 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Switch } from "./ui/switch";
 import { useAuth } from "../lib/auth/context";
+import { apiRequest } from "../lib/api";
 import {
   Dialog,
   DialogContent,
@@ -134,26 +135,23 @@ export function Integrations() {
       if (!user || !token) return;
 
       try {
-        const response = await fetch(`/api/integrations/status/${user.id}`, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          const statuses: Record<string, any> = {};
-          if (data.integrations) {
-            Object.entries(data.integrations).forEach(([platform, integration]: [string, any]) => {
-              if (integration?.connected) {
-                statuses[platform] = {
-                  connected: true,
-                  data: integration,
-                };
-              }
-            });
-          }
-          setConnectionStatuses(statuses);
+        // The backend expects an artistId; Auth.user.id is the Prisma artist id
+        const artistId = user.id
+        const data = await apiRequest<{ ok: true; integrations?: Record<string, any> }>(
+          `/integrations/status/${artistId}`
+        )
+        const statuses: Record<string, any> = {};
+        if (data?.integrations) {
+          Object.entries(data.integrations).forEach(([platform, integration]: [string, any]) => {
+            if (integration?.connected) {
+              statuses[platform] = {
+                connected: true,
+                data: integration,
+              };
+            }
+          });
         }
+        setConnectionStatuses(statuses);
       } catch (error) {
         console.error("Failed to fetch connection statuses:", error);
       }
@@ -177,23 +175,15 @@ export function Integrations() {
 
   const handleDisconnect = async (platformId: string) => {
     if (!user || !token || !confirm(`Are you sure you want to disconnect ${platformId}?`)) return;
-    
+
     setLoadingStatuses((prev) => new Set(prev).add(platformId));
     try {
-      const response = await fetch(`/api/integrations/${platformId}/${user.id}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+      await apiRequest(`/integrations/${platformId}/${user.id}`, { method: "DELETE" })
+      setConnectionStatuses((prev) => {
+        const updated = { ...prev };
+        delete updated[platformId];
+        return updated;
       });
-      
-      if (response.ok) {
-        setConnectionStatuses((prev) => {
-          const updated = { ...prev };
-          delete updated[platformId];
-          return updated;
-        });
-      }
     } catch (error) {
       console.error("Failed to disconnect:", error);
     } finally {

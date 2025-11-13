@@ -91,12 +91,14 @@ Store these in **two places**:
 VITE_STACK_PROJECT_ID=<your-project-id>
 VITE_STACK_CLIENT_KEY=pck_<your-publishable-key>
 VITE_STACK_API_URL=https://api.stack-auth.com
+VITE_STACK_APP_BASE_URL=https://app.stack-auth.com
 ```
 
 **Backend (.env.local):**
 ```env
 # backend/.env.local
 STACK_PROJECT_ID=<your-project-id>
+STACK_CLIENT_KEY=pck_<your-publishable-key>
 STACK_SERVER_KEY=ssk_<your-secret-key>
 STACK_API_URL=https://api.stack-auth.com
 

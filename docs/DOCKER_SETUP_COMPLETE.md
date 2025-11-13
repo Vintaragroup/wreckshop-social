@@ -76,6 +76,21 @@ docker-compose down
 ✅ All services running and healthy  
 ✅ Data persistence enabled with Docker volumes  
 
+## Stack Auth Env Requirements
+
+Add the Stack Auth credentials to `.env.docker` (placeholders are provided—replace them with your real project keys):
+
+```
+STACK_PROJECT_ID=...
+STACK_CLIENT_KEY=pck_...
+STACK_SERVER_KEY=ssk_...
+STACK_WEBHOOK_SECRET=whsec_...
+STACK_API_URL=https://api.stack-auth.com
+STACK_APP_BASE_URL=https://app.stack-auth.com
+```
+
+Without these values the backend containers cannot validate Stack Auth JWTs and the frontend cannot render the hosted social-login flow.
+
 ## Consolidated vs Old Setup
 
 **Old setup** (removed):

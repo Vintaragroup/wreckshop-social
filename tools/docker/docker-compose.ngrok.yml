@@ -14,6 +14,11 @@ services:
       - VITE_ENABLE_DEEZER=true
       - VITE_ENABLE_YOUTUBE=true
       - VITE_ENABLE_AUDIUS=true
+      - VITE_STACK_PROJECT_ID=${STACK_PROJECT_ID:-}
+      - VITE_STACK_CLIENT_KEY=${STACK_CLIENT_KEY:-}
+      - VITE_STACK_API_URL=${STACK_API_URL:-https://api.stack-auth.com}
+      - VITE_STACK_APP_BASE_URL=${STACK_APP_BASE_URL:-https://app.stack-auth.com}
+      - VITE_ENABLE_SPOTIFY_SSO=${VITE_ENABLE_SPOTIFY_SSO:-true}
     ports:
       - "${FRONTEND_PORT:-5176}:5176"
     volumes:
@@ -61,6 +66,11 @@ services:
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
       - SOUNDCLOUD_CLIENT_ID=${SOUNDCLOUD_CLIENT_ID:-}
       - LASTFM_API_KEY=${LASTFM_API_KEY:-}
+      - STACK_PROJECT_ID=${STACK_PROJECT_ID:-}
+      - STACK_CLIENT_KEY=${STACK_CLIENT_KEY:-}
+      - STACK_SERVER_KEY=${STACK_SERVER_KEY:-}
+      - STACK_WEBHOOK_SECRET=${STACK_WEBHOOK_SECRET:-}
+      - STACK_API_URL=${STACK_API_URL:-https://api.stack-auth.com}
     ports:
       - "${BACKEND_PORT:-4002}:4002"
     working_dir: /app

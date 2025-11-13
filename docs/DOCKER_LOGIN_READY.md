@@ -49,6 +49,24 @@
 
 ---
 
+## Stack Auth Configuration for Docker
+
+Before starting the containers, make sure `.env.docker` includes your Stack Auth credentials so both the backend and Vite frontend can talk to Stack Auth:
+
+```env
+# Stack Auth (shared by backend + frontend)
+STACK_PROJECT_ID=<your_project_id>
+STACK_CLIENT_KEY=pck_<your_publishable_key>
+STACK_SERVER_KEY=ssk_<your_server_key>
+STACK_WEBHOOK_SECRET=whsec_<your_webhook_secret>
+STACK_API_URL=https://api.stack-auth.com
+STACK_APP_BASE_URL=https://app.stack-auth.com
+```
+
+These values are injected into the Docker services via the compose files (`docker-compose.yml`). Leave them empty and the containers cannot render the hosted login buttons or validate JWTs.
+
+---
+
 ## What Changed
 
 ### Files Modified
@@ -399,4 +417,3 @@ Header: Authorization: Bearer <token>
 ---
 
 **Ready to test? Go to http://localhost:5176 and create an account!**
-

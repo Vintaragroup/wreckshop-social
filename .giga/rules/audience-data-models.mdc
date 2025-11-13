@@ -1,54 +1,61 @@
 ---
-description: Specification for implementing fan profile data structures and audience segmentation rules in music marketing platforms
+description: Rules and specifications for handling audience data models, segmentation, and fan profiling logic
 ---
 
 
 # audience-data-models
 
-Core Fan Profile Structure:
-- Multi-platform music identity resolution
-- Genre affinity scoring with weighted platform preferences
-- Geographic clustering with venue radius targeting
-- Hierarchical segment membership tracking
-
-Segmentation Models:
-- Primary segment attributes:
-  - Genre preferences (weighted scores 0-100)
-  - Platform engagement levels (tiered 1-5)
-  - Geographic market clusters
-  - Event attendance history
-- Nested segment inheritance rules
-- Real-time segment size estimation
-- Cross-platform identity resolution
-
-Engagement Scoring:
-- Platform-specific engagement metrics:
-  - Spotify: Stream counts, playlist adds, skip rates
-  - Instagram: Story views, post interactions
-  - YouTube: Watch time, subscription status
-- Combined engagement score calculation:
-  platformScore = Σ(metricWeight * normalizedValue)
-  totalScore = Σ(platformWeight * platformScore)
-
-Platform-Specific Metrics:
-- Spotify metrics model:
-  - Genre affinity calculation from listening history
-  - Playlist curator score (0-100)
-  - Artist connection strength (0-1.0)
-- Instagram metrics model:
-  - Story completion rates
-  - Content category engagement
-  - Artist interaction frequency
-- Cross-platform identity confidence scoring
-
-File Paths:
-/models/audience/
-- ProfileSchema.ts
-- SegmentRules.ts
-- EngagementScore.ts
-- PlatformMetrics.ts
-
+## Fan Profile Model
 Importance Score: 95/100
+
+Core data structures for fan profiling:
+- Music taste analysis with weighted genre preferences
+- Platform-specific engagement scores across streaming services
+- Geographic targeting data with custom radius support
+- Custom segmentation tags based on behavioral patterns
+- Artist affinity scoring with temporal decay
+
+## Segmentation Rules Engine
+Importance Score: 90/100
+
+Segment definition model:
+- Multi-criteria rule builder supporting:
+  - Music preferences (genres, artists, platforms)
+  - Geographic boundaries
+  - Engagement levels
+  - Platform-specific metrics
+- Nested logical operators (AND/OR/NOT)
+- Dynamic audience size estimation
+- Segment inheritance and composition
+
+## Engagement Scoring Algorithm
+Importance Score: 85/100
+
+Fan engagement calculation framework:
+- Platform-weighted engagement metrics
+- Time-decay factors for historical interactions
+- Artist-specific engagement multipliers
+- Custom scoring rules per platform:
+  - Spotify: stream counts, saves, playlist adds
+  - Instagram: story views, post interactions
+  - YouTube: watch time, subscription status
+  - TikTok: video completions, shares
+
+## Platform Metrics Model
+Importance Score: 80/100
+
+Unified metrics framework:
+- Standardized engagement metrics across platforms
+- Platform-specific data normalization rules
+- Cross-platform identity resolution
+- Aggregate fan value scoring
+- Custom weight assignments per metric type
+
+File paths containing core implementations:
+- /src/models/audience/FanProfile.ts
+- /src/lib/segments/RuleEngine.ts
+- /backend/src/services/audience/scoring.service.ts
+- /backend/src/services/audience/metrics.service.ts
 
 $END$
 

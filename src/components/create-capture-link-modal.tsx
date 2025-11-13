@@ -5,6 +5,7 @@ import { Label } from './ui/label'
 import { Button } from './ui/button'
 import { Checkbox } from './ui/checkbox'
 import { toast } from 'sonner'
+import { apiRequest } from '../lib/api'
 
 type Props = {
   open: boolean
@@ -41,14 +42,11 @@ export default function CreateCaptureLinkModal({ open, onOpenChange, onCreated }
         redirectUrl: redirectUrl || undefined,
         tags: tags ? tags.split(',').map((t) => t.trim()).filter(Boolean) : undefined,
       }
-      const res = await fetch('/api/audience/capture-links', {
+      const json = await apiRequest<{ ok: true; data: any }>(`/audience/capture-links`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json?.error || 'Failed to create capture link')
-      const payload = { url: json?.data?.url as string, slug: json?.data?.slug as string, link: json?.data?.link }
+      const payload = { url: (json?.data?.url as string), slug: (json?.data?.slug as string), link: (json?.data?.link) }
       try { await navigator.clipboard.writeText(payload.url) } catch {}
       toast.success('Capture link created', { description: payload.url })
       onCreated?.(payload)

@@ -11,6 +11,7 @@
 import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import prisma from '../../lib/prisma';
+import { env } from '../../env';
 
 const router = Router();
 
@@ -41,7 +42,7 @@ function verifyWebhookSignature(
 router.post('/stack-auth', async (req: Request, res: Response) => {
   try {
     const signature = req.headers['x-stack-webhook-signature'] as string;
-    const secret = process.env.STACK_WEBHOOK_SECRET;
+    const secret = env.STACK_WEBHOOK_SECRET;
 
     if (!signature || !secret) {
       console.error('[WEBHOOK] Missing signature or secret');
