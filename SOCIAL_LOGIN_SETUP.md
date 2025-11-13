@@ -161,25 +161,25 @@ Note: The frontend normalizes post-login redirects to "/". Make sure any app lin
 
 ```env
 # Stack Auth Configuration
-STACK_PROJECT_ID=63928c12-12fd-4780-82c4-b21c2706650f
-STACK_CLIENT_KEY=pck_86xrchmcnqmyeeb9rdfsp3bt5gn24dev36zf7xcb9rse8
-STACK_SERVER_KEY=ssk_23s2yr67atdrjbvhbd870yqznxgq7paz0k6kkag9zne2r
-STACK_WEBHOOK_SECRET=whsec_xxxxx
+STACK_PROJECT_ID=<your_stack_project_id>
+STACK_CLIENT_KEY=<your_stack_client_key>
+STACK_SERVER_KEY=<your_stack_server_key>
+STACK_WEBHOOK_SECRET=<your_stack_webhook_secret>
 
 # Google OAuth (configure in Stack Auth)
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CLIENT_ID=<your_google_client_id>
+GOOGLE_CLIENT_SECRET=<your_google_client_secret>
 
 # Facebook OAuth (configure in Stack Auth)
-FACEBOOK_APP_ID=1910013362889762
-FACEBOOK_APP_SECRET=8f3132639c34903553707e9ac04e739d
+FACEBOOK_APP_ID=<your_facebook_app_id>
+FACEBOOK_APP_SECRET=<your_facebook_app_secret>
 ```
 
 ### Frontend (.env)
 
 ```env
 # Stack Auth Project ID (for hosted sign-in flow)
-VITE_STACK_PROJECT_ID=63928c12-12fd-4780-82c4-b21c2706650f
+VITE_STACK_PROJECT_ID=<your_stack_project_id>
 
 # Backend API endpoint
 # Leave unset for Docker dev (defaults to '/api'). If running FE outside Docker, use:

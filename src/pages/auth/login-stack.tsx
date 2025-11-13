@@ -11,7 +11,7 @@ export function LoginPage() {
   
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const stackProjectId = import.meta.env.VITE_STACK_PROJECT_ID || '63928c12-12fd-4780-82c4-b21c2706650f';
+  const stackProjectId = import.meta.env.VITE_STACK_PROJECT_ID;
   const stackAppBaseUrl = useMemo(
     () => (import.meta.env.VITE_STACK_APP_BASE_URL || 'https://app.stack-auth.com').replace(/\/$/, ''),
     []

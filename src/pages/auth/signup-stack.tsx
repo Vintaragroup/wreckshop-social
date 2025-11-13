@@ -14,7 +14,7 @@ function CredentialSignUp() {
   const [accountType, setAccountType] = useState<'ARTIST' | 'ARTIST_AND_MANAGER'>('ARTIST');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const stackProjectId = import.meta.env.VITE_STACK_PROJECT_ID || '63928c12-12fd-4780-82c4-b21c2706650f';
+  const stackProjectId = import.meta.env.VITE_STACK_PROJECT_ID;
   const stackAppBaseUrl = useMemo(
     () => (import.meta.env.VITE_STACK_APP_BASE_URL || 'https://app.stack-auth.com').replace(/\/$/, ''),
     []
