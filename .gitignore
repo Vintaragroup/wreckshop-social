@@ -10,6 +10,13 @@ dist/
 .turbo/
 coverage/
 
+# Markdown files (exclude most docs, keep only essential)
+*.md
+!README.md
+!CONTRIBUTING.md
+!LICENSE.md
+!CHANGELOG.md
+
 # Env files (CRITICAL: Never commit .env files with secrets)
 .env
 .env.local
