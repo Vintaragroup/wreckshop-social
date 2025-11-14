@@ -1,1 +1,7 @@
 *.md
+
+# Last.fm genre data files - optional data for music analysis/ML training
+# Can be regenerated from tools/scrapers/lastfm_scraper/
+data/lastfm-genres/out-lastfm-rnb-150.jsonl
+data/lastfm-genres/out-lastfm-hiphop-150.jsonl
+data/lastfm-genres/out-lastfm-soul-150.jsonl
