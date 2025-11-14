@@ -5,3 +5,26 @@
 data/lastfm-genres/out-lastfm-rnb-150.jsonl
 data/lastfm-genres/out-lastfm-hiphop-150.jsonl
 data/lastfm-genres/out-lastfm-soul-150.jsonl
+
+# Local environment files - developer-specific, not needed for understanding code
+.env.local
+backend/.env.local
+src/.env.local
+
+# IDE and editor configuration - personal preferences, not part of core logic
+.vscode/
+
+# Build outputs and caches - regenerated on build
+build/
+dist/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+# Editor temporary files - swap/backup files
+*.swp
+*.swo
+*~
+
+# Test/utility scripts - one-off scripts, not part of main application
+test-spotify-api.js
