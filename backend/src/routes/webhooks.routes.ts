@@ -289,7 +289,8 @@ async function handleYoutubeConnection(
 async function handleTiktokConnection(
   artistId: string,
   tiktokUserId: string,
-  displayName: string
+  displayName: string,
+  accessToken: string = ""
 ): Promise<void> {
   const existing = await prisma.tikTokIntegration.findUnique({
     where: { artistId },
@@ -301,6 +302,7 @@ async function handleTiktokConnection(
       data: {
         tiktokUserId: tiktokUserId,
         username: displayName,
+        accessToken: accessToken || existing.accessToken,
         lastSyncedAt: new Date(),
       },
     })
@@ -310,6 +312,7 @@ async function handleTiktokConnection(
         artistId,
         tiktokUserId: tiktokUserId,
         username: displayName,
+        accessToken: accessToken || "",
         followers: 0,
       },
     })

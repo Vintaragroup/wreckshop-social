@@ -212,6 +212,11 @@ model TikTokIntegration {
   profileUrl String?
   profileImageUrl String?
 
+  // OAuth tokens (for API calls and refresh)
+  accessToken String
+  refreshToken String?
+  expiresAt DateTime?
+
   // Metadata
   followers Int @default(0)
   totalLikes Int @default(0)

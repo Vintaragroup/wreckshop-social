@@ -10,7 +10,7 @@ interface SpotifyOAuthProps {
   onConnectionChange?: (isConnected: boolean) => void;
 }
 
-const SPOTIFY_CLIENT_ID = "359d80a99deb496c989d77d8e20af741";
+const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID || "";
 const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4002";
 
 // The OAuth scopes we request from Spotify

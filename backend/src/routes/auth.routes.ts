@@ -27,7 +27,7 @@ const router = express.Router();
  * {
  *   "success": true,
  *   "message": "Stack Auth configured and ready",
- *   "projectId": "63928c12-12fd-4780-82c4-b21c2706650f"
+ *   "projectId": "<your_project_id>"
  * }
  */
 router.get('/health', async (req: Request, res: Response) => {

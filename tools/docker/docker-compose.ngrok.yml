@@ -57,8 +57,8 @@ services:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
       - CHOKIDAR_INTERVAL=300
-      - SPOTIFY_CLIENT_ID=359d80a99deb496c989d77d8e20af741
-      - SPOTIFY_CLIENT_SECRET=0a440f76465a4af89604cb66ae89e68e
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID:-}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET:-}
       # For ngrok, update callback URL
       - SPOTIFY_REDIRECT_URI=https://wreckshop.ngrok.app/auth/spotify/callback
       # CORS allows ngrok domain
