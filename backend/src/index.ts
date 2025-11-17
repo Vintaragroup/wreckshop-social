@@ -9,6 +9,7 @@ import { health } from './routes/health'
 import { z } from 'zod'
 import { spotifyAuth } from './routes/auth/spotify.routes'
 import instagramAuth from './routes/auth/instagram.oauth'
+import tiktokAuth from './routes/auth/tiktok.oauth'
 import authRoutes from './routes/auth.routes'
 import testDbRoutes from './routes/test-db.routes'
 import webhooks from './routes/webhooks.routes'
@@ -91,6 +92,7 @@ async function main() {
   app.use('/api/webhooks', stackAuthWebhooks)
   app.use('/auth', spotifyAuth)
   app.use('/auth', instagramAuth)
+  app.use('/auth', tiktokAuth)
   app.use('/api', spotifyDiscoveryRouter)
   app.use('/api', adminDiscoveryRouter)
   app.use('/api', capture) // Events tracking - often public or anonymous
