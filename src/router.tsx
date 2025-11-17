@@ -26,7 +26,7 @@ import { SegmentBuilder } from './components/segment-builder'
 import { EmailTemplates } from './components/email-templates'
 import AdminDiscoveryPage from './pages/admin/discovery'
 import { LoginPage } from './pages/auth/login-stack'
-import { SignupPage } from './pages/auth/signup-stack'
+import SignupPage from './pages/auth/signup-stack'
 import OAuthCallbackPage from './pages/auth/oauth-callback'
 import { useAuth } from './lib/auth/context'
 
