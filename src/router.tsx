@@ -6,6 +6,7 @@ import ProfileDetailPage from './pages/audience/profile-detail'
 import ProfilesDiscoverPage from './pages/audience/profiles-discover'
 import SpotifyCallbackPage from './pages/auth/spotify-callback'
 import { InstagramCallbackHandler } from './components/instagram-callback'
+import { TikTokCallbackHandler } from './components/tiktok-callback'
 import { ThemeProvider } from './components/theme-provider'
 import { AppShell } from './components/app-shell'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -205,6 +206,10 @@ export const router = createBrowserRouter([
   {
     path: '/auth/instagram/callback',
     element: <InstagramCallbackHandler />,
+  },
+  {
+    path: '/auth/tiktok/callback',
+    element: <TikTokCallbackHandler />,
   },
   
   // Protected Routes (require auth)

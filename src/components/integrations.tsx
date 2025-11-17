@@ -23,6 +23,7 @@ import { AddIntegrationModal } from "./add-integration-modal";
 import { SpotifyIntegrationCard } from "./spotify-oauth";
 import { SpotifyDiscoveryCard } from "./spotify-discovery";
 import { InstagramConnectionCard } from "./instagram-connection";
+import { TikTokConnectionCard } from "./tiktok-connection";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -258,8 +259,14 @@ export function Integrations() {
           {/* Spotify */}
           <SpotifyIntegrationCard />
 
-          {/* YouTube, Facebook, TikTok, Apple Music - Placeholder Cards */}
-          {socialPlatforms.filter(p => p.id !== "instagram" && p.id !== "spotify").map((platform) => {
+          {/* TikTok - Using OAuth Component */}
+          {user && <TikTokConnectionCard userId={user.id} onConnectionChange={() => {
+            // Refresh connection statuses
+            setConnectionStatuses((prev) => ({ ...prev }));
+          }} />}
+
+          {/* YouTube, Facebook, Apple Music - Placeholder Cards */}
+          {socialPlatforms.filter(p => p.id !== "instagram" && p.id !== "spotify" && p.id !== "tiktok").map((platform) => {
             const connected = isConnected(platform.id);
             const data = getConnectionData(platform.id);
             const isLoading = loadingStatuses.has(platform.id);
