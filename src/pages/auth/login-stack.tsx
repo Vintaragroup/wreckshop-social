@@ -66,19 +66,22 @@ export function LoginPage() {
         <div className="absolute -bottom-32 right-20 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
-      <div className="w-full max-w-md relative z-10">
+  <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <WreckshopLogo size="md" showText={true} animated={true} />
         </div>
 
         {/* Glass Card */}
-        <div className="glass-elevated rounded-2xl border-white/10 shadow-2xl animate-fade-in p-8" style={{ animationDelay: '0.2s' }}>
+        <div
+          className="glass-elevated rounded-3xl border border-white/40 bg-white/85 shadow-[0_30px_120px_-45px_rgba(15,23,42,0.9)] animate-fade-in p-8 text-slate-900"
+          style={{ animationDelay: '0.2s' }}
+        >
           <div className="space-y-2 pb-6">
-            <h1 className="text-3xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <h1 className="text-3xl font-black bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
               Welcome Back
             </h1>
-            <p className="text-base text-muted-foreground">
+            <p className="text-base text-slate-600">
               Sign in to your Wreckshop account and keep growing
             </p>
           </div>
@@ -92,7 +95,7 @@ export function LoginPage() {
 
             {/* Email Input */}
             <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <label htmlFor="email" className="text-sm font-semibold text-foreground">
+              <label htmlFor="email" className="text-sm font-semibold text-slate-600">
                 Email Address
               </label>
               <input
@@ -103,13 +106,13 @@ export function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
-                className="w-full glass rounded-lg border-white/20 bg-white/5 placeholder:text-muted-foreground/50 px-3 py-2 text-foreground transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-white/10 outline-none"
+                className="w-full rounded-xl border border-white/60 bg-white/80 px-4 py-3 text-slate-900 placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] transition-all duration-200 focus:border-primary/60 focus:bg-white focus:ring-2 focus:ring-primary/30 outline-none disabled:opacity-60"
               />
             </div>
 
             {/* Password Input */}
             <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-              <label htmlFor="password" className="text-sm font-semibold text-foreground">
+              <label htmlFor="password" className="text-sm font-semibold text-slate-600">
                 Password
               </label>
               <input
@@ -120,14 +123,14 @@ export function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={loading}
-                className="w-full glass rounded-lg border-white/20 bg-white/5 placeholder:text-muted-foreground/50 px-3 py-2 text-foreground transition-all duration-200 focus:ring-2 focus:ring-primary/50 focus:border-primary/50 focus:bg-white/10 outline-none"
+                className="w-full rounded-xl border border-white/60 bg-white/80 px-4 py-3 text-slate-900 placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] transition-all duration-200 focus:border-primary/60 focus:bg-white focus:ring-2 focus:ring-primary/30 outline-none disabled:opacity-60"
               />
             </div>
 
             {/* Sign In Button */}
             <button
               type="submit"
-              className="w-full neuro-primary rounded-lg h-11 font-semibold text-lg transition-all duration-300 hover:shadow-lg animate-fade-in flex items-center justify-center gap-2"
+              className="w-full rounded-2xl h-12 font-semibold text-lg bg-gradient-to-r from-primary via-purple-500 to-pink-500 text-white shadow-[0_25px_60px_-30px_rgba(124,58,237,1)] hover:shadow-[0_30px_70px_-30px_rgba(124,58,237,0.95)] transition-all duration-300 animate-fade-in flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               disabled={loading}
               style={{ animationDelay: '0.5s' }}
             >
@@ -147,10 +150,12 @@ export function LoginPage() {
             {/* Divider */}
             <div className="relative py-4 animate-fade-in" style={{ animationDelay: '0.6s' }}>
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/10" />
+                <span className="w-full border-t border-white/60" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-slate-900/50 px-3 text-muted-foreground font-medium">Or continue with</span>
+                <span className="bg-white/85 px-3 text-slate-500 font-medium rounded-full border border-white/60">
+                  Or continue with
+                </span>
               </div>
             </div>
 
@@ -159,7 +164,7 @@ export function LoginPage() {
               <button
                 type="button"
                 onClick={() => redirectToStackAuth('google')}
-                className="rounded-lg h-11 neuro-flat border-white/20 hover:border-primary/50 transition-all duration-300 flex items-center justify-center gap-2 border"
+                className="rounded-xl h-11 bg-white text-slate-900 border border-white/70 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.9)] hover:shadow-[0_20px_35px_-20px_rgba(124,58,237,0.45)] transition-all duration-300 flex items-center justify-center gap-2"
                 disabled={loading}
               >
                 <Chrome className="h-5 w-5" />
@@ -168,7 +173,7 @@ export function LoginPage() {
               <button
                 type="button"
                 onClick={() => redirectToStackAuth('facebook')}
-                className="rounded-lg h-11 neuro-flat border-white/20 hover:border-primary/50 transition-all duration-300 flex items-center justify-center gap-2 border"
+                className="rounded-xl h-11 bg-white text-slate-900 border border-white/70 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.9)] hover:shadow-[0_20px_35px_-20px_rgba(124,58,237,0.45)] transition-all duration-300 flex items-center justify-center gap-2"
                 disabled={loading}
               >
                 <Facebook className="h-5 w-5" />
@@ -181,7 +186,7 @@ export function LoginPage() {
               <button
                 type="button"
                 onClick={() => redirectToStackAuth('spotify')}
-                className="rounded-lg h-11 neuro-flat border-white/20 hover:border-accent/50 transition-all duration-300 flex items-center justify-center gap-2 border"
+                className="rounded-xl h-11 bg-white text-slate-900 border border-white/70 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.9)] hover:shadow-[0_20px_35px_-20px_rgba(34,197,94,0.45)] transition-all duration-300 flex items-center justify-center gap-2"
                 disabled={loading}
               >
                 <Music2 className="h-5 w-5" />
@@ -190,7 +195,7 @@ export function LoginPage() {
               <button
                 type="button"
                 onClick={() => redirectToStackAuth('tiktok')}
-                className="rounded-lg h-11 neuro-flat border-white/20 hover:border-accent/50 transition-all duration-300 flex items-center justify-center gap-2 border"
+                className="rounded-xl h-11 bg-white text-slate-900 border border-white/70 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.9)] hover:shadow-[0_20px_35px_-20px_rgba(34,197,94,0.45)] transition-all duration-300 flex items-center justify-center gap-2"
                 disabled={loading}
               >
                 <span className="text-lg">♪</span>
@@ -199,8 +204,8 @@ export function LoginPage() {
             </div>
 
             {/* Sign Up Link */}
-            <div className="text-center text-sm pt-2 animate-fade-in" style={{ animationDelay: '0.8s' }}>
-              <span className="text-muted-foreground">Don't have an account? </span>
+            <div className="text-center text-sm pt-2 animate-fade-in text-slate-600" style={{ animationDelay: '0.8s' }}>
+              <span>Don't have an account? </span>
               <button
                 type="button"
                 className="font-semibold text-primary hover:text-primary/80 transition-colors duration-200"
