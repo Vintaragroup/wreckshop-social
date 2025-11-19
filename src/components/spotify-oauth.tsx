@@ -1,169 +1,113 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Music, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 import { useAuth } from "../lib/auth/context";
+import { apiRequest, API_BASE_URL } from "../lib/api";
 
 interface SpotifyOAuthProps {
-  onTokenReceived?: (token: string) => void;
+  status?: {
+    connected?: boolean;
+    displayName?: string | null;
+    followers?: number | null;
+    profileUrl?: string | null;
+    lastSyncedAt?: string | null;
+    tokenExpiresAt?: string | null;
+    requiresReconnect?: boolean;
+  } | null;
   onConnectionChange?: (isConnected: boolean) => void;
+  onRefreshStatus?: () => Promise<void> | void;
 }
 
-const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID || "";
-const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4002";
-
-// The OAuth scopes we request from Spotify
-const SPOTIFY_SCOPES = [
-  "user-read-private",           // Read private profile info
-  "user-read-email",              // Read email address
-  "user-top-read",                // Read top artists/tracks
-  "playlist-read-private",        // Read private playlists
-  "user-follow-read",             // Read followed artists
-].join(" ");
-
-export function SpotifyOAuth({ onTokenReceived, onConnectionChange }: SpotifyOAuthProps) {
+export function SpotifyOAuth({ status, onConnectionChange, onRefreshStatus }: SpotifyOAuthProps) {
   const { user, token } = useAuth();
-  const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [connectedUser, setConnectedUser] = useState<string | null>(null);
 
-  // Check if we're handling a callback
-  const handleOAuthCallback = async () => {
-    const params = new URLSearchParams(window.location.search);
-    const accessToken = params.get("spotify_token");
-    const refreshToken = params.get("spotify_refresh");
-    const error = params.get("error");
+  const isConnected = status?.connected ?? false;
+  const connectedUser = status?.displayName ?? null;
 
-    if (error) {
-      setError(`Spotify auth failed: ${error}`);
+  const expiresDisplay = useMemo(() => {
+    if (!status?.tokenExpiresAt) return null;
+    try {
+      return new Date(status.tokenExpiresAt).toLocaleString();
+    } catch {
+      return null;
+    }
+  }, [status?.tokenExpiresAt]);
+
+  const startOAuth = async () => {
+    if (!user || !token) {
+      setError("You must be signed in to connect Spotify.");
       return;
     }
 
-    if (!accessToken) return;
+    setIsLoading(true);
+    setError(null);
 
     try {
-      setIsLoading(true);
-      setError(null);
-
-      // Store token in session/localStorage
-      sessionStorage.setItem("spotify_access_token", accessToken);
-      if (refreshToken) {
-        sessionStorage.setItem("spotify_refresh_token", refreshToken);
-      }
-
-      // Fetch user info to confirm connection
-      const userRes = await fetch("https://api.spotify.com/v1/me", {
-        headers: { Authorization: `Bearer ${accessToken}` },
+      const params = new URLSearchParams({ artistId: user.id });
+      const currentPath = `${window.location.pathname}${window.location.search}`;
+      params.set("redirectPath", currentPath || "/app/integrations");
+      const base = API_BASE_URL || "";
+      const response = await fetch(`${base}/auth/spotify/start?${params.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
       });
 
-      if (!userRes.ok) {
-        throw new Error("Failed to fetch user info");
+      if (!response.ok) {
+        const text = await response.text().catch(() => "Failed to start Spotify auth");
+        throw new Error(text);
       }
 
-      const userData = await userRes.json();
-      setConnectedUser(userData.display_name || userData.email || "Connected");
-      
-      // Send token to backend for profile enrichment AND save integration
-      try {
-        const enrichResponse = await fetch(`${BACKEND_URL}/auth/spotify/connect`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ accessToken }),
-        });
-
-        if (enrichResponse.ok) {
-          const enrichData = await enrichResponse.json();
-          console.log("Profile enriched with data:", enrichData.data);
-          
-          // Now save the integration to database
-          if (user && token) {
-            const saveResponse = await fetch(`${BACKEND_URL}/integrations/spotify`, {
-              method: "POST",
-              headers: { 
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-              },
-              body: JSON.stringify({
-                artistId: user.id,
-                accessToken: accessToken,
-                refreshToken: refreshToken,
-              }),
-            });
-            
-            if (saveResponse.ok) {
-              console.log("Spotify integration saved to database");
-            }
-          }
-        } else {
-          console.warn("Profile enrichment request failed (non-critical)");
-          // Continue anyway - enrichment is optional
-        }
-      } catch (enrichErr) {
-        console.warn("Profile enrichment error (non-critical):", enrichErr);
-        // Continue anyway - enrichment is optional
+      const data = await response.json();
+      if (!data?.authUrl) {
+        throw new Error("Malformed Spotify authorization response");
       }
 
-      setIsConnected(true);
-      setSuccessMessage(`Connected as ${userData.display_name || userData.email}`);
-
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-
-      onTokenReceived?.(accessToken);
-      onConnectionChange?.(true);
+      window.location.href = data.authUrl;
     } catch (err: any) {
-      setError(err.message || "Connection failed");
+      console.error("Spotify start failed", err);
+      setError(err?.message || "Could not start Spotify authorization");
+      setIsLoading(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    if (!user) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      await apiRequest(`/integrations/spotify/${user.id}`, { method: "DELETE" });
+      setSuccessMessage("Spotify disconnected");
       onConnectionChange?.(false);
+      await onRefreshStatus?.();
+    } catch (err: any) {
+      console.error("Disconnect Spotify failed", err);
+      setError(err?.message || "Failed to disconnect Spotify");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Initiate OAuth flow
-  const handleConnect = () => {
-    // Use ngrok tunnel for HTTPS redirect (Spotify requires secure URLs)
-    const redirectUri = "https://wreckshop-webhooks.ngrok.io/auth/spotify/callback";
-    const authUrl = new URL("https://accounts.spotify.com/authorize");
-
-    authUrl.searchParams.set("client_id", SPOTIFY_CLIENT_ID);
-    authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set("redirect_uri", redirectUri);
-    authUrl.searchParams.set("scope", SPOTIFY_SCOPES);
-    authUrl.searchParams.set("show_dialog", "true");
-
-    window.location.href = authUrl.toString();
-  };
-
-  // Handle disconnect
-  const handleDisconnect = () => {
-    sessionStorage.removeItem("spotify_access_token");
-    sessionStorage.removeItem("spotify_refresh_token");
-    setIsConnected(false);
-    setConnectedUser(null);
-    setSuccessMessage(null);
-    onConnectionChange?.(false);
-  };
-
-  // Check for callback on mount
-  if (window.location.search.includes("code")) {
-    handleOAuthCallback();
-  }
-
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Music className="h-6 w-6 text-green-500" />
-            <div>
-              <CardTitle>Spotify Connection</CardTitle>
-              <CardDescription>Connect your Spotify account to access your profile data</CardDescription>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Music className="h-6 w-6 text-green-500" />
+              <div>
+                <CardTitle>Spotify Connection</CardTitle>
+                <CardDescription>
+                  {isConnected ? "Account connected" : "Connect to unlock listener insights"}
+                </CardDescription>
+              </div>
             </div>
-          </div>
-          {isConnected && <CheckCircle className="h-5 w-5 text-green-500" />}
+            {isConnected && <CheckCircle className="h-5 w-5 text-green-500" />}
         </div>
       </CardHeader>
 
@@ -186,27 +130,45 @@ export function SpotifyOAuth({ onTokenReceived, onConnectionChange }: SpotifyOAu
           <div className="space-y-3">
             <div className="rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
               <p className="text-sm font-medium text-green-900 dark:text-green-200">
-                ✓ Connected as {connectedUser}
+                ✓ Connected as {connectedUser || "Spotify account"}
               </p>
+              {status?.followers !== undefined && (
+                <p className="text-xs text-green-800 dark:text-green-300 mt-1">
+                  Followers: {status.followers?.toLocaleString?.() ?? status.followers}
+                </p>
+              )}
+              {expiresDisplay && (
+                <p className="text-xs text-green-800 dark:text-green-300 mt-1">
+                  Token expires: {expiresDisplay}
+                </p>
+              )}
             </div>
             <Button
               variant="outline"
               onClick={handleDisconnect}
               className="w-full"
+              disabled={isLoading}
             >
-              Disconnect Spotify
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Disconnecting…
+                </>
+              ) : (
+                "Disconnect Spotify"
+              )}
             </Button>
           </div>
         ) : (
           <Button
-            onClick={handleConnect}
+            onClick={startOAuth}
             disabled={isLoading}
             className="w-full gap-2 bg-green-600 hover:bg-green-700"
           >
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Connecting...
+                Redirecting…
               </>
             ) : (
               <>
@@ -232,9 +194,21 @@ export function SpotifyOAuth({ onTokenReceived, onConnectionChange }: SpotifyOAu
 }
 
 // Helper component for displaying in integrations page
-export function SpotifyIntegrationCard() {
-  const [isConnected, setIsConnected] = useState(false);
+interface SpotifyIntegrationCardProps {
+  status?: {
+    connected?: boolean;
+    displayName?: string;
+    followers?: number;
+    profileImageUrl?: string | null;
+    tokenExpiresAt?: string | null;
+    requiresReconnect?: boolean;
+  } | null;
+  onRefresh?: () => Promise<void> | void;
+}
+
+export function SpotifyIntegrationCard({ status, onRefresh }: SpotifyIntegrationCardProps) {
   const [showDialog, setShowDialog] = useState(false);
+  const isConnected = status?.connected ?? false;
 
   return (
     <>
@@ -248,7 +222,7 @@ export function SpotifyIntegrationCard() {
               <div>
                 <CardTitle className="text-base">Spotify</CardTitle>
                 <CardDescription className="text-xs">
-                  {isConnected ? "Connected" : "Not connected"}
+                  {isConnected ? status?.displayName || "Connected" : "Not connected"}
                 </CardDescription>
               </div>
             </div>
@@ -282,9 +256,11 @@ export function SpotifyIntegrationCard() {
           </DialogHeader>
 
           <SpotifyOAuth
+            status={status}
+            onRefreshStatus={onRefresh}
             onConnectionChange={(connected) => {
-              setIsConnected(connected);
               if (connected) {
+                onRefresh?.();
                 setTimeout(() => setShowDialog(false), 1000);
               }
             }}

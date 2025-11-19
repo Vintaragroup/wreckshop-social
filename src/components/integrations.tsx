@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   CheckCircle,
   AlertTriangle,
@@ -31,6 +31,8 @@ import { Progress } from "./ui/progress";
 import { Switch } from "./ui/switch";
 import { useAuth } from "../lib/auth/context";
 import { apiRequest } from "../lib/api";
+import { useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -129,44 +131,54 @@ export function Integrations() {
   const [showAddIntegrationModal, setShowAddIntegrationModal] = useState(false);
   const [connectionStatuses, setConnectionStatuses] = useState<Record<string, any>>({});
   const [loadingStatuses, setLoadingStatuses] = useState<Set<string>>(new Set());
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const fetchConnectionStatuses = useCallback(async () => {
+    if (!user || !token) return;
+
+    try {
+      const artistId = user.id;
+      const data = await apiRequest<{ ok: true; integrations?: Record<string, any> }>(
+        `/integrations/status/${artistId}`
+      );
+      setConnectionStatuses(data?.integrations ?? {});
+    } catch (error) {
+      console.error("Failed to fetch connection statuses:", error);
+    }
+  }, [user, token]);
 
   // Fetch connection statuses from API
   useEffect(() => {
-    const fetchConnectionStatuses = async () => {
-      if (!user || !token) return;
-
-      try {
-        // The backend expects an artistId; Auth.user.id is the Prisma artist id
-        const artistId = user.id
-        const data = await apiRequest<{ ok: true; integrations?: Record<string, any> }>(
-          `/integrations/status/${artistId}`
-        )
-        const statuses: Record<string, any> = {};
-        if (data?.integrations) {
-          Object.entries(data.integrations).forEach(([platform, integration]: [string, any]) => {
-            if (integration?.connected) {
-              statuses[platform] = {
-                connected: true,
-                data: integration,
-              };
-            }
-          });
-        }
-        setConnectionStatuses(statuses);
-      } catch (error) {
-        console.error("Failed to fetch connection statuses:", error);
-      }
-    };
-
     fetchConnectionStatuses();
-  }, [user, token]);
+  }, [fetchConnectionStatuses]);
+
+  useEffect(() => {
+    const provider = searchParams.get('provider');
+    const status = searchParams.get('status');
+    const message = searchParams.get('message');
+
+    if (provider === 'spotify') {
+      if (status === 'connected') {
+        toast.success('Spotify connected successfully');
+        fetchConnectionStatuses();
+      } else if (status === 'error') {
+        toast.error(message ? `Spotify connection failed: ${message}` : 'Spotify connection failed');
+      }
+
+      const next = new URLSearchParams(searchParams);
+      next.delete('provider');
+      next.delete('status');
+      next.delete('message');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams, fetchConnectionStatuses]);
 
   const isConnected = (platformId: string): boolean => {
     return connectionStatuses[platformId]?.connected ?? false;
   };
 
   const getConnectionData = (platformId: string) => {
-    return connectionStatuses[platformId]?.data;
+    return connectionStatuses[platformId];
   };
 
   const handleConnect = (integrationId: string) => {
@@ -180,11 +192,7 @@ export function Integrations() {
     setLoadingStatuses((prev) => new Set(prev).add(platformId));
     try {
       await apiRequest(`/integrations/${platformId}/${user.id}`, { method: "DELETE" })
-      setConnectionStatuses((prev) => {
-        const updated = { ...prev };
-        delete updated[platformId];
-        return updated;
-      });
+      await fetchConnectionStatuses();
     } catch (error) {
       console.error("Failed to disconnect:", error);
     } finally {
@@ -251,19 +259,30 @@ export function Integrations() {
         <h2 className="text-xl font-semibold mb-4">Social Media Platforms</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Instagram - Using OAuth Component */}
-          {user && <InstagramConnectionCard userId={user.id} onConnectionChange={() => {
-            // Refresh connection statuses
-            setConnectionStatuses((prev) => ({ ...prev }));
-          }} />}
+          {user && (
+            <InstagramConnectionCard
+              userId={user.id}
+              onConnectionChange={() => {
+                fetchConnectionStatuses();
+              }}
+            />
+          )}
 
           {/* Spotify */}
-          <SpotifyIntegrationCard />
+          <SpotifyIntegrationCard
+            status={getConnectionData("spotify")}
+            onRefresh={fetchConnectionStatuses}
+          />
 
           {/* TikTok - Using OAuth Component */}
-          {user && <TikTokConnectionCard userId={user.id} onConnectionChange={() => {
-            // Refresh connection statuses
-            setConnectionStatuses((prev) => ({ ...prev }));
-          }} />}
+          {user && (
+            <TikTokConnectionCard
+              userId={user.id}
+              onConnectionChange={() => {
+                fetchConnectionStatuses();
+              }}
+            />
+          )}
 
           {/* YouTube, Facebook, Apple Music - Placeholder Cards */}
           {socialPlatforms.filter(p => p.id !== "instagram" && p.id !== "spotify" && p.id !== "tiktok").map((platform) => {

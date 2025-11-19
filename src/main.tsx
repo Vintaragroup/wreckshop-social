@@ -6,6 +6,8 @@ import { AppRouter } from './router'
 import { AuthProvider } from './lib/auth/context'
 // Use the generated Tailwind CSS bundle for app styling
 import './index.css'
+// Load design tokens and custom utilities (glass, gradients, colors)
+import './styles/globals.css'
 
 async function start() {
   if (import.meta.env.DEV && import.meta.env.VITE_USE_MSW === 'true') {

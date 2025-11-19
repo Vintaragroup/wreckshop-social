@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import { Badge } from '../../components/ui/badge'
 import { ProviderBadge } from '../../components/ProviderBadge'
 import { IngestStatusBadge } from '../../components/IngestStatusBadge'
+import { appPath } from '../../lib/routes'
 // Discovery & segmentation
 import { DiscoveredUsersSection } from '../../components/discovered-users'
 import { DiscoveredUserSegmentBuilder } from '../../components/discovered-user-segment-builder'
@@ -72,7 +73,7 @@ export default function ProfilesPage() {
           <h3 className="text-sm font-medium">Platforms overview</h3>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="ghost" onClick={() => setProviderFilter('')} disabled={!providerFilter}>Clear filter</Button>
-            <Button size="sm" variant="outline" onClick={() => navigate('/audience/profiles/discover')}>Find profiles</Button>
+            <Button size="sm" variant="outline" onClick={() => navigate(appPath('/audience/profiles/discover'))}>Find profiles</Button>
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">

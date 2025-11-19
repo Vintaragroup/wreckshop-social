@@ -1,61 +1,179 @@
 ---
-description: Rules and specifications for handling audience data models, segmentation, and fan profiling logic
+description: Documents fan profile data structures, segmentation rules, and audience scoring algorithms for music industry marketing
+---
+
+# === USER INSTRUCTIONS ===
+---
+description: Defines data structures, models, and algorithms for fan profiling, segmentation, and engagement scoring.
 ---
 
 
 # audience-data-models
 
-## Fan Profile Model
+Key Fan Profile Data Structures:
+
+1. Fan Discovery Models
+Importance Score: 90
+- Genre-based affinity scoring for music taste classification
+- Multi-platform identity resolution (Spotify, Instagram, YouTube)
+- Engagement level categorization (superfan, active, casual, dormant)
+- Geographic and demographic segmentation attributes
+
+2. Audience Segmentation Rules
+Importance Score: 85
+- Dynamic segment definitions based on:
+  - Music platform preferences
+  - Genre affinity scores
+  - Geographic targeting rules
+  - Engagement thresholds
+- Segment overlap detection and resolution
+- Real-time audience size estimation
+
+3. Engagement Scoring Algorithm
+Importance Score: 80
+- Cross-platform engagement metrics:
+  - Platform-specific interaction weights
+  - Time decay factors for historical engagement
+  - Normalized engagement scores (0-100)
+- Custom weighting for:
+  - Content type (releases, events, posts)
+  - Platform importance
+  - Action value (comment > like > view)
+
+4. Platform-Specific Metrics
+Importance Score: 75
+- Spotify:
+  - Save-to-listen ratios
+  - Playlist addition rates
+  - Skip patterns
+- Instagram:
+  - Story completion rates
+  - Post engagement velocity
+  - Comment sentiment scores
+- YouTube:
+  - Watch time percentages
+  - Subscription context
+  - Cross-video retention
+
+$END$
+
+ If you're using this file in context, clearly say in italics in one small line that "Context added by Giga audience-data-models" along with specifying exactly what information was used from this file in a human-friendly way, instead of using kebab-case use normal sentence case.
+
+---
+description: Specifications for fan profiling, segmentation algorithms, engagement scoring, and platform-specific analytics for music audience management
+---
+
+
+
+# audience-data-models
+
+Core Audience Data Models:
+
+1. Fan Profile Schema
+- Composite identity resolution across music platforms
+- Progressive enrichment states: discovered -> verified -> enriched -> scored
+- Platform-specific engagement metrics normalization
+- Custom affinity scoring (0-100) for genres, artists, and scenes
+- Geographic clustering with venue/event affinities
+Importance Score: 95
+
+2. Segmentation Rules Engine
+- Multi-criteria segmentation combining:
+  * Music taste (genres, artists, playlists)
+  * Platform behavior (saves, shares, comments)
+  * Geographic patterns (venues, events, scenes)
+  * Campaign engagement history
+- Real-time audience size estimation
+- Segment overlap detection and refinement
+- Custom segment templates for music marketing patterns
+Importance Score: 90
+
+3. Engagement Scoring Algorithm
+- Platform-specific engagement weight mapping:
+  * Spotify: save=3, playlist_add=5, repeat_listen=2
+  * Apple Music: library_add=3, pre_save=4
+  * YouTube: subscribe=4, comment=2, share=3
+  * Instagram: save=2, share=3, comment=1
+- Time-decay functions for engagement freshness
+- Cross-platform activity correlation
+- Custom multipliers for super-fan behavior
+Importance Score: 85
+
+4. Platform-Specific Metrics
+- Normalized engagement rates across:
+  * Streaming services (Spotify, Apple Music, SoundCloud)
+  * Social platforms (Instagram, TikTok, YouTube)
+  * Email/SMS campaigns
+- Custom formulas for platform-specific fan value
+- Geographic market performance scoring
+- Scene-based clustering metrics
+Importance Score: 80
+
+$END$
+
+ If you're using this file in context, clearly say in italics in one small line that "Context added by Giga audience-data-models" along with specifying exactly what information was used from this file in a human-friendly way, instead of using kebab-case use normal sentence case.
+# === END USER INSTRUCTIONS ===
+
+# audience-data-models
+
+## Core Fan Profile Model
+
+Key data structures modeling music fan attributes across platforms:
+
+```typescript
+interface FanProfile {
+  // Core identity 
+  id: string
+  platforms: PlatformIdentity[]
+  
+  // Music preferences
+  genreAffinities: {[genre: string]: number} // 0-100 scores
+  artistTypes: string[] // e.g. "indie", "mainstream"
+  
+  // Engagement metrics
+  platformEngagement: {
+    spotify: SpotifyMetrics
+    instagram: InstagramMetrics
+    tiktok: TiktokMetrics
+  }
+
+  // Geographic
+  locations: GeoLocation[]
+  marketSegments: string[]
+}
+```
+
+## Segmentation Rules
+
+Complex audience filtering based on:
+
+1. Music Taste Criteria
+- Genre affinity thresholds (e.g. indie rock > 80)
+- Artist type matches
+- Platform-specific engagement levels
+
+2. Geographic Rules  
+- Venue radius targeting
+- Music scene clustering
+- Market-based segmentation
+
+3. Behavioral Scoring
+- Platform activity weights
+- Content engagement metrics 
+- Artist interaction patterns
+
+## Discovery Algorithm
+
+Custom fan matching implementation:
+- Progressive profile enrichment
+- Cross-platform identity resolution
+- Taste similarity scoring
+- Geographic market alignment
+- Engagement level classification
+
 Importance Score: 95/100
 
-Core data structures for fan profiling:
-- Music taste analysis with weighted genre preferences
-- Platform-specific engagement scores across streaming services
-- Geographic targeting data with custom radius support
-- Custom segmentation tags based on behavioral patterns
-- Artist affinity scoring with temporal decay
-
-## Segmentation Rules Engine
-Importance Score: 90/100
-
-Segment definition model:
-- Multi-criteria rule builder supporting:
-  - Music preferences (genres, artists, platforms)
-  - Geographic boundaries
-  - Engagement levels
-  - Platform-specific metrics
-- Nested logical operators (AND/OR/NOT)
-- Dynamic audience size estimation
-- Segment inheritance and composition
-
-## Engagement Scoring Algorithm
-Importance Score: 85/100
-
-Fan engagement calculation framework:
-- Platform-weighted engagement metrics
-- Time-decay factors for historical interactions
-- Artist-specific engagement multipliers
-- Custom scoring rules per platform:
-  - Spotify: stream counts, saves, playlist adds
-  - Instagram: story views, post interactions
-  - YouTube: watch time, subscription status
-  - TikTok: video completions, shares
-
-## Platform Metrics Model
-Importance Score: 80/100
-
-Unified metrics framework:
-- Standardized engagement metrics across platforms
-- Platform-specific data normalization rules
-- Cross-platform identity resolution
-- Aggregate fan value scoring
-- Custom weight assignments per metric type
-
-File paths containing core implementations:
-- /src/models/audience/FanProfile.ts
-- /src/lib/segments/RuleEngine.ts
-- /backend/src/services/audience/scoring.service.ts
-- /backend/src/services/audience/metrics.service.ts
+The high score reflects the sophisticated domain-specific modeling of music fan data and complex segmentation rules unique to the music industry marketing domain.
 
 $END$
 

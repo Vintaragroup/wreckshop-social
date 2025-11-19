@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { AlertCircle, Chrome, Facebook, Music2, Zap, Star } from 'lucide-react';
 import { WreckshopLogo } from '../../components/wreckshop-logo';
+import { appPath } from '../../lib/routes';
 
 export function SignupPage() {
   const [email, setEmail] = useState('');
@@ -32,7 +33,7 @@ export function SignupPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/', { replace: true });
+      navigate(appPath('/'), { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -59,8 +60,8 @@ export function SignupPage() {
     setLoading(true);
 
     try {
-  await signup(email, password, name);
-  navigate('/');
+      await signup(email, password, name);
+      navigate(appPath('/'));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Signup failed');
     } finally {
@@ -74,7 +75,7 @@ export function SignupPage() {
       return;
     }
 
-    const redirectUri = `${window.location.origin}/auth/oauth/callback/${provider}`;
+    const redirectUri = `${window.location.origin}${appPath(`/auth/oauth/callback/${provider}`)}`;
     const hostedPath = `${stackAppBaseUrl}/${stackProjectId}/sign-up`;
     const url = `${hostedPath}?provider=${provider}&redirect_uri=${encodeURIComponent(redirectUri)}`;
     window.location.href = url;

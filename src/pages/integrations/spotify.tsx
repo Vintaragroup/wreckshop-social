@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
 import { LineChartWrapper, AreaChartWrapper, type ChartDataPoint } from '../../components/charts';
 import { apiUrl } from '../../lib/api';
+import { appPath } from '../../lib/routes';
 
 const DEFAULT_MOCK_DATA = {
   profile: {
@@ -169,7 +170,7 @@ export default function SpotifyPlatformPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/analytics/platforms')}
+            onClick={() => navigate(appPath('/analytics/platforms'))}
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>

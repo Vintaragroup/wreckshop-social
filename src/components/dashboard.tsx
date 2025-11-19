@@ -53,6 +53,7 @@ import { useRecentCampaignPerformance } from "../lib/dashboard/campaigns";
 import { useManagerOverview } from "../lib/dashboard/manager";
 import { useAuth } from "../lib/auth/context";
 import { useNavigate } from "react-router-dom";
+import { appPath } from "../lib/routes";
 
 // Placeholder for platforms without backend wiring yet
 const staticPlatforms = [
@@ -238,7 +239,7 @@ export function Dashboard() {
                     {errorManager ? <span className="text-destructive text-xs ml-2">{String(errorManager)}</span> : null}
                   </CardTitle>
                   <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" onClick={() => navigate('/analytics')}>
+                    <Button size="sm" variant="outline" onClick={() => navigate(appPath('/analytics'))}>
                       View details
                     </Button>
                     <CollapsibleTrigger asChild>
@@ -541,10 +542,10 @@ export function Dashboard() {
               Object.keys(connectors).forEach((key) => {
                 const c: any = (connectors as any)[key]
                 if (!c?.connected) {
-                  alerts.push({ type: 'error', message: `${c?.name || key} not connected`, action: { label: 'Manage', onClick: () => navigate('/integrations') } })
+                  alerts.push({ type: 'error', message: `${c?.name || key} not connected`, action: { label: 'Manage', onClick: () => navigate(appPath('/integrations')) } })
                 }
                 if (c?.note) {
-                  alerts.push({ type: 'warning', message: `${c?.name || key}: ${c.note}` , action: { label: 'Refresh', onClick: () => navigate('/integrations') } })
+                  alerts.push({ type: 'warning', message: `${c?.name || key}: ${c.note}` , action: { label: 'Refresh', onClick: () => navigate(appPath('/integrations')) } })
                 }
                 // Stale sync threshold: > 7 days ago -> info
                 if (c?.connected && c?.lastSync) {
@@ -552,7 +553,7 @@ export function Dashboard() {
                   if (!isNaN(last.getTime())) {
                     const daysAgo = (Date.now() - last.getTime()) / (1000 * 60 * 60 * 24)
                     if (daysAgo > 7) {
-                      alerts.push({ type: 'info', message: `${c?.name || key} has not synced in ${Math.floor(daysAgo)} days`, action: { label: 'Sync now', onClick: () => navigate('/integrations') } })
+                      alerts.push({ type: 'info', message: `${c?.name || key} has not synced in ${Math.floor(daysAgo)} days`, action: { label: 'Sync now', onClick: () => navigate(appPath('/integrations')) } })
                     }
                   }
                 }
@@ -808,7 +809,7 @@ export function Dashboard() {
                   {campaignsSummary ? `${campaignsSummary.count} • Latest open ${campaignsSummary.latestOpen}` : '—'}
                 </div>
               )}
-              <Button size="sm" variant="outline" onClick={() => navigate('/campaigns')}>View all</Button>
+              <Button size="sm" variant="outline" onClick={() => navigate(appPath('/campaigns'))}>View all</Button>
               <CollapsibleTrigger asChild>
                 <Button size="icon" variant="ghost" aria-label="Toggle Recent Campaigns" aria-expanded={!collapsed.campaigns}>
                   {collapsed.campaigns ? (

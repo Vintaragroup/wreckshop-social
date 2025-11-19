@@ -14,6 +14,8 @@ Music industry audience discovery, segmentation, and engagement platform built w
 
   One-touch setup for local dev with backend and frontend:
 
+> ℹ️ **New:** the production marketing site now lives inside this repo under `apps/marketing-site`. It remains a separate Vite bundle so the public website and the authenticated product can evolve independently while still shipping through the single Docker stack. See [`docs/marketing-site-integration.md`](docs/marketing-site-integration.md) for the migration roadmap and shared-component checklist.
+
 ## 📚 Documentation
 
   1) Install deps

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, RefreshCw, TrendingUp, TrendingDown, Heart } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { useNavigate } from 'react-router-dom';
-import { Badge } from '../../components/ui/badge';
-import { LineChartWrapper, AreaChartWrapper, type ChartDataPoint } from '../../components/charts';
+import { Button } from '../../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import { useNavigate } from 'react-router-dom'
+import { Badge } from '../../components/ui/badge'
+import { LineChartWrapper, BarChartWrapper, AreaChartWrapper, type ChartDataPoint } from '../../components/charts'
+import { appPath } from '../../lib/routes'
 
 const MOCK_DATA = {
   profile: {
@@ -165,7 +166,7 @@ export default function TikTokPlatformPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/analytics/platforms')}
+            onClick={() => navigate(appPath('/analytics/platforms'))}
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>

@@ -14,7 +14,19 @@
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+  "@marketing-core": ["src/components/marketing-core/index.ts"],
+  "@marketing-core/*": ["src/components/marketing-core/*"],
+  "@marketing-site": ["apps/marketing-site/src"],
+  "@marketing-site/*": ["apps/marketing-site/src/*"],
+  "@marketing-site/components": ["apps/marketing-site/src/components"],
+  "@marketing-site/components/*": ["apps/marketing-site/src/components/*"],
+  "@marketing-site/pages": ["apps/marketing-site/src/pages"],
+  "@marketing-site/pages/*": ["apps/marketing-site/src/pages/*"]
+    },
     "types": ["vite/client"]
   },
-  "include": ["src"]
+  "include": ["src", "apps/marketing-site/src"]
 }

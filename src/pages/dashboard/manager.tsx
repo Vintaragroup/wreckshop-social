@@ -19,6 +19,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { appPath } from '../../lib/routes';
 
 export function ManagerDashboardPage() {
   const { user, token, logout } = useAuth();
@@ -44,7 +45,7 @@ export function ManagerDashboardPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate('/settings')}
+              onClick={() => navigate(appPath('/settings'))}
             >
               <Settings className="w-4 h-4 mr-2" />
               Settings

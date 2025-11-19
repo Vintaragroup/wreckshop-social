@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Card, CardContent } from './ui/card'
 import { Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 import { Button } from './ui/button'
+import { appPath } from '../lib/routes'
 
 export function TikTokCallbackHandler() {
   const [searchParams] = useSearchParams()
@@ -94,7 +95,7 @@ export function TikTokCallbackHandler() {
 
       // Redirect to integrations page after 2 seconds
       setTimeout(() => {
-        navigate('/integrations')
+        navigate(appPath('/integrations'))
       }, 2000)
     } catch (err: any) {
       console.error('TikTok callback error:', err)
@@ -146,7 +147,7 @@ export function TikTokCallbackHandler() {
                   <h2 className="text-lg font-semibold mb-2 text-destructive">Connection Failed</h2>
                   <p className="text-sm text-muted-foreground mb-4">{message}</p>
                   <Button
-                    onClick={() => navigate('/integrations')}
+                  onClick={() => navigate(appPath('/integrations'))}
                     className="w-full"
                   >
                     Return to Integrations

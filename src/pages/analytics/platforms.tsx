@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Badge } from '../../components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/auth/context';
+import { appPath } from '../../lib/routes';
 
 interface PlatformSnapshot {
   platform: 'instagram' | 'spotify' | 'youtube' | 'tiktok' | 'apple-music' | 'facebook';
@@ -186,7 +187,7 @@ export default function PlatformAnalyticsPage() {
   };
 
   const handleConnect = (platform: string) => {
-    navigate('/integrations');
+  navigate(appPath('/integrations'));
   };
 
   const lastFullSync = new Date(Date.now() - 45 * 60 * 1000); // 45 minutes ago
@@ -321,7 +322,7 @@ export default function PlatformAnalyticsPage() {
             <p className="text-sm text-muted-foreground text-center">
               Connect your first platform in{' '}
               <button
-                onClick={() => navigate('/integrations')}
+                onClick={() => navigate(appPath('/integrations'))}
                 className="text-primary hover:underline"
               >
                 Integrations

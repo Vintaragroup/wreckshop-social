@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { appPath } from '../../lib/routes'
 import { useQuery } from '@tanstack/react-query'
 import { apiGetProfile, type ProfileDTO } from '../../lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
@@ -199,7 +200,7 @@ export default function ProfileDetailPage() {
       </div>
 
       <div>
-        <Link to="/audience/profiles" className="text-sm text-primary hover:underline">Back to profiles</Link>
+        <Link to={appPath('/audience/profiles')} className="text-sm text-primary hover:underline">Back to profiles</Link>
       </div>
     </div>
   )

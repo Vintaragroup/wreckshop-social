@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Loader2, CheckCircle, AlertCircle, Music } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import { appPath } from '../../lib/routes'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4002'
 
@@ -19,14 +20,14 @@ export default function SpotifyCallbackPage() {
       if (error) {
         setStatus('error')
         setMessage(`Connection failed: ${error}`)
-        setTimeout(() => navigate('/integrations'), 3000)
+          setTimeout(() => navigate(appPath('/integrations')), 3000)
         return
       }
 
       if (!code) {
         setStatus('error')
         setMessage('No authorization code received')
-        setTimeout(() => navigate('/integrations'), 3000)
+          setTimeout(() => navigate(appPath('/integrations')), 3000)
         return
       }
 
@@ -88,11 +89,11 @@ export default function SpotifyCallbackPage() {
         setMessage(`Connected as ${userData.display_name || userData.email}`)
 
         // Redirect back to integrations
-        setTimeout(() => navigate('/integrations'), 2000)
+          setTimeout(() => navigate(appPath('/integrations')), 2000)
       } catch (err: any) {
         setStatus('error')
         setMessage(err.message || 'Connection failed')
-        setTimeout(() => navigate('/integrations'), 3000)
+          setTimeout(() => navigate(appPath('/integrations')), 3000)
       }
     }
 

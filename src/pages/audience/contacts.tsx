@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import CreateCaptureLinkModal from "../../components/create-capture-link-modal";
 import { Label } from "../../components/ui/label";
 import { apiRequest } from "../../lib/api";
+import { appPath } from "../../lib/routes";
 
 interface AudienceContact {
   _id: string;
@@ -130,7 +131,7 @@ export default function AudienceContactsPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 pt-2">
-            <Button variant="default" onClick={() => navigate('/integrations')}>
+            <Button variant="default" onClick={() => navigate(appPath('/integrations'))}>
               Connect platforms
             </Button>
             <Button variant="default" onClick={() => setOpenCreateLink(true)}>
@@ -144,10 +145,10 @@ export default function AudienceContactsPage() {
             <Button variant="secondary" onClick={() => setOpenCreate(true)}>
               Add contact manually
             </Button>
-            <Button variant="outline" onClick={() => navigate('/campaigns/email')}>
+            <Button variant="outline" onClick={() => navigate(appPath('/campaigns/email'))}>
               Create email campaign
             </Button>
-            <Button variant="outline" onClick={() => navigate('/campaigns/sms')}>
+            <Button variant="outline" onClick={() => navigate(appPath('/campaigns/sms'))}>
               Create SMS campaign
             </Button>
           </div>

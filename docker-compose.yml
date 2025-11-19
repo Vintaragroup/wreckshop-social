@@ -71,8 +71,8 @@ services:
       # API Secrets - MUST be set via .env.local
       SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:-}
       SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET:-}
-      SPOTIFY_REDIRECT_URI: http://localhost:4002/auth/spotify/callback
-      CORS_ORIGIN: http://localhost:5176
+      SPOTIFY_REDIRECT_URI: http://127.0.0.1:4002/auth/spotify/callback
+      CORS_ORIGIN: http://localhost:5176,http://localhost:3001
       LASTFM_API_KEY: ${LASTFM_API_KEY:-}
       INSTAGRAM_APP_ID: ${INSTAGRAM_APP_ID:-}
       INSTAGRAM_APP_SECRET: ${INSTAGRAM_APP_SECRET:-}
@@ -86,6 +86,7 @@ services:
       NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY: ${NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY:-}
       STACK_SECRET_SERVER_KEY: ${STACK_SECRET_SERVER_KEY:-}
       STACK_AUTH_WEBHOOK_SECRET: ${STACK_AUTH_WEBHOOK_SECRET:-}
+      INTEGRATION_TOKEN_SECRET: ${INTEGRATION_TOKEN_SECRET:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -111,7 +112,7 @@ services:
       - "5176:5176"
     environment:
       NODE_ENV: development
-      VITE_API_BASE_URL: ""
+      VITE_API_BASE_URL: http://localhost:4002/api
     depends_on:
       - backend
     networks:
@@ -119,12 +120,31 @@ services:
     volumes:
       - ./src:/app/src
       - ./public:/app/public
+      - ./apps/marketing-site/src:/app/apps/marketing-site/src
       - ./index.html:/app/index.html
       - ./vite.config.ts:/app/vite.config.ts
       - ./tsconfig.json:/app/tsconfig.json
       - ./package.json:/app/package.json
       - /app/node_modules
     command: npm run dev
+
+  website-design:
+    build:
+      context: ../Wreckshop-Social-Website-Design
+      dockerfile: Dockerfile
+    container_name: wreckshop-website-design
+    ports:
+      - "3001:3000"
+    environment:
+      NODE_ENV: production
+    networks:
+      - wreckshop-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 networks:
   wreckshop-network:

@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express'
 import prisma from '../../lib/prisma'
 import { authenticateJWT } from '../../lib/middleware/auth.middleware'
-import { enrichSpotifyProfile, SpotifyEnrichedData } from '../../services/spotify/enrichment.service'
 import { spotifyAnalyticsRouter } from './spotify-analytics.routes'
 import { z } from 'zod'
+import { upsertSpotifyIntegration } from '../../services/spotify/integration.service'
 
 export const spotifyIntegrationRouter = Router()
 
@@ -13,7 +13,7 @@ spotifyIntegrationRouter.use('/spotify/analytics', spotifyAnalyticsRouter)
 /**
  * POST /api/integrations/spotify
  * Saves or updates Spotify integration for an artist
- * Body: { artistId: string, accessToken: string, refreshToken?: string }
+ * Body: { artistId: string, accessToken: string, refreshToken?: string, expiresIn?: number, scopes?: string[] }
  */
 spotifyIntegrationRouter.post(
   '/spotify',
@@ -24,6 +24,8 @@ spotifyIntegrationRouter.post(
         artistId: z.string(),
         accessToken: z.string(),
         refreshToken: z.string().optional(),
+        expiresIn: z.number().optional(),
+        scopes: z.array(z.string()).optional(),
       })
 
       const parsed = bodySchema.safeParse(req.body)
@@ -35,7 +37,7 @@ spotifyIntegrationRouter.post(
         })
       }
 
-      const { artistId, accessToken, refreshToken } = parsed.data
+      const { artistId, accessToken, refreshToken, expiresIn, scopes } = parsed.data
 
       // Verify artist exists and user owns it
       const artist = await prisma.artist.findUnique({
@@ -49,49 +51,19 @@ spotifyIntegrationRouter.post(
         })
       }
 
-      // Enrich Spotify profile with token
-      const enrichedData = await enrichSpotifyProfile(accessToken)
-
-      // Save or update Spotify integration
-      const integration = await prisma.spotifyIntegration.upsert({
-        where: { artistId },
-        create: {
-          artistId,
-          spotifyAccountId: enrichedData.profile.id,
-          displayName: enrichedData.profile.displayName,
-          profileUrl: enrichedData.profile.profileUrl,
-          profileImageUrl: enrichedData.profile.avatarUrl,
-          followers: enrichedData.profile.followersCount,
-          isArtistAccount: enrichedData.profile.followersCount > 100, // Heuristic
-          genres: enrichedData.topGenres.slice(0, 5),
-          monthlyListeners: enrichedData.topGenres.length > 0 ? 0 : 0, // Will be synced
-          totalStreams: 0,
-          lastSyncedAt: new Date(),
-        },
-        update: {
-          spotifyAccountId: enrichedData.profile.id,
-          displayName: enrichedData.profile.displayName,
-          profileUrl: enrichedData.profile.profileUrl,
-          profileImageUrl: enrichedData.profile.avatarUrl,
-          followers: enrichedData.profile.followersCount,
-          genres: enrichedData.topGenres.slice(0, 5),
-          lastSyncedAt: new Date(),
+      const { integration } = await upsertSpotifyIntegration({
+        artistId,
+        tokens: {
+          accessToken,
+          refreshToken,
+          expiresIn,
+          scopes,
         },
       })
 
       return res.json({
         ok: true,
-        integration: {
-          id: integration.id,
-          spotifyAccountId: integration.spotifyAccountId,
-          displayName: integration.displayName,
-          followers: integration.followers,
-          monthlyListeners: integration.monthlyListeners,
-          totalStreams: integration.totalStreams,
-          genres: integration.genres,
-          profileUrl: integration.profileUrl,
-          lastSyncedAt: integration.lastSyncedAt,
-        },
+        integration: serializeIntegration(integration),
       })
     } catch (error: any) {
       console.error('Spotify integration error:', error)
@@ -125,6 +97,8 @@ spotifyIntegrationRouter.get('/status/:artistId', async (req: Request, res: Resp
           totalStreams: true,
           genres: true,
           lastSyncedAt: true,
+            tokenExpiresAt: true,
+            tokenScope: true,
         },
       }),
       prisma.instagramIntegration.findUnique({
@@ -149,6 +123,9 @@ spotifyIntegrationRouter.get('/status/:artistId', async (req: Request, res: Resp
           ? {
               connected: true,
               ...spotifyIntegration,
+              requiresReconnect: spotifyIntegration.tokenExpiresAt
+                ? spotifyIntegration.tokenExpiresAt.getTime() < Date.now() + 5 * 24 * 60 * 60 * 1000
+                : true,
             }
           : {
               connected: false,
@@ -195,19 +172,28 @@ spotifyIntegrationRouter.get('/spotify/:artistId', async (req: Request, res: Res
         genres: true,
         isArtistAccount: true,
         lastSyncedAt: true,
+        tokenExpiresAt: true,
+        tokenScope: true,
+        lastRefreshedAt: true,
       },
     })
 
     if (!integration) {
-      return res.status(404).json({
-        ok: false,
-        error: 'No Spotify integration found',
+      return res.json({
+        ok: true,
+        integration: null,
+        message: 'No Spotify integration configured',
       })
     }
 
     return res.json({
       ok: true,
-      integration,
+        integration: {
+          ...integration,
+          requiresReconnect: integration.tokenExpiresAt
+            ? integration.tokenExpiresAt.getTime() < Date.now() + 5 * 24 * 60 * 60 * 1000
+            : true,
+        },
     })
   } catch (error: any) {
     console.error('Get Spotify integration error:', error)
@@ -236,7 +222,7 @@ spotifyIntegrationRouter.post(
       })
 
       if (!integration) {
-        return res.status(404).json({
+        return res.json({
           ok: false,
           error: 'No Spotify integration found',
         })
@@ -303,3 +289,9 @@ spotifyIntegrationRouter.delete(
     }
   }
 )
+
+function serializeIntegration(integration: any) {
+  if (!integration) return integration
+  const { accessTokenEncrypted, refreshTokenEncrypted, ...safe } = integration
+  return safe
+}

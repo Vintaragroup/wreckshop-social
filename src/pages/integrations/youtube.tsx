@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
 import { LineChartWrapper, BarChartWrapper, type ChartDataPoint } from '../../components/charts';
+import { appPath } from '../../lib/routes';
 
 const MOCK_DATA = {
   profile: {
@@ -175,7 +176,7 @@ export default function YouTubePlatformPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/analytics/platforms')}
+            onClick={() => navigate(appPath('/analytics/platforms'))}
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>

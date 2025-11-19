@@ -128,9 +128,10 @@ instagramIntegrationRouter.get('/instagram/:artistId', async (req: Request, res:
     })
 
     if (!integration) {
-      return res.status(404).json({
-        ok: false,
-        error: 'No Instagram integration found',
+      return res.json({
+        ok: true,
+        integration: null,
+        message: 'No Instagram integration found',
       })
     }
 
@@ -164,7 +165,7 @@ instagramIntegrationRouter.post(
       })
 
       if (!integration) {
-        return res.status(404).json({
+        return res.json({
           ok: false,
           error: 'No Instagram integration found',
         })

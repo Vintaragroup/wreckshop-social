@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../lib/auth/context'
+import { appPath } from '../../lib/routes'
 
 /**
  * OAuth Callback Page
@@ -30,13 +31,13 @@ export default function OAuthCallbackPage() {
         // If the hosted page returned a token directly, use it
         if (tokenParam) {
           await completeSsoLogin(tokenParam)
-          navigate('/')
+          navigate(appPath('/'))
           return
         }
 
         // Otherwise, exchange the code for a token via our backend helper
         if (code && provider) {
-          const redirectUri = `${window.location.origin}/auth/oauth/callback/${provider}`
+          const redirectUri = `${window.location.origin}${appPath(`/auth/oauth/callback/${provider}`)}`
           const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
           const res = await fetch(`${apiBaseUrl}/auth/sso/exchange`, {
             method: 'POST',
@@ -56,7 +57,7 @@ export default function OAuthCallbackPage() {
           }
 
           await completeSsoLogin(accessToken)
-          navigate('/')
+          navigate(appPath('/'))
           return
         }
 

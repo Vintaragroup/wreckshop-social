@@ -3,6 +3,7 @@ import { useIngestProfile, useDiscover } from '../../hooks/useProfiles'
 import { useNavigate } from 'react-router-dom'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
+import { appPath } from '../../lib/routes'
 import { Label } from '../../components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
@@ -59,7 +60,7 @@ export default function ProfilesDiscoverPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold">Discover candidates</h2>
-        <Button variant="ghost" onClick={() => navigate('/audience/profiles')}>Back to profiles</Button>
+        <Button variant="ghost" onClick={() => navigate(appPath('/audience/profiles'))}>Back to profiles</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">

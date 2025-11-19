@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../lib/auth/context';
 import { useNavigate } from 'react-router-dom';
+import { appPath } from '../../lib/routes';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
@@ -29,7 +30,7 @@ export function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/', { replace: true });
+      navigate(appPath('/'), { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -48,7 +49,7 @@ export function LoginPage() {
       console.log('[LOGIN] Login successful, navigating to dashboard');
       // Use setTimeout to ensure state updates are processed
       setTimeout(() => {
-        navigate('/');
+        navigate(appPath('/'));
       }, 100);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Login failed';
@@ -65,7 +66,7 @@ export function LoginPage() {
       return;
     }
 
-    const redirectUri = `${window.location.origin}/auth/oauth/callback/${provider}`;
+    const redirectUri = `${window.location.origin}${appPath(`/auth/oauth/callback/${provider}`)}`;
     const hostedPath = `${stackAppBaseUrl}/${stackProjectId}/sign-in`;
     const url = `${hostedPath}?provider=${provider}&redirect_uri=${encodeURIComponent(redirectUri)}`;
     window.location.href = url;

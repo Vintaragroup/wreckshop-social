@@ -33,6 +33,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "./ui/sheet";
 import { useIsMobile } from "./ui/use-mobile";
 import { ThemeToggle } from "./theme-toggle";
+import { APP_BASE_PATH, appPath } from "../lib/routes";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -41,53 +42,53 @@ interface AppShellProps {
 }
 
 const navigationItems = [
-  { icon: Home, label: "Dashboard", id: "dashboard", href: "/" },
+  { icon: Home, label: "Dashboard", id: "dashboard", href: appPath('/') },
   {
     icon: Users,
     label: "Audience",
     id: "audience",
-    href: "/audience",
+  href: appPath("/audience"),
     children: [
-      { label: "Contacts", href: "/audience/contacts" },
-      { label: "Profiles", href: "/audience/profiles" },
-      { label: "Segments", href: "/audience/segments" },
+  { label: "Contacts", href: appPath("/audience/contacts") },
+  { label: "Profiles", href: appPath("/audience/profiles") },
+  { label: "Segments", href: appPath("/audience/segments") },
     ],
   },
   {
     icon: Mail,
     label: "Campaigns",
     id: "campaigns",
-    href: "/campaigns",
+  href: appPath("/campaigns"),
     children: [
-      { label: "Email", href: "/campaigns/email" },
-      { label: "SMS", href: "/campaigns/sms" },
-      { label: "Journeys", href: "/campaigns/journeys" },
-      { label: "Templates", href: "/campaigns/templates" },
+  { label: "Email", href: appPath("/campaigns/email") },
+  { label: "SMS", href: appPath("/campaigns/sms") },
+  { label: "Journeys", href: appPath("/campaigns/journeys") },
+  { label: "Templates", href: appPath("/campaigns/templates") },
     ],
   },
   {
     icon: Music,
     label: "Content",
     id: "content",
-    href: "/content",
+  href: appPath("/content"),
     children: [
-      { label: "Artists", href: "/content/artists" },
-      { label: "Releases", href: "/content/releases" },
-      { label: "Events", href: "/content/events" },
-      { label: "Assets & Links", href: "/content/assets" },
+  { label: "Artists", href: appPath("/content/artists") },
+  { label: "Releases", href: appPath("/content/releases") },
+  { label: "Events", href: appPath("/content/events") },
+  { label: "Assets & Links", href: appPath("/content/assets") },
     ],
   },
-  { icon: Zap, label: "Integrations", id: "integrations", href: "/integrations" },
-  { icon: BarChart3, label: "Analytics", id: "analytics", href: "/analytics" },
-  { icon: Shield, label: "Compliance", id: "compliance", href: "/compliance" },
-  { icon: Settings, label: "Settings", id: "settings", href: "/settings" },
+  { icon: Zap, label: "Integrations", id: "integrations", href: appPath("/integrations") },
+  { icon: BarChart3, label: "Analytics", id: "analytics", href: appPath("/analytics") },
+  { icon: Shield, label: "Compliance", id: "compliance", href: appPath("/compliance") },
+  { icon: Settings, label: "Settings", id: "settings", href: appPath("/settings") },
   {
     icon: Shield,
     label: "Admin",
     id: "admin",
-    href: "/admin",
+  href: appPath("/admin/discovery"),
     children: [
-      { label: "Discovery", href: "/admin/discovery" },
+  { label: "Discovery", href: appPath("/admin/discovery") },
     ],
   },
 ];
@@ -116,7 +117,7 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
   };
 
   const handleProfile = () => {
-    navigate('/settings');
+  navigate(appPath('/settings'));
   };
 
   // Filter navigation items based on user role and permissions
@@ -396,7 +397,7 @@ export function AppShell({ children, currentPage = "dashboard", onPageChange }: 
                   <DropdownMenuItem onClick={handleProfile}>
                     Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/settings')}>
+                  <DropdownMenuItem onClick={() => navigate(appPath('/settings'))}>
                     Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

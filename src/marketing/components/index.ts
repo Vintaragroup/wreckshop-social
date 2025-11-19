@@ -1,0 +1,10 @@
+// Re-export marketing site components for local imports
+export { Navigation } from '@marketing-site/components/Navigation'
+export { Hero } from '@marketing-site/components/Hero'
+export { Features } from '@marketing-site/components/Features'
+export { HowItWorks } from '@marketing-site/components/HowItWorks'
+export { UseCases } from '@marketing-site/components/UseCases'
+export { Testimonials } from '@marketing-site/components/Testimonials'
+export { DataPrivacy } from '@marketing-site/components/DataPrivacy'
+export { Pricing } from '@marketing-site/components/Pricing'
+export { Footer } from '@marketing-site/components/Footer'

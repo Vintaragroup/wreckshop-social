@@ -1,0 +1,1 @@
+export { Logo } from "@marketing-core";

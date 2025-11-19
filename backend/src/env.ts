@@ -8,6 +8,8 @@ const EnvSchema = z.object({
   SPOTIFY_CLIENT_ID: z.string().min(1),
   SPOTIFY_CLIENT_SECRET: z.string().min(1),
   SPOTIFY_REDIRECT_URI: z.string().url(),
+  FRONTEND_URL: z.string().url().default('http://localhost:5176'),
+  INTEGRATION_TOKEN_SECRET: z.string().min(32),
   INSTAGRAM_APP_ID: z.string().optional(),
   INSTAGRAM_APP_SECRET: z.string().optional(),
   INSTAGRAM_REDIRECT_URI: z.string().url().optional(),
@@ -20,7 +22,7 @@ const EnvSchema = z.object({
   FACEBOOK_APP_ID: z.string().optional(),
   FACEBOOK_APP_SECRET: z.string().optional(),
   FACEBOOK_REDIRECT_URI: z.string().url().optional(),
-  CORS_ORIGIN: z.string().url(),
+  CORS_ORIGIN: z.string().min(1),
   ADMIN_API_KEY: z.string().default(''),
   ADMIN_SUPER_EMAILS: z.string().default('ryan@vintaragroup.com'),
   STACK_PROJECT_ID: z.string().min(1),
@@ -30,13 +32,15 @@ const EnvSchema = z.object({
   STACK_API_URL: z.string().url().default('https://api.stack-auth.com'),
 })
 
-export const env = EnvSchema.parse({
+const rawEnv = EnvSchema.parse({
   PORT: process.env.PORT,
   MONGODB_URI: process.env.MONGODB_URI,
   REDIS_URL: process.env.REDIS_URL,
   SPOTIFY_CLIENT_ID: process.env.SPOTIFY_CLIENT_ID,
   SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
   SPOTIFY_REDIRECT_URI: process.env.SPOTIFY_REDIRECT_URI,
+  FRONTEND_URL: process.env.FRONTEND_URL,
+  INTEGRATION_TOKEN_SECRET: process.env.INTEGRATION_TOKEN_SECRET,
   INSTAGRAM_APP_ID: process.env.INSTAGRAM_APP_ID,
   INSTAGRAM_APP_SECRET: process.env.INSTAGRAM_APP_SECRET,
   INSTAGRAM_REDIRECT_URI: process.env.INSTAGRAM_REDIRECT_URI,
@@ -58,3 +62,25 @@ export const env = EnvSchema.parse({
   STACK_WEBHOOK_SECRET: process.env.STACK_WEBHOOK_SECRET ?? process.env.STACK_AUTH_WEBHOOK_SECRET,
   STACK_API_URL: process.env.STACK_API_URL ?? 'https://api.stack-auth.com',
 })
+
+const corsOrigins = rawEnv.CORS_ORIGIN.split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+
+if (!corsOrigins.length) {
+  throw new Error('CORS_ORIGIN must include at least one origin')
+}
+
+corsOrigins.forEach((origin) => {
+  try {
+    new URL(origin)
+  } catch (err) {
+    throw new Error(`Invalid CORS origin: ${origin}`)
+  }
+})
+
+export const env = {
+  ...rawEnv,
+  CORS_ORIGIN: corsOrigins[0],
+  CORS_ORIGINS: corsOrigins,
+}

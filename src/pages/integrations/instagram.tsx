@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, RefreshCw, TrendingUp, TrendingDown, Users, Heart, MessageCircle, Share2 } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { useNavigate } from 'react-router-dom';
-import { Badge } from '../../components/ui/badge';
-import { LineChartWrapper, AreaChartWrapper, type ChartDataPoint } from '../../components/charts';
-import { apiUrl } from '../../lib/api';
+import { Button } from '../../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import { useNavigate } from 'react-router-dom'
+import { Badge } from '../../components/ui/badge'
+import { LineChartWrapper, AreaChartWrapper, type ChartDataPoint } from '../../components/charts'
+import { apiUrl } from '../../lib/api'
+import { appPath } from '../../lib/routes'
 
 // Mock data structure
 interface InstagramMetrics {
@@ -232,7 +233,7 @@ export default function InstagramPlatformPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/analytics/platforms')}
+            onClick={() => navigate(appPath('/analytics/platforms'))}
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>

@@ -184,9 +184,10 @@ integrations.get('/instagram/:userId', async (req: Request, res: Response) => {
     }).select('-accessToken')
 
     if (!connection) {
-      return res.status(404).json({
-        ok: false,
-        error: 'No active Instagram connection found',
+      return res.json({
+        ok: true,
+        connection: null,
+        message: 'No active Instagram connection found',
       })
     }
 
@@ -234,9 +235,9 @@ integrations.delete('/instagram/:userId', async (req: Request, res: Response) =>
     )
 
     if (result.matchedCount === 0) {
-      return res.status(404).json({
-        ok: false,
-        error: 'No active Instagram connection found',
+      return res.json({
+        ok: true,
+        message: 'No active Instagram connection to disconnect',
       })
     }
 

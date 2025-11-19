@@ -1,5 +1,5 @@
 import express from 'express'
-import cors from 'cors'
+import cors, { CorsOptions } from 'cors'
 import morgan from 'morgan'
 import { env } from './env'
 import { connectMongo } from './lib/db'
@@ -62,21 +62,21 @@ async function main() {
   // Enable CORS for the frontend, including credentials because the web app uses
   // fetch with `credentials: 'include'`. Without this, the browser will block
   // cross-origin responses even if no cookies are used.
-  app.use(
-    cors({
-      origin: env.CORS_ORIGIN,
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key'],
-    })
-  )
-  // Handle preflight quickly
-  app.options('*', cors({
-    origin: env.CORS_ORIGIN,
+  const allowedOrigins = env.CORS_ORIGINS
+  const corsOptions: CorsOptions = {
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true)
+      }
+      return callback(new Error('Not allowed by CORS'))
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key'],
-  }))
+  }
+
+  app.use(cors(corsOptions))
+  app.options('*', cors(corsOptions))
   app.use(morgan('dev'))
   app.use(express.json())
 
@@ -113,12 +113,12 @@ async function main() {
   app.use('/api', authenticateJWT, segments)
   app.use('/api', authenticateJWT, templates)
   app.use('/api', authenticateJWT, abTests)
-  app.use('/api', authenticateJWT, spotifyIntegrationRouter)
-  app.use('/api', authenticateJWT, instagramIntegrationRouter)
-  app.use('/api', authenticateJWT, youtubeIntegrationRouter)
-  app.use('/api', authenticateJWT, tiktokIntegrationRouter)
-  app.use('/api', authenticateJWT, appleMusicIntegrationRouter)
-  app.use('/api', authenticateJWT, integrations)
+  app.use('/api/integrations', authenticateJWT, spotifyIntegrationRouter)
+  app.use('/api/integrations', authenticateJWT, instagramIntegrationRouter)
+  app.use('/api/integrations', authenticateJWT, youtubeIntegrationRouter)
+  app.use('/api/integrations', authenticateJWT, tiktokIntegrationRouter)
+  app.use('/api/integrations', authenticateJWT, appleMusicIntegrationRouter)
+  app.use('/api/integrations', authenticateJWT, integrations)
 
   // Permission management routes (all require authentication)
   app.use('/api/manager', authenticateJWT, permissionsRouter)

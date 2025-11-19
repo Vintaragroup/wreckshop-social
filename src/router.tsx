@@ -25,10 +25,12 @@ import { Settings } from './components/settings'
 import { SegmentBuilder } from './components/segment-builder'
 import { EmailTemplates } from './components/email-templates'
 import AdminDiscoveryPage from './pages/admin/discovery'
-import { LoginPage } from './pages/auth/login-stack'
+import LoginPage from './pages/auth/login-stack'
 import SignupPage from './pages/auth/signup-stack'
 import OAuthCallbackPage from './pages/auth/oauth-callback'
 import { useAuth } from './lib/auth/context'
+import { marketingRoutes } from './marketing/routes'
+import { APP_BASE_PATH, appPath, stripAppPath } from './lib/routes'
 
 const AudienceContactsPage = React.lazy(() => import('./pages/audience/contacts'))
 const CapturePage = React.lazy(() => import('./pages/capture'))
@@ -47,94 +49,99 @@ function usePageMapping() {
   const navigate = useNavigate()
 
   const path = location.pathname
+  const normalizedPath = stripAppPath(path)
   let currentPage = 'dashboard'
-  if (path === '/') currentPage = 'dashboard'
-  else if (path.startsWith('/audience/segments')) currentPage = 'audience-segments'
-  else if (path.startsWith('/audience/contacts')) currentPage = 'audience-contacts'
-  else if (path.startsWith('/audience/profiles')) currentPage = 'audience-profiles'
-  else if (path === '/audience') currentPage = 'audience'
-  else if (path.startsWith('/campaigns/email')) currentPage = 'campaigns-email'
-  else if (path.startsWith('/campaigns/sms')) currentPage = 'campaigns-sms'
-  else if (path.startsWith('/campaigns/journeys')) currentPage = 'campaigns-journeys'
-  else if (path.startsWith('/campaigns/templates')) currentPage = 'campaigns-templates'
-  else if (path === '/campaigns') currentPage = 'campaigns'
-  else if (path.startsWith('/content/artists')) currentPage = 'content-artists'
-  else if (path.startsWith('/content/releases')) currentPage = 'content-releases'
-  else if (path.startsWith('/content/events')) currentPage = 'content-events'
-  else if (path.startsWith('/content/assets')) currentPage = 'content-assets'
-  else if (path.startsWith('/integrations/instagram')) currentPage = 'integrations'
-  else if (path.startsWith('/integrations/spotify')) currentPage = 'integrations'
-  else if (path.startsWith('/integrations/youtube')) currentPage = 'integrations'
-  else if (path.startsWith('/integrations/tiktok')) currentPage = 'integrations'
-  else if (path.startsWith('/integrations/apple-music')) currentPage = 'integrations'
-  else if (path.startsWith('/integrations')) currentPage = 'integrations'
-  else if (path.startsWith('/analytics/platforms')) currentPage = 'analytics'
-  else if (path.startsWith('/analytics')) currentPage = 'analytics'
-  else if (path.startsWith('/compliance')) currentPage = 'compliance'
-  else if (path.startsWith('/settings')) currentPage = 'settings'
-  else if (path.startsWith('/admin/discovery')) currentPage = 'admin-discovery'
+  if (normalizedPath === '/' || normalizedPath === '') currentPage = 'dashboard'
+  else if (normalizedPath.startsWith('/audience/segments')) currentPage = 'audience-segments'
+  else if (normalizedPath.startsWith('/audience/contacts')) currentPage = 'audience-contacts'
+  else if (normalizedPath.startsWith('/audience/profiles')) currentPage = 'audience-profiles'
+  else if (normalizedPath === '/audience') currentPage = 'audience'
+  else if (normalizedPath.startsWith('/campaigns/email')) currentPage = 'campaigns-email'
+  else if (normalizedPath.startsWith('/campaigns/sms')) currentPage = 'campaigns-sms'
+  else if (normalizedPath.startsWith('/campaigns/journeys')) currentPage = 'campaigns-journeys'
+  else if (normalizedPath.startsWith('/campaigns/templates')) currentPage = 'campaigns-templates'
+  else if (normalizedPath === '/campaigns') currentPage = 'campaigns'
+  else if (normalizedPath.startsWith('/content/artists')) currentPage = 'content-artists'
+  else if (normalizedPath.startsWith('/content/releases')) currentPage = 'content-releases'
+  else if (normalizedPath.startsWith('/content/events')) currentPage = 'content-events'
+  else if (normalizedPath.startsWith('/content/assets')) currentPage = 'content-assets'
+  else if (normalizedPath.startsWith('/integrations/instagram')) currentPage = 'integrations'
+  else if (normalizedPath.startsWith('/integrations/spotify')) currentPage = 'integrations'
+  else if (normalizedPath.startsWith('/integrations/youtube')) currentPage = 'integrations'
+  else if (normalizedPath.startsWith('/integrations/tiktok')) currentPage = 'integrations'
+  else if (normalizedPath.startsWith('/integrations/apple-music')) currentPage = 'integrations'
+  else if (normalizedPath.startsWith('/integrations')) currentPage = 'integrations'
+  else if (normalizedPath.startsWith('/analytics/platforms')) currentPage = 'analytics'
+  else if (normalizedPath.startsWith('/analytics')) currentPage = 'analytics'
+  else if (normalizedPath.startsWith('/compliance')) currentPage = 'compliance'
+  else if (normalizedPath.startsWith('/settings')) currentPage = 'settings'
+  else if (normalizedPath.startsWith('/admin/discovery')) currentPage = 'admin-discovery'
 
   const onPageChange = (page: string) => {
+    const go = (target: string) => {
+      navigate(appPath(target))
+    }
+
     switch (page) {
       case 'dashboard':
-        navigate('/')
+        go('/')
         break
       case 'audience':
-        navigate('/audience')
+        go('/audience')
         break
       case 'audience-profiles':
-        navigate('/audience/profiles')
+        go('/audience/profiles')
         break
       case 'audience-segments':
-        navigate('/audience/segments')
+        go('/audience/segments')
         break
       case 'audience-contacts':
-        navigate('/audience/contacts')
+        go('/audience/contacts')
         break
       case 'campaigns':
-        navigate('/campaigns')
+        go('/campaigns')
         break
       case 'campaigns-email':
-        navigate('/campaigns/email')
+        go('/campaigns/email')
         break
       case 'campaigns-sms':
-        navigate('/campaigns/sms')
+        go('/campaigns/sms')
         break
       case 'campaigns-journeys':
-        navigate('/campaigns/journeys')
+        go('/campaigns/journeys')
         break
       case 'campaigns-templates':
-        navigate('/campaigns/templates')
+        go('/campaigns/templates')
         break
       case 'content-artists':
-        navigate('/content/artists')
+        go('/content/artists')
         break
       case 'content-releases':
-        navigate('/content/releases')
+        go('/content/releases')
         break
       case 'content-events':
-        navigate('/content/events')
+        go('/content/events')
         break
       case 'content-assets':
-        navigate('/content/assets')
+        go('/content/assets')
         break
       case 'integrations':
-        navigate('/integrations')
+        go('/integrations')
         break
       case 'analytics':
-        navigate('/analytics')
+        go('/analytics')
         break
       case 'compliance':
-        navigate('/compliance')
+        go('/compliance')
         break
       case 'settings':
-        navigate('/settings')
+        go('/settings')
         break
       case 'admin-discovery':
-        navigate('/admin/discovery')
+        go('/admin/discovery')
         break
       default:
-        navigate('/')
+        go('/')
         break
     }
   }
@@ -177,6 +184,7 @@ function Layout() {
 }
 
 export const router = createBrowserRouter([
+  ...marketingRoutes,
   // Auth Routes (public)
   {
     path: '/login',
@@ -200,7 +208,15 @@ export const router = createBrowserRouter([
     element: <SpotifyCallbackPage />,
   },
   {
+    path: `${APP_BASE_PATH}/auth/spotify/callback`,
+    element: <SpotifyCallbackPage />,
+  },
+  {
     path: '/auth/oauth/callback/:provider',
+    element: <OAuthCallbackPage />,
+  },
+  {
+    path: `${APP_BASE_PATH}/auth/oauth/callback/:provider`,
     element: <OAuthCallbackPage />,
   },
   {
@@ -208,13 +224,21 @@ export const router = createBrowserRouter([
     element: <InstagramCallbackHandler />,
   },
   {
+    path: `${APP_BASE_PATH}/auth/instagram/callback`,
+    element: <InstagramCallbackHandler />,
+  },
+  {
     path: '/auth/tiktok/callback',
+    element: <TikTokCallbackHandler />,
+  },
+  {
+    path: `${APP_BASE_PATH}/auth/tiktok/callback`,
     element: <TikTokCallbackHandler />,
   },
   
   // Protected Routes (require auth)
   {
-    path: '/',
+    path: APP_BASE_PATH,
     element: <Layout />,
     children: [
       { index: true, element: <Dashboard /> },
@@ -247,10 +271,10 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // Fallback - redirect to login
+  // Fallback - redirect to marketing homepage
   {
     path: '*',
-    element: <Navigate to="/login" replace />,
+    element: <Navigate to="/" replace />,
   },
 ])
 

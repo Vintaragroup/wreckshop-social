@@ -51,7 +51,48 @@
         '@radix-ui/react-alert-dialog@1.1.6': '@radix-ui/react-alert-dialog',
         '@radix-ui/react-accordion@1.2.3': '@radix-ui/react-accordion',
         '@': path.resolve(__dirname, './src'),
+  '@marketing-core': path.resolve(__dirname, './src/components/marketing-core'),
+  '@marketing-site/components': path.resolve(__dirname, './apps/marketing-site/src/components'),
+  '@marketing-site/pages': path.resolve(__dirname, './apps/marketing-site/src/pages'),
+  '@marketing-site': path.resolve(__dirname, './apps/marketing-site/src'),
       },
+    },
+    optimizeDeps: {
+      include: [
+        '@marketing-site/pages/PrivacyPolicy',
+        '@marketing-site/pages/TermsOfService',
+        '@marketing-site/pages/Security',
+        '@marketing-site/pages/About',
+        '@marketing-site/pages/Contact',
+        '@marketing-site/pages/Integrations',
+        '@marketing-site/pages/CookiePolicy',
+        '@marketing-site/pages/Blog',
+        '@marketing-site/pages/CaseStudies',
+        '@marketing-site/pages/Careers',
+        '@marketing-site/pages/Status',
+        '@marketing-site/pages/Documentation',
+        '@marketing-site/pages/DoNotSell',
+        '@marketing-site/pages/SignIn',
+        '@marketing-site/pages/SignUp',
+        '@marketing-site/pages/Artists',
+        '@marketing-site/pages/Labels',
+        '@marketing-site/pages/Promoters',
+        '@marketing-site/pages/Community',
+        '@marketing-site/pages/Academy',
+        '@marketing-site/pages/DiscoveryEngine',
+        '@marketing-site/pages/AnalyticsDashboard',
+        '@marketing-site/pages/GeofencingSegmentation',
+        '@marketing-site/pages/CampaignOrchestration',
+        '@marketing-site/components/Navigation',
+        '@marketing-site/components/Hero',
+        '@marketing-site/components/Features',
+        '@marketing-site/components/HowItWorks',
+        '@marketing-site/components/UseCases',
+        '@marketing-site/components/Testimonials',
+        '@marketing-site/components/DataPrivacy',
+        '@marketing-site/components/Pricing',
+        '@marketing-site/components/Footer',
+      ],
     },
     build: {
       target: 'esnext',
@@ -62,6 +103,17 @@
       port: 5176,
       // Disable auto-opening the browser to avoid xdg-open errors in containers
       open: false,
+      fs: {
+        // Explicitly allow serving files from the marketing-site workspace folder
+        allow: [
+          // Project root and node_modules (required for CSS and assets from dependencies)
+          path.resolve(__dirname),
+          path.resolve(__dirname, './node_modules'),
+          // App source trees
+          path.resolve(__dirname, './src'),
+          path.resolve(__dirname, './apps/marketing-site/src'),
+        ],
+      },
       // Allow ngrok domain and other hosts for development
       allowedHosts: [
         'localhost',
